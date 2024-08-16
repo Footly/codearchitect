@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Render child elements
             message.item.children.forEach(child => {
                 //Copy the tags of the parent to the child
-                renderChild(child, objectDiv);
+                renderChild(child, objectDiv, vscode);
             });
 
             // Create and append the save button
@@ -39,23 +39,23 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function resolveRef(schema, root_schema) {
-  for (const key in schema) {
-    if (key === "$ref") {
-      const ref = schema["$ref"].split("/");
-      //Discard the first element
-      ref.shift();
-      //Convert all %24 to $ using map
-      const ref_keys = ref.map((item) => item.replace(/%24/g, "$"));
-      //Get the root schema
-      let current_schema = root_schema;
-      //Loop through the ref_keys
-      for (const ref_key of ref_keys) {
-        current_schema = current_schema[ref_key];
-      }
-      schema = current_schema;
+    for (const key in schema) {
+        if (key === "$ref") {
+            const ref = schema["$ref"].split("/");
+            //Discard the first element
+            ref.shift();
+            //Convert all %24 to $ using map
+            const ref_keys = ref.map((item) => item.replace(/%24/g, "$"));
+            //Get the root schema
+            let current_schema = root_schema;
+            //Loop through the ref_keys
+            for (const ref_key of ref_keys) {
+                current_schema = current_schema[ref_key];
+            }
+            schema = current_schema;
+        }
     }
-  }
-  return schema;
+    return schema;
 }
 
 
@@ -126,33 +126,36 @@ function updateTitle(title, titleInput, item, container) {
     });
 }
 
-function renderChild(child, div) {
-    console.log(child);
+function renderChild(child, div, vscode) {
     const format = child.schema.format;
     switch (format) {
         case 'sub-object':
-            renderSubObjectChild(child, div);
+            renderSubObjectChild(child, div, vscode);
             break;
         case 'input-string':
-            renderInputString(child, div);
+            renderInputString(child, div, vscode);
             break;
         case 'checkbox':
-            renderCheckbox(child, div);
+            renderCheckbox(child, div, vscode);
             break;
         case 'dropdown-select':
-            renderDropdownSelect(child, div);
+            renderDropdownSelect(child, div, vscode);
             break;
         case 'dropdown-select-tag':
-            renderDropdownSelectTag(child, div);
+            renderDropdownSelectTag(child, div, vscode);
             break;
         case 'pool-dropdown-select':
-            renderPoolDropdownSelect(child, div);
+            renderPoolDropdownSelect(child, div, vscode);
             break;
         case 'pool-dropdown-select-tag':
-            renderPoolDropdownSelectTag(child, div);
+            renderPoolDropdownSelectTag(child, div, vscode);
             break;
         case 'text-area':
-            renderTextArea(child, div);
+            renderTextArea(child, div, vscode);
+            break;
+        case 'array-creator':
+            renderArrayCreator(child, div, vscode);
+            break;
         case 'hidden':
             break;
         default:
@@ -161,7 +164,7 @@ function renderChild(child, div) {
     }
 }
 
-function renderInputString(child, div) {
+function renderInputString(child, div, vscode) {
     const $label = document.createElement('label');
     $label.textContent = child.$label;
     div.appendChild($label);
@@ -176,7 +179,8 @@ function renderInputString(child, div) {
         child.value = event.target.value;
     });
 }
-function renderTextArea(child, div) {
+
+function renderTextArea(child, div, vscode) {
     const $label = document.createElement('label');
     $label.textContent = child.$label;
     div.appendChild($label);
@@ -194,7 +198,7 @@ function renderTextArea(child, div) {
     });
 }
 
-function renderCheckbox(child, div) {
+function renderCheckbox(child, div, vscode) {
     const checkboxContainer = document.createElement('div');
     checkboxContainer.style.display = 'flex';
     checkboxContainer.style.alignItems = 'center';
@@ -216,7 +220,7 @@ function renderCheckbox(child, div) {
     });
 }
 
-function renderDropdownSelect(child, div) {
+function renderDropdownSelect(child, div, vscode) {
     const $label = document.createElement('label');
     $label.textContent = child.$label;
     div.appendChild($label);
@@ -241,8 +245,7 @@ function renderDropdownSelect(child, div) {
     });
 }
 
-
-function renderDropdownSelectTag(child, div) {
+function renderDropdownSelectTag(child, div, vscode) {
     const $label = document.createElement('label');
     $label.textContent = child.$label;
     div.appendChild($label);
@@ -263,7 +266,7 @@ function renderDropdownSelectTag(child, div) {
         optionElement.textContent = tag.$label;
         select.appendChild(optionElement);
     });
-    
+
     select.value = child.value;
 
     select.addEventListener('change', (event) => {
@@ -271,7 +274,85 @@ function renderDropdownSelectTag(child, div) {
     });
 }
 
-function renderPoolDropdownSelect(child, div) {
+function renderArrayCreator(child, div, vscode) {
+    // Create a new div for the array creator
+    const arrayCreatorDiv = document.createElement('div');
+    arrayCreatorDiv.style.border = '1px solid #ccc';
+    arrayCreatorDiv.style.padding = '10px';
+    arrayCreatorDiv.style.marginBottom = '10px';
+    div.appendChild(arrayCreatorDiv);
+
+    // Create and append the $label
+    const $label = document.createElement('label');
+    $label.textContent = child.$label;
+    arrayCreatorDiv.appendChild($label);
+
+    const format = child.schema.items.format;
+
+    // Create and append the add button
+    const addButton = document.createElement('button');
+    addButton.textContent = 'Add';
+    addButton.onclick = () => {
+        if (format === 'sub-object') {
+            createElement(child, vscode);
+        } else {
+            child.value.push('');
+            //Remove previous div
+            arrayCreatorDiv.remove();
+            renderArrayCreator(child, div, vscode);
+        }
+    };
+    arrayCreatorDiv.appendChild(addButton);
+
+    if (format === 'sub-object') {
+        // For children of the array creator
+        child.hidden_children.forEach(subChild => {
+            renderChild(subChild, arrayCreatorDiv, vscode);
+            //Create a remove button in this div
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'Remove';
+            removeButton.onclick = () => {
+                removeElement(subChild, vscode);
+            }
+            arrayCreatorDiv.appendChild(removeButton);
+            //Copy subchild into child
+            child.children.push(subChild);
+        });
+    } else {
+        for (value of child.value) {
+            // Create a child
+            const fake_child = {
+                value: value,
+                schema: child.schema.items
+            }
+
+            // Create a listener to update child when fake_child changes
+            Object.defineProperty(fake_child, 'value', {
+                set: function (newValue) {
+                    child.value[child.value.indexOf(value)] = newValue;
+                },
+                get: function () {
+                    return child.value[child.value.indexOf(value)];
+                }
+            });
+
+            renderChild(fake_child, arrayCreatorDiv, vscode);
+
+            // Create a remove button in this div
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'Remove';
+            removeButton.onclick = () => {
+                child.value.splice(child.value.indexOf(value), 1);
+                // Remove previous div
+                arrayCreatorDiv.remove();
+                renderArrayCreator(child, div, vscode);
+            }
+            arrayCreatorDiv.appendChild(removeButton);
+        }
+    }
+}
+
+function renderPoolDropdownSelect(child, div, vscode) {
     // Create and append the container for the filter input and selected items
     const containerDiv = document.createElement('div');
     containerDiv.style.marginBottom = '10px'; // Add margin
@@ -384,7 +465,7 @@ function renderPoolDropdownSelect(child, div) {
     }
 }
 
-function renderPoolDropdownSelectTag(child, div) {
+function renderPoolDropdownSelectTag(child, div, vscode) {
     // Create and append the container for the filter input and selected items
     const containerDiv = document.createElement('div');
     containerDiv.style.marginBottom = '10px'; // Add margin
@@ -504,8 +585,7 @@ function renderPoolDropdownSelectTag(child, div) {
     }
 }
 
-
-function renderSubObjectChild(child, div) {
+function renderSubObjectChild(child, div, vscode) {
     const subObjectDiv = document.createElement('div');
     subObjectDiv.style.border = '1px solid #ccc';
     subObjectDiv.style.padding = '10px';
@@ -517,17 +597,26 @@ function renderSubObjectChild(child, div) {
     subObjectDiv.appendChild($label);
 
     child.hidden_children.forEach(subChild => {
-        renderChild(subChild, subObjectDiv);
+        renderChild(subChild, subObjectDiv, vscode);
         //Copy subchild into child
         child.children.push(subChild);
     });
 }
 
 function createSaveButton(item, vscode) {
+    console.log(item);
     const saveButton = document.createElement('button');
     saveButton.textContent = 'Save';
     saveButton.onclick = () => {
         vscode.postMessage({ command: 'saveObject', item: item });
     };
     return saveButton;
+}
+
+function createElement(item, vscode) {
+    vscode.postMessage({ command: 'createItem', item: item });
+}
+
+function removeElement(item, vscode) {
+    vscode.postMessage({ command: 'removeItem', item: item });
 }

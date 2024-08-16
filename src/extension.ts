@@ -193,5 +193,11 @@ function handleMessage(message: any) {
 		// Handle the objectEdited command
 		// Call the saveObject method from the tree.ts file
 		itemTreeProvider.updateItem(message.item);
+	} else if(message.command === 'createItem') {
+		// Call the deleteObject method from the tree.ts file
+		itemTreeProvider.createChildFrom(message.item);
+	} else if(message.command === 'removeItem') {
+		// Call the deleteObject method from the tree.ts file
+		itemTreeProvider.removeItem(message.item);
 	}
 }

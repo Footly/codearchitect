@@ -210,6 +210,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         case 'dropdown-select':
           parent.hidden_children.push(item);
           break;
+        case 'array-creator':
         case 'sub-object':
           // Decode the sub-object
           this.decodeChildrenFromJson(item.value, item.schema, item.jsonPath, item);
