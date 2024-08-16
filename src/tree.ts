@@ -44,7 +44,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     // Drill down to the desired part of the JSON
     const jsonObject = element.jsonPath.reduce((obj, key) => obj[key], parentJSON);
 
-    this.decodeChildrenFromJson(jsonObject, element);
+    this.decodeChildrenFromJson(jsonObject, element.schema, element.jsonPath, element);
 
     //Check if element.children is empty
     if (element.children.length === 0) {
@@ -55,8 +55,8 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
   }
 
 
-  private decodeChildrenFromJson(jsonObject: any, parent: Item): void {
-    let schema = parent.schema;
+  private decodeChildrenFromJson(jsonObject: any, schemaItem: any, parentPath: string[], parent: Item): void {
+    let schema = schemaItem;
 
     const createItem = (key: string, keyProperties: any, jsonPath: string[], $label: string): Item => {
       keyProperties = this.resolveRef(keyProperties, this.rootSchema);
@@ -78,11 +78,13 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       }
       switch (format) {
         case 'parent-object':
-          parent.children.push(item);
-          break;
         case 'array-parent-objects':
-          parent.children.push(item);
-          break;
+            parent.children.push(item);
+            break;
+        case 'folder':
+            this.decodeChildrenFromJson(jsonObject[item.$label], item.schema, item.jsonPath, parent);
+            parent.hidden_children.push(item);
+            break;
         case 'hidden':
         case 'pool-dropdown-select-tag':
         case 'dropdown-select-tag':
@@ -94,7 +96,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
           break;
         case 'sub-object':
           // Decode the sub-object
-          this.decodeChildrenFromJson(item.value, item);
+          this.decodeChildrenFromJson(item.value, item.schema, item.jsonPath, item);
           parent.hidden_children.push(item);
           break;
         default:
@@ -106,9 +108,8 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     const processArray = (array: any[]): void => {
       array.forEach((itemValue, index) => {
         let itemSchema = this.resolveRef(schema.items, this.rootSchema);
-        
 
-        const item = createItem(index.toString(), itemSchema, parent.jsonPath.concat(index.toString()), itemValue?.$label);
+        const item = createItem(index.toString(), itemSchema, parentPath.concat(index.toString()), itemValue?.$label);
 
         if (itemValue !== undefined) {
           item.value = itemValue;
@@ -126,7 +127,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         if (object.hasOwnProperty(key)) {
           const keyProperties = properties[key];
           const jsonKey = object[key];
-          const item = createItem(key, keyProperties, parent.jsonPath.concat(key), key);
+          const item = createItem(key, keyProperties, parentPath.concat(key), key);
 
           if (jsonKey !== undefined) {
             item.value = jsonKey;
@@ -138,7 +139,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     };
 
     // Check if $tags exists in jsonObject
-    if (jsonObject.$tags) {
+    if (jsonObject?.$tags) {
       parent.$tags.push(...jsonObject.$tags.map((tag: any) => ({
         ...tag,
         $label: this.findObjectByID(tag.$id, jsonObject).$label
@@ -332,10 +333,40 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       return;
     }
 
-    if (!parent.schema.items) {
-      vscode.window.showErrorMessage('Child object can only be created for array with items');
-      return;
+    let jsonPath = parent.jsonPath;
+    let items = parent.schema.items;
+
+    if(parent.schema.type === 'object') {
+      let options: Array<[string, number]> = [];
+      //Check options for creating a child object
+      parent.hidden_children.forEach((child) => {
+        const schema = this.resolveRef(child.schema, this.rootSchema);
+        const type = schema.type;
+        const items = this.resolveRef(schema.items, this.rootSchema);
+        if(items?.format === 'parent-object') {
+          options.push([items.title, parent.hidden_children.indexOf(child)]);
+        }
+      });
+
+      if(options.length === 0) {
+        vscode.window.showWarningMessage('No child object available to create');
+        return;
+      }
+      const optionName = await vscode.window.showQuickPick(options.map(option => option[0]), { placeHolder: 'Select child object to create' });
+
+      if (!optionName) {
+        vscode.window.showWarningMessage('Child object creation cancelled');
+        return;
+      }
+
+      const selectedOption = options.find(option => option[0] === optionName);
+      const selectedChild = parent.hidden_children[selectedOption![1]];
+
+      jsonPath = selectedChild.jsonPath;
+      items = selectedChild.schema.items;
     }
+
+    const rootJSONfile = parent.filePath;
 
     const childName = await vscode.window.showInputBox({ prompt: 'Enter child object name' });
     if (!childName) {
@@ -343,11 +374,8 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       return;
     }
 
-    const rootJSONfile = parent.filePath;
-    const jsonPath = parent.jsonPath;
-
     // Create child object based on schema
-    const [rootJSON,] = this.createChildrenFromSchema(parent.schema.items, rootJSONfile, jsonPath, childName);
+    const [rootJSON,] = this.createChildrenFromSchema(items, rootJSONfile, jsonPath, childName);
 
     try {
       fs.writeFileSync(rootJSONfile, JSON.stringify(rootJSON, null, 2), 'utf-8');

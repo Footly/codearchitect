@@ -37,8 +37,7 @@
       "$ref": "./visibility.schema.json"
     },
     "parameters": {
-      "contentMediaType": "folder",
-      "format": "array-parent-objects",
+      "format": "folder",
       "type": "array",
       "items": {
         "$ref": "./parameter.schema.json"

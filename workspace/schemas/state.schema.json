@@ -15,16 +15,14 @@
     },
     "states": {
       "type": "array",
-      "contentMediaType": "folder",
-      "format": "array-parent-objects",
+      "format": "folder",
       "items": {
         "$ref": "./state.schema.json"
       }
     },
     "transitions": {
       "type": "array",
-      "contentMediaType": "folder",
-      "format": "array-parent-objects",
+      "format": "folder",
       "items": {
         "$ref": "./transition.schema.json"
       }

@@ -14,8 +14,7 @@
       "format": "hidden"
     },
     "members": {
-      "contentMediaType": "folder",
-      "format": "array-parent-objects",
+      "format": "folder",
       "type": "array",
       "items": {
         "$ref": "./enummember.schema.json"

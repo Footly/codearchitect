@@ -23,48 +23,42 @@
     },
     "variables": {
       "type": "array",
-      "contentMediaType": "folder",
-      "format": "array-parent-objects",
+      "format": "folder",
       "items": {
         "$ref": "./variable.schema.json"
       }
     },
     "funcions": {
       "type": "array",
-      "contentMediaType": "folder",
-      "format": "array-parent-objects",
+      "format": "folder",
       "items": {
         "$ref": "./funcio.schema.json"
       }
     },
     "datastructures": {
       "type": "array",
-      "contentMediaType": "folder",
-      "format": "array-parent-objects",
+      "format": "folder",
       "items": {
         "$ref": "./datastructure.schema.json"
       }
     },
     "typedefs": {
       "type": "array",
-      "contentMediaType": "folder",
-      "format": "array-parent-objects",
+      "format": "folder",
       "items": {
         "$ref": "./typedefs.schema.json"
       }
     },
     "enumerators": {
       "type": "array",
-      "contentMediaType": "folder",
-      "format": "array-parent-objects",
+      "format": "folder",
       "items": {
         "$ref": "./enumerator.schema.json"
       }
     },
     "hsm": {
       "type": "array",
-      "contentMediaType": "folder",
-      "format": "array-parent-objects",
+      "format": "folder",
       "items": {
         "$ref": "./hsm.schema.json"
       }

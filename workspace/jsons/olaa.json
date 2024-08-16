@@ -1,0 +1,293 @@
+{
+  "$id": "dc67c275-8562-4cda-9a79-27f090ae0725",
+  "$label": "olaa",
+  "Classes": [
+    {
+      "$id": "ecde0312-34d7-41eb-ae26-77d6e06eee8e",
+      "$label": "wifiAO",
+      "requirements": [],
+      "variables": [
+        {
+          "$id": "47944ef0-4671-4c1e-a34b-4705dfc66494",
+          "$label": "variable",
+          "datatype": "",
+          "visibility": "private",
+          "isArray": "",
+          "isPointer": true,
+          "isVolatile": true,
+          "isConst": true,
+          "$tag": [
+            "*",
+            "variable"
+          ]
+        },
+        {
+          "$id": "d1f9c698-4a1e-4891-97d5-9579e973298a",
+          "$label": "funcioA",
+          "datatype": "",
+          "visibility": "private",
+          "isArray": "50",
+          "isPointer": true,
+          "isVolatile": true,
+          "isConst": true,
+          "$tag": [
+            "*",
+            "variable"
+          ]
+        }
+      ],
+      "funcions": [
+        {
+          "$id": "e0d9213c-9162-44d9-974e-c625cf8eb09c",
+          "$label": "patata",
+          "returntype": {
+            "datatype": "",
+            "isPointer": false,
+            "isConst": false
+          },
+          "visibility": "",
+          "parameters": [],
+          "$tag": [
+            "*",
+            "funcions"
+          ]
+        },
+        {
+          "$id": "979fd8ee-6c9f-41da-8af8-013b7bb64e1f",
+          "$label": "dasda",
+          "returntype": {
+            "datatype": "",
+            "isPointer": false,
+            "isConst": false
+          },
+          "visibility": "",
+          "parameters": [
+            {
+              "$id": "6e226be7-7edc-448f-bdcd-e268a332ecbe",
+              "$label": "we4tr345t",
+              "datatype": "",
+              "isArray": "",
+              "isPointer": false,
+              "pointerDirection": "",
+              "isPointerToConst": false,
+              "isConstPointer": false
+            }
+          ],
+          "$tag": [
+            "*",
+            "funcions"
+          ]
+        }
+      ],
+      "datastructures": [
+        {
+          "$id": "f77067ad-8851-4d71-bccf-d4991f186ac5",
+          "$label": "rtyhhrte",
+          "type": "struct",
+          "members": [
+            {
+              "$id": "3418ebd7-7a36-4ef7-8bcf-7e366f26ffe4",
+              "$label": "daefrh",
+              "datatype": "",
+              "isArray": "",
+              "isPointer": false,
+              "isVolatile": false,
+              "isConst": false
+            }
+          ],
+          "$tag": [
+            "*",
+            "types"
+          ]
+        }
+      ],
+      "typedefs": [
+        {
+          "$id": "6419f902-23bb-42b6-87d3-3a7f25183e4b",
+          "$label": "coca",
+          "datatype": "",
+          "$tag": [
+            "*",
+            "types"
+          ]
+        }
+      ],
+      "enumerators": [
+        {
+          "$id": "f0286aec-5900-41e1-bff3-136e14152cf7",
+          "$label": "enumerator",
+          "members": [
+            {
+              "$id": "bdab0c7d-abb6-46ab-9559-2c79b85cf9af",
+              "$label": "HAHA",
+              "value": ""
+            }
+          ],
+          "$tag": [
+            "*",
+            "types"
+          ]
+        }
+      ],
+      "hsm": [
+        {
+          "$id": "8bd11688-03f5-4344-b819-685ce2d1ea7d",
+          "$label": "sadasd",
+          "states": [
+            {
+              "$id": "e8d158c4-0d59-47b7-b7ef-4acc82e1d4d9",
+              "$label": "Top",
+              "states": [
+                {
+                  "$id": "520b5fda-23ee-4215-a792-b3779e896e2e",
+                  "$label": "Active",
+                  "states": [],
+                  "transitions": [
+                    {
+                      "$id": "948e56b3-23ad-4dc4-b3c2-e2fefd0fa58e",
+                      "$label": "OFFLINE",
+                      "to": "a7cfaa51-c67c-49d8-b144-f5ecd1d695ac",
+                      "$tag": [
+                        "*",
+                        "transition"
+                      ],
+                      "$tags": []
+                    }
+                  ],
+                  "$tag": [
+                    "*",
+                    "state"
+                  ],
+                  "$tags": []
+                },
+                {
+                  "$id": "a7cfaa51-c67c-49d8-b144-f5ecd1d695ac",
+                  "$label": "WTF",
+                  "states": [],
+                  "transitions": [],
+                  "$tag": [
+                    "*",
+                    "state"
+                  ],
+                  "$tags": []
+                }
+              ],
+              "transitions": [],
+              "$tag": [
+                "*",
+                "state"
+              ],
+              "$tags": []
+            }
+          ],
+          "$tag": [
+            "*",
+            "hsm"
+          ],
+          "$tags": []
+        }
+      ],
+      "$tag": [
+        "*",
+        "class"
+      ],
+      "$tags": [
+        {
+          "$tag": [
+            "*",
+            "types"
+          ],
+          "$id": "f77067ad-8851-4d71-bccf-d4991f186ac5"
+        },
+        {
+          "$tag": [
+            "*",
+            "types"
+          ],
+          "$id": "6419f902-23bb-42b6-87d3-3a7f25183e4b"
+        },
+        {
+          "$tag": [
+            "*",
+            "funcions"
+          ],
+          "$id": "e0d9213c-9162-44d9-974e-c625cf8eb09c"
+        },
+        {
+          "$tag": [
+            "*",
+            "variable"
+          ],
+          "$id": "47944ef0-4671-4c1e-a34b-4705dfc66494"
+        },
+        {
+          "$tag": [
+            "*",
+            "variable"
+          ],
+          "$id": "d1f9c698-4a1e-4891-97d5-9579e973298a"
+        },
+        {
+          "$tag": [
+            "*",
+            "funcions"
+          ],
+          "$id": "979fd8ee-6c9f-41da-8af8-013b7bb64e1f"
+        },
+        {
+          "$tag": [
+            "*",
+            "types"
+          ],
+          "$id": "f0286aec-5900-41e1-bff3-136e14152cf7"
+        }
+      ]
+    }
+  ],
+  "Requirements": [],
+  "Primitive Types": [],
+  "$tags": [
+    {
+      "$tag": [
+        "*",
+        "class"
+      ],
+      "$id": "ecde0312-34d7-41eb-ae26-77d6e06eee8e"
+    },
+    {
+      "$tag": [
+        "*",
+        "hsm"
+      ],
+      "$id": "8bd11688-03f5-4344-b819-685ce2d1ea7d"
+    },
+    {
+      "$tag": [
+        "*",
+        "state"
+      ],
+      "$id": "e8d158c4-0d59-47b7-b7ef-4acc82e1d4d9"
+    },
+    {
+      "$tag": [
+        "*",
+        "state"
+      ],
+      "$id": "520b5fda-23ee-4215-a792-b3779e896e2e"
+    },
+    {
+      "$tag": [
+        "*",
+        "transition"
+      ],
+      "$id": "948e56b3-23ad-4dc4-b3c2-e2fefd0fa58e"
+    },
+    {
+      "$tag": [
+        "*",
+        "state"
+      ],
+      "$id": "a7cfaa51-c67c-49d8-b144-f5ecd1d695ac"
+    }
+  ]
+}

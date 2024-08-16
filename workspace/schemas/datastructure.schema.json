@@ -19,8 +19,7 @@
       "enum": ["struct", "union"]
     },
     "members": {
-      "contentMediaType": "folder",
-      "format": "array-parent-objects",
+      "format": "folder",
       "type": "array",
       "items": {
         "$ref": "./datamember.schema.json"
