@@ -148,6 +148,11 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     return schema;
   }
 
+  getParent(element: Item): vscode.ProviderResult<Item> {
+    //TO DO! IMPLEMENT REVEAL API
+    return null;
+  }
+
   getTreeItem(element: Item): vscode.TreeItem {
     // Get the parent item's JSON file
     const parentJSON = JSON.parse(fs.readFileSync(element.filePath, 'utf-8')); // Read the parent JSON file
@@ -322,10 +327,8 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       });
 
       return ParentItems;
-      //return ParentItems.filter(item => item.visible); // Filter by visibility
     } else {
       return element.children;
-      //return children.filter(item => item.visible); // Filter by visibility
     }
   }
 

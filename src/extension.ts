@@ -105,7 +105,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const addItemCommand = vscode.commands.registerCommand('codearchitect.addItem', async (item) => {
 		await itemTreeProvider.createChildFrom(item);
-
+		//TO DO! IMPLEMENT REVEAL API Wait for the item to be created
+		//TO DO! IMPLEMENT REVEAL API await new Promise(resolve => setTimeout(resolve, 100));
+		//TO DO! IMPLEMENT REVEAL API itemTreeView?.reveal(item, { focus: true, select: true , expand: true });
 	});
 
 	const propertiesProvider = vscode.window.registerWebviewViewProvider('codearchitect-properties', {
