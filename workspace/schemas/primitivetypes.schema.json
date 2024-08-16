@@ -15,8 +15,20 @@
     },
     "$tag": {
       "format": "hidden",
-      "type": "array",
-      "const": ["*", "primitivetypes", "types"]
+      "type": "object",
+      "properties": {
+        "$filter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "const": ["*", "primitivetypes", "types"]
+        },
+        "$scope": {
+          "type": "string",
+          "const": "global"
+        }
+      }
     }
   }
 }

@@ -46,11 +46,20 @@
     },
     "$tag": {
       "format": "hidden",
-      "type": "array",
-      "const": [
-        "*",
-        "funcions"
-      ]
+      "type": "object",
+      "properties": {
+        "$filter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "const": ["*", "funcions"]
+        },
+        "$scope": {
+          "type": "string",
+          "const": "parent"
+        }
+      }
     }
   }
 }

@@ -1,0 +1,144 @@
+{
+  "$id": "ae4cfaa8-8284-4d48-b788-5cb3bf8a32a8",
+  "$label": "benge",
+  "Classes": [
+    {
+      "$id": "57e64eff-72e9-4eed-9b4d-d2a92d1bc051",
+      "$label": "d",
+      "requirements": [],
+      "variables": [],
+      "funcions": [],
+      "datastructures": [],
+      "typedefs": [],
+      "enumerators": [],
+      "hsm": [
+        {
+          "$id": "e1ac1a96-4d85-4429-a2e7-5a692a40566c",
+          "$label": "wifiSM",
+          "states": [
+            {
+              "$id": "8f533e57-e6f3-4813-8b48-120c62145286",
+              "$label": "Super",
+              "states": [
+                {
+                  "$id": "5051685f-6317-4f3e-b300-355eb7795bef",
+                  "$label": "Idle",
+                  "states": [],
+                  "transitions": [],
+                  "$tag": [
+                    "*",
+                    "state"
+                  ],
+                  "$tags": []
+                },
+                {
+                  "$id": "6201d719-dcff-4660-abd9-ce2e68799802",
+                  "$label": "Active",
+                  "states": [
+                    {
+                      "$id": "797aba27-0443-4123-bbfd-d54501ddb610",
+                      "$label": "Connecting",
+                      "states": [],
+                      "transitions": [
+                        {
+                          "$id": "1d05291e-d5d2-4b11-9b9c-9fa0a4c7c511",
+                          "$label": "OFF",
+                          "to": "8f533e57-e6f3-4813-8b48-120c62145286",
+                          "$tag": [
+                            "*",
+                            "transition"
+                          ],
+                          "$tags": []
+                        }
+                      ],
+                      "$tag": [
+                        "*",
+                        "state"
+                      ],
+                      "$tags": []
+                    }
+                  ],
+                  "transitions": [],
+                  "$tag": [
+                    "*",
+                    "state"
+                  ],
+                  "$tags": []
+                }
+              ],
+              "transitions": [],
+              "$tag": [
+                "*",
+                "state"
+              ],
+              "$tags": []
+            }
+          ],
+          "$tag": [
+            "*",
+            "hsm"
+          ],
+          "$tags": []
+        }
+      ],
+      "$tag": [
+        "*",
+        "class"
+      ],
+      "$tags": []
+    }
+  ],
+  "Requirements": [],
+  "Primitive Types": [],
+  "$tags": [
+    {
+      "$tag": [
+        "*",
+        "class"
+      ],
+      "$id": "57e64eff-72e9-4eed-9b4d-d2a92d1bc051"
+    },
+    {
+      "$tag": [
+        "*",
+        "hsm"
+      ],
+      "$id": "e1ac1a96-4d85-4429-a2e7-5a692a40566c"
+    },
+    {
+      "$tag": [
+        "*",
+        "state"
+      ],
+      "$id": "8f533e57-e6f3-4813-8b48-120c62145286"
+    },
+    {
+      "$tag": [
+        "*",
+        "state"
+      ],
+      "$id": "5051685f-6317-4f3e-b300-355eb7795bef"
+    },
+    {
+      "$tag": [
+        "*",
+        "state"
+      ],
+      "$id": "6201d719-dcff-4660-abd9-ce2e68799802"
+    },
+    {
+      "$tag": [
+        "*",
+        "state"
+      ],
+      "$id": "797aba27-0443-4123-bbfd-d54501ddb610"
+    },
+    {
+      "$tag": [
+        "*",
+        "transition"
+      ],
+      "$id": "1d05291e-d5d2-4b11-9b9c-9fa0a4c7c511"
+    }
+  ]
+}

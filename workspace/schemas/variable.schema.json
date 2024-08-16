@@ -40,11 +40,20 @@
     },
     "$tag": {
       "format": "hidden",
-      "type": "array",
-      "const": [
-        "*",
-        "variable"
-      ]
+      "type": "object",
+      "properties": {
+        "$filter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "const": ["*", "variable"]
+        },
+        "$scope": {
+          "type": "string",
+          "const": "parent"
+        }
+      }
     }
   }
 }

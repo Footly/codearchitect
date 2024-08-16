@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { ItemTreeProvider, Item } from './tree';
 import $RefParser from "@apidevtools/json-schema-ref-parser";
+import { decode } from 'punycode';
 
 let schema: any; // Declare the schema variable at the top level
 let itemTreeProvider: ItemTreeProvider; // Declare the itemTreeProvider variable at the top level
@@ -10,8 +11,6 @@ let webviewPanel: vscode.WebviewView | undefined; // To keep a reference to the 
 let itemTreeView: vscode.TreeView<Item> | undefined; // To keep a reference to the tree view
 
 export function activate(context: vscode.ExtensionContext) {
-	console.log('Congratulations, your extension "codearchitect" is now active!');
-
 	const config = vscode.workspace.getConfiguration('codearchitect');
 	const pathFileProfile = config.get<string>('pathFileProfile', '');
 	const pathProjects = config.get<string>('pathProjects', '');
@@ -30,6 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
 					vscode.window.showInformationMessage('JSON Schema validated successfully!');
 					itemTreeProvider = new ItemTreeProvider(pathProjects, schema);
 					itemTreeView = vscode.window.createTreeView('codearchitect-treeview', { treeDataProvider: itemTreeProvider });
+					//Implement selection of items
 				} catch (err) {
 					vscode.window.showErrorMessage('Error parsing the JSON Schema.');
 				}
@@ -105,14 +105,7 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	const editObjectCommand = vscode.commands.registerCommand('codearchitect.editObject', async (item: Item) => {
-		console.log('Edit object command called');
-		// Get the item
-		
-		itemTreeView?.reveal(item, { select: true, focus: true , expand: true });
-		//Wait for 250ms to make sure the tree view is expanded
-		await new Promise(resolve => setTimeout(resolve, 250));
-		const cachedItem = itemTreeProvider.getCachedItem(item.filePath, item.jsonPath);
-		const itemCopy = JSON.parse(JSON.stringify(cachedItem));
+		const itemCopy = JSON.parse(JSON.stringify(item));
 		itemCopy.children = itemCopy.children.concat(itemCopy.hidden_children);
 		if (webviewPanel) {
 			webviewPanel.webview.postMessage({ command: 'editObject', item: itemCopy });
@@ -131,12 +124,9 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 async function dereferenceSchema(pathFileProfile: string) {
-	console.log('Dereferencing the JSON Schema file...');
 	try {
-		schema = await $RefParser.dereference(pathFileProfile); // Assign the dereferenced schema to the variable
+		schema = await $RefParser.bundle(pathFileProfile);
 		vscode.window.showInformationMessage('Schema dereferenced successfully!');
-		//Console.log the dereferenced schema
-		console.log(schema);
 	} catch (err) {
 		vscode.window.showErrorMessage('Error dereferencing the JSON Schema file.');
 	}
@@ -160,11 +150,8 @@ function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri) {
 function handleMessage(message: any) {
 	//// Handle the message received from the webview
 	//// You can perform actions based on the message content
-	console.log('Message received from webview:', message);
-	console.log('Message command:', message.command);
 	if (message.command === 'saveObject') {
 		// Handle the objectEdited command
-		console.log('Object saved:', message.item);
 		// Call the saveObject method from the tree.ts file
 		itemTreeProvider.updateItem(message.item);
 	}

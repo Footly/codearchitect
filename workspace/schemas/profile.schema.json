@@ -49,9 +49,6 @@
               "$ref": "./tags.schema.json"
             }
           },
-          "$label": {
-            "type": "string"
-          },
           "$id": {
             "type": "string"
           }

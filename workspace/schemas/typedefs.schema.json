@@ -20,11 +20,20 @@
     },
     "$tag": {
       "format": "hidden",
-      "type": "array",
-      "const": [
-        "*",
-        "types"
-      ]
+      "type": "object",
+      "properties": {
+        "$filter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "const": ["*", "types"]
+        },
+        "$scope": {
+          "type": "string",
+          "const": "parent"
+        }
+      }
     }
   }
 }

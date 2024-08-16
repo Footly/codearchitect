@@ -8,6 +8,8 @@
     "types",
     "primitivetypes",
     "variables",
-    "funcions"
+    "funcions",
+    "hsm",
+    "state"
   ]
 }

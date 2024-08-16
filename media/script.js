@@ -38,6 +38,27 @@ document.addEventListener('DOMContentLoaded', () => {
     vscode.postMessage({ command: 'webviewReady' });
 });
 
+function resolveRef(schema, root_schema) {
+  for (const key in schema) {
+    if (key === "$ref") {
+      const ref = schema["$ref"].split("/");
+      //Discard the first element
+      ref.shift();
+      //Convert all %24 to $ using map
+      const ref_keys = ref.map((item) => item.replace(/%24/g, "$"));
+      //Get the root schema
+      let current_schema = root_schema;
+      //Loop through the ref_keys
+      for (const ref_key of ref_keys) {
+        current_schema = current_schema[ref_key];
+      }
+      schema = current_schema;
+    }
+  }
+  return schema;
+}
+
+
 // Helper functions
 
 function createTitleContainer(item, vscode) {
@@ -46,7 +67,7 @@ function createTitleContainer(item, vscode) {
     container.style.alignItems = 'center';
 
     const title = document.createElement('h2');
-    title.textContent = item.label;
+    title.textContent = item.$label;
 
     const editButton = document.createElement('button');
     editButton.innerHTML = '&#9998;';
@@ -95,17 +116,18 @@ function handleTitleInputFocusOut(title, titleInput, item, container) {
 function updateTitle(title, titleInput, item, container) {
     title.textContent = titleInput.value;
     container.replaceChild(title, titleInput);
-    item.label = title.textContent;
+    item.$label = title.textContent;
 
     // Update child items if needed
     item.children.forEach(child => {
-        if (child.label === 'label') {
+        if (child.$label === '$label') {
             child.value = title.textContent;
         }
     });
 }
 
 function renderChild(child, div) {
+    console.log(child);
     const format = child.schema.format;
     switch (format) {
         case 'sub-object':
@@ -129,13 +151,20 @@ function renderChild(child, div) {
         case 'pool-dropdown-select-tag':
             renderPoolDropdownSelectTag(child, div);
             break;
+        case 'text-area':
+            renderTextArea(child, div);
+        case 'hidden':
+            break;
+        default:
+            console.error(`Unsupported format: ${format}`);
+            break;
     }
 }
 
 function renderInputString(child, div) {
-    const label = document.createElement('label');
-    label.textContent = child.label;
-    div.appendChild(label);
+    const $label = document.createElement('label');
+    $label.textContent = child.$label;
+    div.appendChild($label);
 
     const input = document.createElement('input');
     input.type = 'text';
@@ -147,15 +176,32 @@ function renderInputString(child, div) {
         child.value = event.target.value;
     });
 }
+function renderTextArea(child, div) {
+    const $label = document.createElement('label');
+    $label.textContent = child.$label;
+    div.appendChild($label);
+
+    const textarea = document.createElement('textarea');
+    textarea.value = child.value;
+    textarea.style.marginBottom = '10px';
+    textarea.style.width = '100%'; // Set textarea width to 100% of the parent div
+    textarea.style.height = '100%'; // Set textarea height to 100% of the parent div
+    textarea.style.resize = 'vertical'; // Allow vertical resizing
+    div.appendChild(textarea);
+
+    textarea.addEventListener('input', (event) => {
+        child.value = event.target.value;
+    });
+}
 
 function renderCheckbox(child, div) {
     const checkboxContainer = document.createElement('div');
     checkboxContainer.style.display = 'flex';
     checkboxContainer.style.alignItems = 'center';
 
-    const label = document.createElement('label');
-    label.textContent = child.label;
-    checkboxContainer.appendChild(label);
+    const $label = document.createElement('label');
+    $label.textContent = child.$label;
+    checkboxContainer.appendChild($label);
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
@@ -171,9 +217,9 @@ function renderCheckbox(child, div) {
 }
 
 function renderDropdownSelect(child, div) {
-    const label = document.createElement('label');
-    label.textContent = child.label;
-    div.appendChild(label);
+    const $label = document.createElement('label');
+    $label.textContent = child.$label;
+    div.appendChild($label);
 
     const select = document.createElement('select');
     select.style.marginBottom = '10px';
@@ -197,9 +243,9 @@ function renderDropdownSelect(child, div) {
 
 
 function renderDropdownSelectTag(child, div) {
-    const label = document.createElement('label');
-    label.textContent = child.label;
-    div.appendChild(label);
+    const $label = document.createElement('label');
+    $label.textContent = child.$label;
+    div.appendChild($label);
 
     const select = document.createElement('select');
     select.style.marginBottom = '10px';
@@ -209,12 +255,12 @@ function renderDropdownSelectTag(child, div) {
     const tags_filter = child.schema.const;
 
     // Filter in child.$tags only the objects that contain the tags_filter
-    const tags = child.$tags.filter(tag => tag.tag.some(t => tags_filter.includes(t)));
+    const tags = child.$tags.filter(tag => tag.$tag.some(t => tags_filter.includes(t)));
 
     tags.forEach(tag => {
         const optionElement = document.createElement('option');
         optionElement.value = tag.$id;
-        optionElement.textContent = tag.label;
+        optionElement.textContent = tag.$label;
         select.appendChild(optionElement);
     });
     
@@ -231,10 +277,10 @@ function renderPoolDropdownSelect(child, div) {
     containerDiv.style.marginBottom = '10px'; // Add margin
     div.appendChild(containerDiv);
 
-    // Create and append the label
-    const label = document.createElement('label');
-    label.textContent = child.label;
-    containerDiv.appendChild(label);
+    // Create and append the $label
+    const $label = document.createElement('label');
+    $label.textContent = child.$label;
+    containerDiv.appendChild($label);
 
     // Create and append the input field for searching
     const input = document.createElement('input');
@@ -344,10 +390,10 @@ function renderPoolDropdownSelectTag(child, div) {
     containerDiv.style.marginBottom = '10px'; // Add margin
     div.appendChild(containerDiv);
 
-    // Create and append the label
-    const label = document.createElement('label');
-    label.textContent = child.label;
-    containerDiv.appendChild(label);
+    // Create and append the $label
+    const $label = document.createElement('label');
+    $label.textContent = child.$label;
+    containerDiv.appendChild($label);
 
     // Create and append the input field for searching
     const input = document.createElement('input');
@@ -396,10 +442,10 @@ function renderPoolDropdownSelectTag(child, div) {
     function updateSuggestions(input, suggestionsDiv, selectedItemsDiv, selectedValues, child) {
         const query = input.value.toLowerCase();
         const tagsFilter = child.schema.items.const;
-        const tags = child.$tags.filter(tag => tag.tag.some(t => tagsFilter.includes(t)));
+        const tags = child.$tags.filter(tag => tag.$tag.some(t => tagsFilter.includes(t)));
         const filteredTags = tags
-            .filter(tag => tag.label.toLowerCase().includes(query) && !selectedValues.includes(tag.$id))
-            .map(tag => tag.label);
+            .filter(tag => tag.$label.toLowerCase().includes(query) && !selectedValues.includes(tag.$id))
+            .map(tag => tag.$label);
         renderSuggestions(suggestionsDiv, filteredTags, selectedItemsDiv, selectedValues, child);
     }
 
@@ -415,7 +461,7 @@ function renderPoolDropdownSelectTag(child, div) {
     }
 
     function handleSuggestionClick(optionLabel, suggestionsDiv, selectedItemsDiv, selectedValues, child) {
-        const tag = child.$tags.find(tag => tag.label === optionLabel);
+        const tag = child.$tags.find(tag => tag.$label === optionLabel);
         if (tag && tag.$id) {
             selectedValues.push(tag.$id);
             renderSelectedItems(selectedItemsDiv, selectedValues, child);
@@ -432,7 +478,7 @@ function renderPoolDropdownSelectTag(child, div) {
                 itemDiv.className = 'selected-item';
 
                 const itemLabel = document.createElement('span');
-                itemLabel.textContent = tag.label;
+                itemLabel.textContent = tag.$label;
                 itemDiv.appendChild(itemLabel);
 
                 const removeButton = document.createElement('button');
@@ -466,12 +512,14 @@ function renderSubObjectChild(child, div) {
     subObjectDiv.style.marginBottom = '10px';
     div.appendChild(subObjectDiv);
 
-    const label = document.createElement('h3');
-    label.textContent = child.label;
-    subObjectDiv.appendChild(label);
+    const $label = document.createElement('h3');
+    $label.textContent = child.$label;
+    subObjectDiv.appendChild($label);
 
     child.hidden_children.forEach(subChild => {
         renderChild(subChild, subObjectDiv);
+        //Copy subchild into child
+        child.children.push(subChild);
     });
 }
 

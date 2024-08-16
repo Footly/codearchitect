@@ -1,9 +1,9 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "title": "Class",
+  "title": "State",
+  "contentMediaType": "window",
   "format": "parent-object",
-  "contentMediaType": "symbol-class",
   "properties": {
     "$id": {
       "type": "string",
@@ -13,60 +13,20 @@
       "type": "string",
       "format": "hidden"
     },
-    "requirements": {
-      "type": "array",
-      "format": "pool-dropdown-select-tag",
-      "items": {
-        "$ref": "./tags.schema.json",
-        "const": ["reqs"]
-      }
-    },
-    "variables": {
+    "states": {
       "type": "array",
       "contentMediaType": "folder",
       "format": "array-parent-objects",
       "items": {
-        "$ref": "./variable.schema.json"
+        "$ref": "./state.schema.json"
       }
     },
-    "funcions": {
+    "transitions": {
       "type": "array",
       "contentMediaType": "folder",
       "format": "array-parent-objects",
       "items": {
-        "$ref": "./funcio.schema.json"
-      }
-    },
-    "datastructures": {
-      "type": "array",
-      "contentMediaType": "folder",
-      "format": "array-parent-objects",
-      "items": {
-        "$ref": "./datastructure.schema.json"
-      }
-    },
-    "typedefs": {
-      "type": "array",
-      "contentMediaType": "folder",
-      "format": "array-parent-objects",
-      "items": {
-        "$ref": "./typedefs.schema.json"
-      }
-    },
-    "enumerators": {
-      "type": "array",
-      "contentMediaType": "folder",
-      "format": "array-parent-objects",
-      "items": {
-        "$ref": "./enumerator.schema.json"
-      }
-    },
-    "hsm": {
-      "type": "array",
-      "contentMediaType": "folder",
-      "format": "array-parent-objects",
-      "items": {
-        "$ref": "./hsm.schema.json"
+        "$ref": "./transition.schema.json"
       }
     },
     "$tag": {
@@ -78,7 +38,7 @@
           "items": {
             "type": "string"
           },
-          "const": ["*", "class"]
+          "const": ["*", "state"]
         },
         "$scope": {
           "type": "string",

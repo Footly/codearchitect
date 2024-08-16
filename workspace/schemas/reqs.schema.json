@@ -14,13 +14,26 @@
       "format": "hidden"
     },
     "description": {
-      "format": "input-string",
+      "format": "text-area",
       "type": "string"
     },
+
     "$tag": {
       "format": "hidden",
-      "type": "array",
-      "const": ["*", "reqs"]
+      "type": "object",
+      "properties": {
+        "$filter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "const": ["*", "reqs"]
+        },
+        "$scope": {
+          "type": "string",
+          "const": "global"
+        }
+      }
     }
   }
 }
