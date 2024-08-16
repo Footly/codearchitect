@@ -1,15 +1,20 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "profile.schema.json",
   "title": "Project",
   "contentMediaType": "symbol-method",
   "type": "object",
-  "format": "parent-object",
+  "format": "root-object",
   "properties": {
     "$id": {
       "type": "string",
       "format": "hidden"
     },
     "$label": {
+      "type": "string",
+      "format": "hidden"
+    },
+    "$schema": {
       "type": "string",
       "format": "hidden"
     },

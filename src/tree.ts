@@ -4,16 +4,127 @@ import * as path from 'path';
 import { randomUUID } from 'crypto';
 import { json } from 'stream/consumers';
 
+export class JsonEditor {
+  private undoStack: string[] = [];
+  private redoStack: string[] = [];
+  private currentContent: string = '';
+  private currentUndoIndex: number = -1; // Keeps track of the current position in the undo stack
+  private isInUndoRedoOperation: boolean = false; // Flag to indicate if an undo/redo operation is in progress
+
+  constructor(private jsonFilePath: string) {
+    // Initialize current content with the file's content
+    this.currentContent = fs.readFileSync(this.jsonFilePath, 'utf-8');
+    this.undoStack.push(this.currentContent);
+    this.currentUndoIndex = 0;
+
+    // Subscribe to document changes
+    vscode.workspace.onDidChangeTextDocument(this.onDidChangeTextDocument, this);
+  }
+
+  private onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent) {
+    if (event.document.fileName.toLowerCase() === this.jsonFilePath.toLowerCase()) {
+      if (this.isInUndoRedoOperation) {
+        this.isInUndoRedoOperation = false;
+        return; // Skip processing if an undo/redo operation is in progress
+      }
+
+      // Remove any redo entries as new change happened
+      this.redoStack = [];
+
+      // Update undo stack and current content
+      this.currentContent = event.document.getText();
+      if (this.currentUndoIndex === this.undoStack.length - 1) {
+        // Append new change to the end of the undo stack
+        this.undoStack.push(this.currentContent);
+      } else {
+        // Replace the current position with new change
+        this.undoStack[this.currentUndoIndex + 1] = this.currentContent;
+        // Remove entries after the current position
+        this.undoStack = this.undoStack.slice(0, this.currentUndoIndex + 2);
+      }
+      this.currentUndoIndex = this.undoStack.length - 1;
+    }
+  }
+
+  public undo(): boolean {
+    if (this.currentUndoIndex > 0) {
+      this.isInUndoRedoOperation = true; // Start undo/redo operation
+
+      // Move current content to redo stack
+      this.redoStack.push(this.currentContent);
+
+      // Move one step back in the undo stack
+      this.currentUndoIndex--;
+      this.currentContent = this.undoStack[this.currentUndoIndex];
+      this.writeContentToFile(this.currentContent);
+      return true;
+    } else {
+      vscode.window.showInformationMessage('Nothing to undo');
+      return false;
+    }
+  }
+
+  public redo(): boolean {
+    if (this.redoStack.length > 0) {
+      this.isInUndoRedoOperation = true; // Start undo/redo operation
+
+      // Move current content to undo stack
+      this.undoStack.push(this.currentContent);
+      this.currentUndoIndex++;
+
+      // Move one step forward in the redo stack
+      this.currentContent = this.redoStack.pop()!;
+      this.writeContentToFile(this.currentContent);
+      return true;
+    } else {
+      vscode.window.showInformationMessage('Nothing to redo');
+      return false;
+    }
+  }
+
+  private writeContentToFile(content: string) {
+    fs.writeFileSync(this.jsonFilePath, content, 'utf-8');
+    this.refreshFile();
+  }
+
+  private refreshFile() {
+    const document = vscode.workspace.textDocuments.find(doc => doc.uri.fsPath === this.jsonFilePath);
+    if (document) {
+      const edit = new vscode.WorkspaceEdit();
+      const fullRange = new vscode.Range(
+        document.positionAt(0),
+        document.positionAt(document.getText().length)
+      );
+      edit.replace(document.uri, fullRange, this.currentContent);
+      vscode.workspace.applyEdit(edit);
+    }
+  }
+}
+
 export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
 
   private _onDidChangeTreeData: vscode.EventEmitter<Item | undefined | void> = new vscode.EventEmitter<Item | undefined | void>();
   readonly onDidChangeTreeData: vscode.Event<Item | undefined | void> = this._onDidChangeTreeData.event;
+  private editors: Map<string, JsonEditor> = new Map();
 
-  constructor(private rootPath: string, private rootSchema: any) {
+  constructor(private rootPath: string, private schemas: any[]) {
+    this.refresh();
   }
 
   refresh(): void {
     this._onDidChangeTreeData.fire();
+  }
+
+  navigateBack(item: Item): void {
+    if (this.editors.get(item.filePath)?.undo()) {
+      this.refresh();
+    }
+  }
+
+  navigateForward(item: Item): void {
+    if (this.editors.get(item.filePath)?.redo()) {
+      this.refresh();
+    }
   }
 
   private resolveRef(schema: any, root_schema: any): any {
@@ -59,15 +170,14 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     let schema = schemaItem;
 
     const createItem = (key: string, keyProperties: any, jsonPath: string[], $label: string): Item => {
-      keyProperties = this.resolveRef(keyProperties, this.rootSchema);
+      keyProperties = this.resolveRef(keyProperties, parent.root_schema);
       return new Item(
         $label,
-        key,
         keyProperties,
         parent.filePath,
         jsonPath,
         vscode.TreeItemCollapsibleState.Collapsed,
-        this.rootSchema
+        parent.root_schema
       );
     };
 
@@ -79,12 +189,13 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       switch (format) {
         case 'parent-object':
         case 'array-parent-objects':
-            parent.children.push(item);
-            break;
+        case 'root-object':
+          parent.children.push(item);
+          break;
         case 'folder':
-            this.decodeChildrenFromJson(jsonObject[item.$label], item.schema, item.jsonPath, parent);
-            parent.hidden_children.push(item);
-            break;
+          this.decodeChildrenFromJson(jsonObject[item.$label], item.schema, item.jsonPath, parent);
+          parent.hidden_children.push(item);
+          break;
         case 'hidden':
         case 'pool-dropdown-select-tag':
         case 'dropdown-select-tag':
@@ -107,7 +218,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
 
     const processArray = (array: any[]): void => {
       array.forEach((itemValue, index) => {
-        let itemSchema = this.resolveRef(schema.items, this.rootSchema);
+        let itemSchema = this.resolveRef(schema.items, parent.root_schema);
 
         const item = createItem(index.toString(), itemSchema, parentPath.concat(index.toString()), itemValue?.$label);
 
@@ -120,8 +231,8 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     };
 
     const processObject = (object: { [key: string]: any }): void => {
-      const properties = this.resolveRef(schema.properties, this.rootSchema);
-      
+      const properties = this.resolveRef(schema.properties, parent.root_schema);
+
 
       for (const key in object) {
         if (object.hasOwnProperty(key)) {
@@ -172,16 +283,43 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       const files = fs.readdirSync(this.rootPath);
       const jsonFiles = files.filter(file => file.endsWith('.json'));
 
+      // Create a new JSON editor for each of the parent JSON files
+      jsonFiles.forEach(file => {
+        const filePath = path.join(this.rootPath, file);
+        if (!this.editors.has(filePath)) {
+          const editor = new JsonEditor(filePath);
+          this.editors.set(filePath, editor);
+        }
+      });
+
       // Get the parent items
-      const ParentItems = jsonFiles.map(file => new Item(
-        path.basename(file, '.json'),
-        this.rootSchema.title,
-        this.rootSchema,
-        path.join(this.rootPath, file), // Pass the parent JSON file path
-        [],  // Root path
-        vscode.TreeItemCollapsibleState.Collapsed,
-        this.rootSchema
-      ));
+      const ParentItems: Item[] = [];
+      jsonFiles.forEach(file => {
+        // Read the JSON file
+        const content = fs.readFileSync(path.join(this.rootPath, file), 'utf-8');
+        //Look for the $schema in the JSON file
+        const rootSchema = JSON.parse(content);
+        //Check if rootSchema has a $schema
+        if (!rootSchema.$schema) {
+          vscode.window.showWarningMessage(`$schema not found for ${file}`);
+          return;
+        }
+        //Check if the $schema is in the schemas
+        const schema = this.schemas.find(schema => schema.$id === rootSchema.$schema);
+        if (!schema) {
+          vscode.window.showWarningMessage(`Schema ${rootSchema.$schema} not found for ${file}`);
+          return;
+        }
+        const item = new Item(
+          path.basename(file, '.json'),
+          schema,
+          path.join(this.rootPath, file), // Pass the parent JSON file path
+          [],  // Root path
+          vscode.TreeItemCollapsibleState.Collapsed,
+          schema
+        );
+        ParentItems.push(item);
+      });
 
       return ParentItems;
       //return ParentItems.filter(item => item.visible); // Filter by visibility
@@ -191,26 +329,28 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     }
   }
 
-  private createChildrenFromSchema(schema: any, rootJSONpath: any, jsonPath: string[] = [], name?: string): [any, { [key: string]: any }] {
+  private createChildrenFromSchema(schema: any, rootSchema: any, rootJSONpath: any, jsonPath: string[] = [], name?: string): [any, { [key: string]: any }] {
     const children: { [key: string]: any } = {};
     let isTag = false;
     let scope = "";
 
-    schema = this.resolveRef(schema, this.rootSchema);
+    schema = this.resolveRef(schema, rootSchema);
 
     //Convert the path to a JSON file and create a variable for the parentJSON
     let rootJSON = JSON.parse(fs.readFileSync(rootJSONpath, 'utf-8'));
 
     for (const key in schema.properties) {
       const jsonPathKey = [...jsonPath];
-      jsonPathKey.push(key); 
-      const property = this.resolveRef(schema.properties[key], this.rootSchema);
+      jsonPathKey.push(key);
+      const property = this.resolveRef(schema.properties[key], rootSchema);
       const type = property.type;
 
       if (key === '$label') {
         children.$label = name || '';
       } else if (key === '$id') {
         children.$id = generateUUID();
+      } else if (key === '$schema') {
+        children.$schema = rootSchema.$id;
       } else if (key === '$tag') {
         children.$tag = property.properties.$filter.const;
         scope = property.properties.$scope.const;
@@ -224,13 +364,13 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       } else if (type === 'array') {
         children[key] = [];
       } else if (type === 'object') {
-        [, children[key]] = this.createChildrenFromSchema(property, rootJSONpath, jsonPathKey);
+        [, children[key]] = this.createChildrenFromSchema(property, rootSchema, rootJSONpath, jsonPathKey);
       } else {
         vscode.window.showWarningMessage(`Type ${type} in property ${key} is not supported`);
       }
     }
 
-    if(!name) {
+    if (!name) {
       return [rootJSON, children];
     }
 
@@ -290,6 +430,33 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       return;
     }
 
+    // Get options from the schemas provided
+    const options: Array<[string, number]> = [];
+
+    this.schemas.forEach((schema, index) => {
+      if (schema.format === 'root-object') {
+        options.push([schema.$id, index]);
+      }
+    });
+
+    if (options.length === 0) {
+      vscode.window.showWarningMessage('No parent object available to create');
+      return;
+    }
+
+    // Show a quick pick dialog to select a schema
+    const optionName = await vscode.window.showQuickPick(options.map(option => option[0]), { placeHolder: 'Select parent object to create' });
+
+    if (!optionName) {
+      vscode.window.showWarningMessage('Parent object creation cancelled');
+      return;
+    }
+
+    const selectedOption = options.find(option => option[0] === optionName);
+
+    // Get the selected schema
+    const rootSchema = this.schemas[selectedOption![1]];
+
     // Ask for the name of the parent object
     const name = await vscode.window.showInputBox({ prompt: 'Enter parent object name' });
     if (!name) {
@@ -299,7 +466,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     }
 
     // Check if type is object
-    if (this.rootSchema.type !== 'object') {
+    if (rootSchema.type !== 'object') {
       vscode.window.showErrorMessage('Parent object can only be created for type object');
       return;
     }
@@ -314,7 +481,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     fs.writeFileSync(rootJSONfile, JSON.stringify(rootJSON, null, 2), 'utf-8');
 
     //Now open the file and write the parent object
-    [rootJSON,] = this.createChildrenFromSchema(this.rootSchema, rootJSONfile, [], name);
+    [rootJSON,] = this.createChildrenFromSchema(rootSchema, rootSchema, rootJSONfile, [], name);
 
     try {
       fs.writeFileSync(rootJSONfile, JSON.stringify(rootJSON, null, 2), 'utf-8');
@@ -336,19 +503,19 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     let jsonPath = parent.jsonPath;
     let items = parent.schema.items;
 
-    if(parent.schema.type === 'object') {
+    if (parent.schema.type === 'object') {
       let options: Array<[string, number]> = [];
       //Check options for creating a child object
       parent.hidden_children.forEach((child) => {
-        const schema = this.resolveRef(child.schema, this.rootSchema);
+        const schema = this.resolveRef(child.schema, parent.root_schema);
         const type = schema.type;
-        const items = this.resolveRef(schema.items, this.rootSchema);
-        if(items?.format === 'parent-object') {
+        const items = this.resolveRef(schema.items, parent.root_schema);
+        if (items?.format === 'parent-object' || items?.format === 'root-object') {
           options.push([items.title, parent.hidden_children.indexOf(child)]);
         }
       });
 
-      if(options.length === 0) {
+      if (options.length === 0) {
         vscode.window.showWarningMessage('No child object available to create');
         return;
       }
@@ -375,7 +542,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     }
 
     // Create child object based on schema
-    const [rootJSON,] = this.createChildrenFromSchema(items, rootJSONfile, jsonPath, childName);
+    const [rootJSON,] = this.createChildrenFromSchema(items, parent.root_schema, rootJSONfile, jsonPath, childName);
 
     try {
       fs.writeFileSync(rootJSONfile, JSON.stringify(rootJSON, null, 2), 'utf-8');
@@ -425,19 +592,6 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     }
   }
 
-  private removeIds(obj: any, rootJSON: any): void {
-    for (const key in obj) {
-      if (key === '$id') {
-        // Remove the $id from the $tags
-        if (rootJSON.$tags) {
-          rootJSON.$tags = rootJSON.$tags.filter((tag: any) => tag.$id !== obj.$id);
-        }
-      } else if (typeof obj[key] === 'object') {
-        this.removeIds(obj[key], rootJSON);
-      }
-    }
-  }
-
   async removeItem(item: Item): Promise<void> {
     if (!this.rootPath) {
       vscode.window.showInformationMessage('No folder or workspace opened');
@@ -451,6 +605,19 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     }
 
     const rootJSON = JSON.parse(fs.readFileSync(item.filePath, 'utf-8'));
+
+    if (item.contextValue === 'root-object') {
+      //Add another prompt to confirm the removal of the root object in the disk
+      const response = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: `The root object ${item.$label}.json will be removed from the disk. Are you sure you want to proceed?` });
+      if (response !== 'Yes') {
+        return;
+      }
+      // Remove the root object
+      fs.unlinkSync(item.filePath);
+      vscode.window.showInformationMessage(`Item ${item.$label} removed successfully!`);
+      this.refresh();
+      return;
+    }
 
     // Drill down to the desired part of the JSON
     let current = rootJSON;
@@ -507,6 +674,13 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
           childCurrent = childCurrent[key];
         }
         const childLastKey = child.jsonPath[child.jsonPath.length - 1];
+        if (child.value !== childCurrent[childLastKey] && childLastKey === '$label' &&
+          item.contextValue === 'root-object') {
+          //Change the name of the file
+          const newFilePath = path.join(this.rootPath, `${child.value}.json`);
+          fs.renameSync(item.filePath, newFilePath);
+          item.filePath = newFilePath;
+        }
         if (child.value !== undefined) {
           childCurrent[childLastKey] = child.value;
         }
@@ -538,15 +712,17 @@ export class Item extends vscode.TreeItem {
 
   constructor(
     public readonly $label: string,
-    public readonly description: string,
     public readonly schema: any,
-    public readonly filePath: string,
+    public filePath: string,
     public readonly jsonPath: string[] = [], // New property to track JSON path
     public collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed,
     public root_schema: any
   ) {
     super($label, collapsibleState);
-    this.description = "";
+    if (this.schema.title) {
+      this.description = this.schema.title;
+      //this.tooltip = this.schema.title;
+    }
 
     if (this.schema?.contentMediaType) {
       this.iconPath = new vscode.ThemeIcon(this.schema.contentMediaType);

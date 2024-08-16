@@ -43,6 +43,21 @@
         "command": "codearchitect.editObject",
         "title": "Edit Object",
         "icon": "$(edit)"
+      },
+      {
+        "command": "codearchitect.navigateBack",
+        "title": "Navigate Back",
+        "icon": "$(arrow-left)"
+      },
+      {
+        "command": "codearchitect.navigateForward",
+        "title": "Navigate Forward",
+        "icon": "$(arrow-right)"
+      },
+      {
+        "command": "codearchitect.lookUp",
+        "title": "Look Up",
+        "icon": "$(search)"
       }
     ],
     "viewsContainers": {
@@ -113,6 +128,36 @@
           "command": "codearchitect.editObject",
           "when": "view == codearchitect-treeview && viewItem == parent-object",
           "group": "inline"
+        },
+        {
+          "command": "codearchitect.editObject",
+          "when": "view == codearchitect-treeview && viewItem == root-object",
+          "group": "inline"
+        },
+        {
+          "command": "codearchitect.addItem",
+          "when": "view == codearchitect-treeview && viewItem == root-object",
+          "group": "inline"
+        },
+        {
+          "command": "codearchitect.removeItem",
+          "when": "view == codearchitect-treeview && viewItem == root-object",
+          "group": "inline"
+        },
+        {
+          "command": "codearchitect.navigateBack",
+          "when": "view == codearchitect-treeview && viewItem == root-object",
+          "group": "inline"
+        },
+        {
+          "command": "codearchitect.navigateForward",
+          "when": "view == codearchitect-treeview && viewItem == root-object",
+          "group": "inline"
+        },
+        {
+          "command": "codearchitect.lookUp",
+          "when": "view == codearchitect-treeview && viewItem == root-object",
+          "group": "inline"
         }
       ]
     },
@@ -120,10 +165,10 @@
       {
         "title": "Code Architect",
         "properties": {
-          "codearchitect.pathFileProfile": {
+          "codearchitect.pathSchema": {
             "type": "string",
             "default": "",
-            "description": "Path to the profile of this project"
+            "description": "Path to where the schemas are located"
           }
         }
       },
