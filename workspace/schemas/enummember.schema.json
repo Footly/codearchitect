@@ -16,6 +16,29 @@
     "value": {
       "format": "input-string",
       "type":"string"
+    },
+    "$link": {
+      "format": "hidden",
+      "type": "object",
+      "properties": {
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "const": ["*", "enummember"]
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scope": {
+          "type": "string",
+          "const": "parent"
+        }
+      }
     }
   }
 }

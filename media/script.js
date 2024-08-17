@@ -23,8 +23,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Render child elements
             message.item.children.forEach(child => {
+                //Copy the $links of the parent to the child
+                child.$links = message.item.$links;
+                //Copy dependencies of the parent to the child
+                child.dependencies = message.item.dependencies;
                 //Copy the tags of the parent to the child
                 renderChild(child, objectDiv, vscode);
+
             });
         }
     });
@@ -318,13 +323,16 @@ function renderDropdownSelectTag(child, div, vscode) {
     // Tag to filter
     const tags_filter = child.schema.const;
 
-    // Filter in child.$tags only the objects that contain the tags_filter
-    const tags = child.$tags.filter(tag => tag.$tag.some(t => tags_filter.includes(t)));
+    // Dependencies to filter
+    const dependencies = child.dependencies;
 
-    tags.forEach(tag => {
+    // Filter in child.$links throuhg the tags_filter
+    const links = child.$links.filter(link => link.$tags.some(t => tags_filter.includes(t))).filter(link => dependencies.includes(link.$id));
+
+    links.forEach(link => {
         const optionElement = document.createElement('option');
-        optionElement.value = tag.$id;
-        optionElement.textContent = tag.$label;
+        optionElement.value = link.$id;
+        optionElement.textContent = link.$label;
         select.appendChild(optionElement);
     });
 
@@ -368,6 +376,10 @@ function renderArrayCreator(child, div, vscode) {
     if (format === 'sub-object') {
         // For children of the array creator
         child.hidden_children.forEach(subChild => {
+            //Copy the $links of the parent to the child
+            subChild.$links = child.$links;
+            //Copy dependencies of the parent to the child
+            subChild.dependencies = child.dependencies;
             renderChild(subChild, arrayCreatorDiv, vscode);
             //Create a remove button in this div
             const removeButton = document.createElement('button');
@@ -396,6 +408,11 @@ function renderArrayCreator(child, div, vscode) {
                     return child.value[child.value.indexOf(value)];
                 }
             });
+
+            //Copy the $links of the parent to the child
+            fake_child.$links = child.$links;
+            //Copy dependencies of the parent to the child
+            fake_child.dependencies = child.dependencies;
 
             renderChild(fake_child, arrayCreatorDiv, vscode);
 
@@ -691,6 +708,10 @@ function renderSubObjectChild(child, div, vscode) {
 
     // Add sub-children to the collapsible content
     child.hidden_children.forEach(subChild => {
+        //Copy the $links of the parent to the child
+        subChild.$links = child.$links;
+        //Copy dependencies of the parent to the child
+        subChild.dependencies = child.dependencies;
         renderChild(subChild, contentDiv, vscode);
         // Copy subchild into child
         child.children.push(subChild);

@@ -13,20 +13,26 @@
       "type": "string",
       "format": "hidden"
     },
-    "$tag": {
+    "$link": {
       "format": "hidden",
       "type": "object",
       "properties": {
-        "$filter": {
+        "tags": {
           "type": "array",
           "items": {
             "type": "string"
           },
           "const": ["*", "primitivetypes", "types"]
         },
-        "$scope": {
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scope": {
           "type": "string",
-          "const": "global"
+          "const": "parent"
         }
       }
     }

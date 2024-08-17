@@ -3,7 +3,6 @@
   "type": "string",
   "enum": [
     "public",
-    "private",
-    "protected"
+    "private"
   ]
 }

@@ -154,6 +154,14 @@ export function activate(context: vscode.ExtensionContext) {
 		await itemTreeView?.reveal(item, {select: true, focus: true });
 		const itemCopy = JSON.parse(JSON.stringify(item));
 		itemCopy.children = itemCopy.children.concat(itemCopy.hidden_children);
+		//Get the rootJSON
+		const rootJSON = item.filePath;
+		//Open and parse the JSON file
+		const $links = JSON.parse(fs.readFileSync(rootJSON, 'utf8')).$links
+		//Add the $links to the item
+		itemCopy.$links = $links;
+		if(itemCopy?.value.$link?.dependencies) itemCopy.dependencies = itemCopy.value.$link.dependencies;
+		else itemCopy.dependencies = [];
 		if (webviewPanel) {
 			webviewPanel.webview.postMessage({ command: 'editObject', item: itemCopy });
 		} else {

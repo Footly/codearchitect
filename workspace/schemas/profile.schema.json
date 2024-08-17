@@ -42,22 +42,30 @@
         "$ref": "./primitivetypes.schema.json"
       }
     },
-    "$tags": {
-      "type": "array",
+    "$link": {
       "format": "hidden",
-      "items": {
-        "type": "object",
-        "properties": {
-          "$tag": {
-            "type": "array",
-            "items": {
-              "$ref": "./tags.schema.json"
-            }
+      "type": "object",
+      "properties": {
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
           },
-          "$id": {
+          "const": ["*"]
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
             "type": "string"
           }
         }
+      }
+    },
+    "$links": {
+      "type": "array",
+      "format": "hidden",
+      "items": {
+        "$ref": "./tags.schema.json"
       }
     }
   }

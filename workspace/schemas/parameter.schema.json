@@ -15,7 +15,7 @@
     },
     "datatype": {
       "format": "dropdown-select-tag",
-      "$ref": "./tags.schema.json",
+      "type": "string",
       "const": ["types"]
     },
     "isArray": {
@@ -38,6 +38,29 @@
     "isConstPointer": {
       "format": "checkbox",
       "type": "boolean"
+    },
+    "$link": {
+      "format": "hidden",
+      "type": "object",
+      "properties": {
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "const": ["*", "parameters"]
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scope": {
+          "type": "string",
+          "const": "parent"
+        }
+      }
     }
   },
   "if": {

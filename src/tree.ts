@@ -209,10 +209,6 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     };
 
     const addItemToParent = (item: Item, format: string): void => {
-      //Add the contents of $tags of the parent into the item
-      if (parent.$tags) {
-        item.$tags.push(...parent.$tags);
-      }
       switch (format) {
         case 'parent-object':
         case 'array-parent-objects':
@@ -249,7 +245,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         let itemSchema = this.resolveRef(schema.items, parent.root_schema);
 
         const item = createItem(index.toString(), itemSchema, parentPath.concat(index.toString()), itemValue?.$label);
-      
+
         // Add item into the itemMap. String is item.filePath + item.jsonPath.join('/')
         this.itemMap.set(item.filePath + item.jsonPath.join('/'), item);
 
@@ -275,8 +271,8 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
           this.itemMap.set(item.filePath + item.jsonPath.join('/'), item);
 
           if (jsonKey !== undefined) {
-            if(key === '$id'){
-              if(jsonKey === this.lastIDCreated){
+            if (key === '$id') {
+              if (jsonKey === this.lastIDCreated) {
                 this.lastItemCreated = parent;
               }
             }
@@ -287,14 +283,6 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         }
       }
     };
-
-    // Check if $tags exists in jsonObject
-    if (jsonObject?.$tags) {
-      parent.$tags.push(...jsonObject.$tags.map((tag: any) => ({
-        ...tag,
-        $label: this.findObjectByID(tag.$id, jsonObject).$label
-      })));
-    }
 
     if (Array.isArray(jsonObject)) {
       processArray(jsonObject);
@@ -309,8 +297,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       parent.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
     }
   }
-
-
+  
   async getChildren(element?: Item): Promise<Item[]> {
     if (!this.rootPath) {
       vscode.window.showInformationMessage('No folder or workspace opened');
@@ -369,8 +356,9 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
 
   private createChildrenFromSchema(schema: any, rootSchema: any, rootJSONpath: any, jsonPath: string[] = [], name?: string): [any, { [key: string]: any }] {
     const children: { [key: string]: any } = {};
-    let isTag = false;
-    let scope = "";
+    let tags: string[] = [];
+    let visibility: string = 'public';
+    let scope: string = 'local';
 
     schema = this.resolveRef(schema, rootSchema);
 
@@ -390,10 +378,12 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         this.lastIDCreated = children.$id;
       } else if (key === '$schema') {
         children.$schema = rootSchema.$id;
-      } else if (key === '$tag') {
-        children.$tag = property.properties.$filter.const;
-        scope = property.properties.$scope.const;
-        isTag = true;
+      } else if (key === '$link') {
+        if (property?.properties?.tags?.const) tags = property.properties.tags.const;
+        if (property?.properties?.scope?.const) scope = property.properties.scope.const;
+      } else if (key === '$visibility') {
+        children[key] = 'public';
+        visibility = property.const;
       } else if (type === 'string') {
         children[key] = '';
       } else if (type === 'number') {
@@ -427,37 +417,65 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       current.push(children);
     }
 
-    if (isTag) {
+    if (tags.length > 0) {
+      children.$link = {};
+      children.$link.tags = tags;
+      children.$link.dependencies = [];
+      children.$link.dependencies.push(children.$id);
+      children.$link.scope = scope;
+
+      //Check the scope of the children
+      if (scope === 'parent') {
+        //Get the parent of the children
+        let tempJSON = rootJSON;
+        for (const key of jsonPath) {
+          tempJSON = tempJSON[key];
+        }
+
+        //While $link is not found, keep going up the inverse way
+        while (!tempJSON.$link) {
+          let tempJSONPath = [...jsonPath];
+          tempJSONPath.pop();
+          tempJSON = rootJSON;
+          for (const key of tempJSONPath) {
+            tempJSON = tempJSON[key];
+          }
+        }
+        //Add the children to the parent
+        tempJSON.$link.dependencies.push(children.$id);
+      }
+
+      const populateLinks = (json: any, dependencies: string[] = []): void => {
+        //Check if key $link exists
+        let json_dependencies = dependencies;
+        if (json.$link) {
+            // Concat the json_dependencies with the json.$link.dependencies, excluding repeated values
+            json_dependencies = [...new Set(json_dependencies.concat(json.$link.dependencies))];
+        }
+        for (const key in json) {
+          if(key === '$link') {
+            json.$link.dependencies = json_dependencies;
+          }
+          //check if json[key] is an object
+          if (typeof json[key] === 'object') {
+            //Recursively call the function
+            populateLinks(json[key], json_dependencies);
+          }
+        }
+      }
+
+      populateLinks(rootJSON);
+
       //Create object for the tags
       const obj = {
-        $tag: children.$tag,
-        $id: children.$id
+        $id: children.$id,
+        $tags: tags,
+        $visibility: visibility,
+        $label: children.$label,
+        $path: jsonPath.join('/')
       }
-      //Check the scope which can be global, parent or local
-      if (scope === 'global') {
-        //Add the $tags to the rootJSON
-        if (!rootJSON.$tags) {
-          rootJSON.$tags = [];
-        }
-        rootJSON.$tags.push(obj);
-      } else if (scope === 'parent') {
-        //Add the $tags to the parent
-        const jsonPathParent = jsonPath.slice(0, -1);
-        let parent = rootJSON;
-        for (const key of jsonPathParent) {
-          parent = parent[key];
-        }
-        if (!parent.$tags) {
-          parent.$tags = [];
-        }
-        parent.$tags.push(obj);
-      } else if (scope === 'local') {
-        //Add the $tags to the children
-        if (!children.$tags) {
-          children.$tags = [];
-        }
-        children.$tags.push(obj);
-      }
+      //Add the tags to the rootJSON
+      rootJSON.$links.push(obj);
     }
 
     return [rootJSON, children];
@@ -745,7 +763,8 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
 
 export class Item extends vscode.TreeItem {
   public children: Item[]; // Add children[] property
-  public $tags: any[] = [];
+  public $links: any[] = [];
+  public dependencies: any[] = [];
   public value: any;
   public hidden_children: Item[] = [];
 
@@ -756,7 +775,7 @@ export class Item extends vscode.TreeItem {
     public jsonPath: string[] = [], // New property to track JSON path
     public collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed,
     public root_schema: any,
-    public parentJsonPath?: string[]
+    public parentJsonPath: string[]
   ) {
     super($label, collapsibleState);
     if (this.schema.title) {
