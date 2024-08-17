@@ -106,6 +106,9 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
   private _onDidChangeTreeData: vscode.EventEmitter<Item | undefined | void> = new vscode.EventEmitter<Item | undefined | void>();
   readonly onDidChangeTreeData: vscode.Event<Item | undefined | void> = this._onDidChangeTreeData.event;
   private editors: Map<string, JsonEditor> = new Map();
+  private itemMap: Map<string, Item> = new Map();
+  private lastIDCreated: string = '';
+  private lastItemCreated: Item | undefined;
 
   constructor(private rootPath: string, private schemas: any[]) {
     this.refresh();
@@ -148,9 +151,27 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     return schema;
   }
 
+  getItem(jsonPath: string[], filePath: string): Item | undefined {
+    return this.itemMap.get(filePath + jsonPath.join('/'));
+  }
+
+  getLastItemCreated(): Item | undefined {
+    return this.lastItemCreated;
+  }
+
   getParent(element: Item): vscode.ProviderResult<Item> {
-    //TO DO! IMPLEMENT REVEAL API
-    return null;
+    // Get the json path of current element
+    const parentPath = element.parentJsonPath;
+
+    // Check if parent path is empty
+    if (parentPath === undefined) {
+      return undefined;
+    }
+
+    // Get the parent item
+    const parent = this.itemMap.get(element.filePath + parentPath.join('/'));
+
+    return parent;
   }
 
   getTreeItem(element: Item): vscode.TreeItem {
@@ -182,7 +203,8 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         parent.filePath,
         jsonPath,
         vscode.TreeItemCollapsibleState.Collapsed,
-        parent.root_schema
+        parent.root_schema,
+        parent.jsonPath
       );
     };
 
@@ -227,6 +249,9 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         let itemSchema = this.resolveRef(schema.items, parent.root_schema);
 
         const item = createItem(index.toString(), itemSchema, parentPath.concat(index.toString()), itemValue?.$label);
+      
+        // Add item into the itemMap. String is item.filePath + item.jsonPath.join('/')
+        this.itemMap.set(item.filePath + item.jsonPath.join('/'), item);
 
         if (itemValue !== undefined) {
           item.value = itemValue;
@@ -246,7 +271,15 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
           const jsonKey = object[key];
           const item = createItem(key, keyProperties, parentPath.concat(key), key);
 
+          // Add item into the itemMap. String is item.filePath + item.jsonPath.join('/')
+          this.itemMap.set(item.filePath + item.jsonPath.join('/'), item);
+
           if (jsonKey !== undefined) {
+            if(key === '$id'){
+              if(jsonKey === this.lastIDCreated){
+                this.lastItemCreated = parent;
+              }
+            }
             item.value = jsonKey;
           }
 
@@ -322,7 +355,8 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
           path.join(this.rootPath, file), // Pass the parent JSON file path
           [],  // Root path
           vscode.TreeItemCollapsibleState.Collapsed,
-          schema
+          schema,
+          []
         );
         ParentItems.push(item);
       });
@@ -353,6 +387,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         children.$label = name || '';
       } else if (key === '$id') {
         children.$id = generateUUID();
+        this.lastIDCreated = children.$id;
       } else if (key === '$schema') {
         children.$schema = rootSchema.$id;
       } else if (key === '$tag') {
@@ -718,9 +753,10 @@ export class Item extends vscode.TreeItem {
     public readonly $label: string,
     public readonly schema: any,
     public filePath: string,
-    public readonly jsonPath: string[] = [], // New property to track JSON path
+    public jsonPath: string[] = [], // New property to track JSON path
     public collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed,
-    public root_schema: any
+    public root_schema: any,
+    public parentJsonPath?: string[]
   ) {
     super($label, collapsibleState);
     if (this.schema.title) {

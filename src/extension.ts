@@ -104,10 +104,27 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	const addItemCommand = vscode.commands.registerCommand('codearchitect.addItem', async (item) => {
+		//Get JSON path from currrent parent
+		const jsonPath = item.jsonPath;
+		const filePath = item.filePath;
+		//Create a child from the item
 		await itemTreeProvider.createChildFrom(item);
-		//TO DO! IMPLEMENT REVEAL API Wait for the item to be created
-		//TO DO! IMPLEMENT REVEAL API await new Promise(resolve => setTimeout(resolve, 100));
-		//TO DO! IMPLEMENT REVEAL API itemTreeView?.reveal(item, { focus: true, select: true , expand: true });
+		//Wait 100ms for the item to be created
+		await new Promise(resolve => setTimeout(resolve, 50));
+		//Get parent Object
+		const parentObject = itemTreeProvider.getItem(jsonPath, filePath);
+		if(parentObject) {
+			//First reveal the item
+			await itemTreeView?.reveal(parentObject, {expand: true });
+			//Wait 50ms for the item to be created
+			await new Promise(resolve => setTimeout(resolve, 50));
+			//Get the created item
+			const newItem = itemTreeProvider.getLastItemCreated();
+			if(newItem) {
+				//Edit the created item
+				vscode.commands.executeCommand('codearchitect.editObject', newItem);
+			}
+		}
 	});
 
 	const propertiesProvider = vscode.window.registerWebviewViewProvider('codearchitect-properties', {
@@ -133,6 +150,8 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	const editObjectCommand = vscode.commands.registerCommand('codearchitect.editObject', async (item: Item) => {
+		//First reveal the item
+		await itemTreeView?.reveal(item, {select: true, focus: true });
 		const itemCopy = JSON.parse(JSON.stringify(item));
 		itemCopy.children = itemCopy.children.concat(itemCopy.hidden_children);
 		if (webviewPanel) {

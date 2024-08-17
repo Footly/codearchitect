@@ -17,7 +17,6 @@
       "format": "text-area",
       "type": "string"
     },
-
     "$tag": {
       "format": "hidden",
       "type": "object",

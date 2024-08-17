@@ -18,8 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Create a new div for the object
             const objectDiv = document.createElement('div');
             // Give some css
-            objectDiv.style.border = '1px solid #ccc';
-            objectDiv.style.padding = '10px';
             objectDiv.style.marginBottom = '10px';
             document.body.appendChild(objectDiv);
 
@@ -28,10 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 //Copy the tags of the parent to the child
                 renderChild(child, objectDiv, vscode);
             });
-
-            // Create and append the save button
-            const saveButton = createSaveButton(message.item, vscode);
-            document.body.appendChild(saveButton);
         }
     });
 
@@ -58,9 +52,7 @@ function resolveRef(schema, root_schema) {
     return schema;
 }
 
-
 // Helper functions
-
 function createTitleContainer(item, vscode) {
     const container = document.createElement('div');
     container.style.display = 'flex';
@@ -69,53 +61,70 @@ function createTitleContainer(item, vscode) {
     const title = document.createElement('h2');
     title.textContent = item.$label;
 
+    // Create and append the edit button which is a minimalistic icon
     const editButton = document.createElement('button');
-    editButton.innerHTML = '&#9998;';
+    editButton.className = 'codicon codicon-edit';
     editButton.style.marginLeft = '10px';
-    editButton.onclick = () => handleEditTitle(title, item, vscode, container);
+    editButton.style.background = 'none'; // Remove the background
+    editButton.style.border = 'none'; // Remove the border
+    editButton.style.padding = '0'; // Remove the padding
+    editButton.style.cursor = 'pointer'; // Add cursor pointer
+    editButton.style.color = '#6c6c6c'; // Set icon color to match VSCode light theme
+    editButton.onclick = () => handleEditTitle(title, item, vscode);
 
     container.appendChild(title);
     container.appendChild(editButton);
     return container;
 }
 
-function handleEditTitle(title, item, vscode, container) {
-    const titleText = title.textContent;
-    const titleInput = document.createElement('input');
-    titleInput.type = 'text';
-    titleInput.value = titleText;
-    applyInputStyles(title, titleInput);
+function handleEditTitle(title, item, vscode) {
+    // Hide the edit button
+    title.nextElementSibling.style.display = 'none';
+    // Enable content-editable mode on the title
+    title.contentEditable = true;
 
-    titleInput.addEventListener('keydown', (event) => handleTitleInput(event, title, item, container));
-    titleInput.addEventListener('focusout', () => handleTitleInputFocusOut(title, titleInput, item, container));
+    // Apply custom styles when editing
+    title.style.fontStyle = 'italic'; // Apply cursive style
+    title.style.outline = 'none'; // Remove the default outline
+    //I want to add the cursor to the end of the text
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(title);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    title.focus();
 
-    container.replaceChild(titleInput, title);
-    titleInput.focus();
-    titleInput.select();
+
+    // Handle Enter key and focus out event to save changes
+    title.addEventListener('keydown', (event) => handleTitleInput(event, title, item, vscode));
+    title.addEventListener('focusout', () => handleTitleInputFocusOut(title, item, vscode));
 }
 
-function applyInputStyles(title, titleInput) {
-    titleInput.style.fontSize = window.getComputedStyle(title).fontSize;
-    titleInput.style.fontFamily = window.getComputedStyle(title).fontFamily;
-    titleInput.style.border = 'none';
-    titleInput.style.padding = '0';
-    titleInput.style.margin = '0';
-    titleInput.style.outline = 'none';
-}
-
-function handleTitleInput(event, title, item, container) {
+function handleTitleInput(event, title, item, vscode) {
     if (event.key === 'Enter') {
-        updateTitle(title, event.target, item, container);
+        event.preventDefault(); // Prevent inserting a line break
+        title.contentEditable = false;
+
+        // Reset the styles after editing
+        title.style.fontStyle = ''; 
+        title.style.border = ''; 
+        title.style.padding = ''; 
+
+        item.$label = title.textContent;
     }
 }
 
-function handleTitleInputFocusOut(title, titleInput, item, container) {
-    updateTitle(title, titleInput, item, container);
-}
+function handleTitleInputFocusOut(title, item, vscode) {
+    // Disable content-editable mode and reset styles
+    title.contentEditable = false;
+    title.style.fontStyle = ''; 
+    title.style.border = ''; 
+    title.style.padding = ''; 
 
-function updateTitle(title, titleInput, item, container) {
-    title.textContent = titleInput.value;
-    container.replaceChild(title, titleInput);
+    // Show the edit button
+    title.nextElementSibling.style.display = 'block';
+
     item.$label = title.textContent;
 
     // Update child items if needed
@@ -124,6 +133,8 @@ function updateTitle(title, titleInput, item, container) {
             child.value = title.textContent;
         }
     });
+
+    vscode.postMessage({ command: 'saveObject', item: item });
 }
 
 function renderChild(child, div, vscode) {
@@ -167,6 +178,7 @@ function renderChild(child, div, vscode) {
 function renderInputString(child, div, vscode) {
     const $label = document.createElement('label');
     $label.textContent = child.$label;
+    $label.style.marginBottom = '10px';
     div.appendChild($label);
 
     const input = document.createElement('input');
@@ -177,24 +189,68 @@ function renderInputString(child, div, vscode) {
 
     input.addEventListener('input', (event) => {
         child.value = event.target.value;
+        vscode.postMessage({ command: 'saveObject', item: child });
     });
 }
 
 function renderTextArea(child, div, vscode) {
-    const $label = document.createElement('label');
-    $label.textContent = child.$label;
-    div.appendChild($label);
+    // Create the container for the collapsible content
+    const collapsibleDiv = document.createElement('div');
+    collapsibleDiv.style.marginBottom = '10px'; // Spacing between sections
+    div.appendChild(collapsibleDiv);
 
+    // Create the header for the collapsible section
+    const headerDiv = document.createElement('div');
+    headerDiv.style.display = 'flex';
+    headerDiv.style.alignItems = 'center';
+    headerDiv.style.cursor = 'pointer';
+    headerDiv.style.userSelect = 'none'; // Prevent text selection on click
+    collapsibleDiv.appendChild(headerDiv);
+
+    // Create the label
+    const $label = document.createElement('h3');
+    $label.textContent = child.$label;
+    $label.style.margin = '0';
+    headerDiv.appendChild($label);
+
+    // Create the toggle button
+    const toggleButton = document.createElement('button');
+    toggleButton.textContent = '▼'; // Default to "expanded" icon
+    toggleButton.style.marginLeft = '10px';
+    toggleButton.style.background = 'none';
+    toggleButton.style.border = 'none';
+    toggleButton.style.cursor = 'pointer';
+    toggleButton.style.color = '#6c6c6c'; // Set icon color to match VSCode light theme
+    headerDiv.appendChild(toggleButton);
+
+    // Create the collapsible content container
+    const contentDiv = document.createElement('div');
+    contentDiv.style.display = 'none'; // Initially hidden
+    // Create a margin at the top
+    contentDiv.style.marginTop = '10px';
+    // Make a small tabulation, padding
+    contentDiv.style.paddingLeft = '10px';
+    collapsibleDiv.appendChild(contentDiv);
+
+    // Create the textarea element
     const textarea = document.createElement('textarea');
     textarea.value = child.value;
-    textarea.style.marginBottom = '10px';
     textarea.style.width = '100%'; // Set textarea width to 100% of the parent div
-    textarea.style.height = '100%'; // Set textarea height to 100% of the parent div
+    textarea.style.height = '100px'; // Set a default height for the textarea
     textarea.style.resize = 'vertical'; // Allow vertical resizing
-    div.appendChild(textarea);
+    contentDiv.appendChild(textarea);
 
+    // Add input event listener to the textarea
     textarea.addEventListener('input', (event) => {
         child.value = event.target.value;
+        vscode.postMessage({ command: 'saveObject', item: child });
+    });
+
+    // Toggle function for showing/hiding content
+    headerDiv.addEventListener('click', () => {
+        const isExpanded = contentDiv.style.display === 'block';
+        contentDiv.style.display = isExpanded ? 'none' : 'block';
+        toggleButton.textContent = isExpanded ? '▼' : '▲'; // Change icon
     });
 }
 
@@ -205,6 +261,7 @@ function renderCheckbox(child, div, vscode) {
 
     const $label = document.createElement('label');
     $label.textContent = child.$label;
+    $label.style.marginBottom = '10px';
     checkboxContainer.appendChild($label);
 
     const checkbox = document.createElement('input');
@@ -217,12 +274,14 @@ function renderCheckbox(child, div, vscode) {
 
     checkbox.addEventListener('change', (event) => {
         child.value = event.target.checked;
+        vscode.postMessage({ command: 'saveObject', item: child });
     });
 }
 
 function renderDropdownSelect(child, div, vscode) {
     const $label = document.createElement('label');
     $label.textContent = child.$label;
+    $label.style.marginBottom = '10px';
     div.appendChild($label);
 
     const select = document.createElement('select');
@@ -242,12 +301,14 @@ function renderDropdownSelect(child, div, vscode) {
 
     select.addEventListener('change', (event) => {
         child.value = event.target.value;
+        vscode.postMessage({ command: 'saveObject', item: child });
     });
 }
 
 function renderDropdownSelectTag(child, div, vscode) {
     const $label = document.createElement('label');
     $label.textContent = child.$label;
+    $label.style.marginBottom = '10px';
     div.appendChild($label);
 
     const select = document.createElement('select');
@@ -271,20 +332,20 @@ function renderDropdownSelectTag(child, div, vscode) {
 
     select.addEventListener('change', (event) => {
         child.value = event.target.value;
+        vscode.postMessage({ command: 'saveObject', item: child });
     });
 }
 
 function renderArrayCreator(child, div, vscode) {
     // Create a new div for the array creator
     const arrayCreatorDiv = document.createElement('div');
-    arrayCreatorDiv.style.border = '1px solid #ccc';
-    arrayCreatorDiv.style.padding = '10px';
     arrayCreatorDiv.style.marginBottom = '10px';
     div.appendChild(arrayCreatorDiv);
 
     // Create and append the $label
     const $label = document.createElement('label');
     $label.textContent = child.$label;
+    $label.style.marginBottom = '10px';
     arrayCreatorDiv.appendChild($label);
 
     const format = child.schema.items.format;
@@ -361,6 +422,7 @@ function renderPoolDropdownSelect(child, div, vscode) {
     // Create and append the $label
     const $label = document.createElement('label');
     $label.textContent = child.$label;
+    $label.style.marginBottom = '10px';
     containerDiv.appendChild($label);
 
     // Create and append the input field for searching
@@ -462,6 +524,7 @@ function renderPoolDropdownSelect(child, div, vscode) {
 
     function updateChildValues(child, selectedValues) {
         child.value = selectedValues;
+        vscode.postMessage({ command: 'saveObject', item: child });
     }
 }
 
@@ -474,6 +537,7 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
     // Create and append the $label
     const $label = document.createElement('label');
     $label.textContent = child.$label;
+    $label.style.marginBottom = '10px';
     containerDiv.appendChild($label);
 
     // Create and append the input field for searching
@@ -582,35 +646,62 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
 
     function updateChildValues(child, selectedValues) {
         child.value = selectedValues;
+        vscode.postMessage({ command: 'saveObject', item: child });
     }
 }
 
 function renderSubObjectChild(child, div, vscode) {
+    // Create the container for the collapsible content
     const subObjectDiv = document.createElement('div');
-    subObjectDiv.style.border = '1px solid #ccc';
-    subObjectDiv.style.padding = '10px';
-    subObjectDiv.style.marginBottom = '10px';
+    subObjectDiv.style.marginBottom = '10px'; // Spacing between sections
     div.appendChild(subObjectDiv);
 
+    // Create the header for the collapsible section
+    const headerDiv = document.createElement('div');
+    headerDiv.style.display = 'flex';
+    headerDiv.style.alignItems = 'center';
+    headerDiv.style.cursor = 'pointer';
+    headerDiv.style.userSelect = 'none'; // Prevent text selection on click
+    subObjectDiv.appendChild(headerDiv);
+
+    // Create the label
     const $label = document.createElement('h3');
     $label.textContent = child.$label;
-    subObjectDiv.appendChild($label);
+    $label.style.margin = '0';
+    headerDiv.appendChild($label);
 
+    // Create the toggle button
+    const toggleButton = document.createElement('button');
+    toggleButton.textContent = '▼'; // Default to "expanded" icon
+    toggleButton.style.marginLeft = '10px';
+    toggleButton.style.background = 'none';
+    toggleButton.style.border = 'none';
+    toggleButton.style.cursor = 'pointer';
+    toggleButton.style.color = '#6c6c6c'; // Set icon color to match VSCode light theme
+    headerDiv.appendChild(toggleButton);
+
+    // Create the collapsible content container
+    const contentDiv = document.createElement('div');
+    contentDiv.style.display = 'none'; // Initially hidden
+    //Create a margin at the top
+    contentDiv.style.marginTop = '10px';
+    //make a small tabulation, padding
+    contentDiv.style.paddingLeft = '10px';
+    subObjectDiv.appendChild(contentDiv);
+
+    // Add sub-children to the collapsible content
     child.hidden_children.forEach(subChild => {
-        renderChild(subChild, subObjectDiv, vscode);
-        //Copy subchild into child
+        renderChild(subChild, contentDiv, vscode);
+        // Copy subchild into child
         child.children.push(subChild);
     });
-}
 
-function createSaveButton(item, vscode) {
-    console.log(item);
-    const saveButton = document.createElement('button');
-    saveButton.textContent = 'Save';
-    saveButton.onclick = () => {
-        vscode.postMessage({ command: 'saveObject', item: item });
-    };
-    return saveButton;
+    // Toggle function for showing/hiding content
+    headerDiv.addEventListener('click', () => {
+        const isExpanded = contentDiv.style.display === 'block';
+        contentDiv.style.display = isExpanded ? 'none' : 'block';
+        toggleButton.textContent = isExpanded ? '▼' : '▲'; // Change icon
+    });
 }
 
 function createElement(item, vscode) {
