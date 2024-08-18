@@ -566,11 +566,18 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
     selectedItemsDiv.className = 'selected-items';
     containerDiv.appendChild(selectedItemsDiv);
 
-    // Create and append the suggestions container
+    // Create and append the suggestions container as a popup window with dark mode styling
     const suggestionsDiv = document.createElement('div');
-    suggestionsDiv.className = 'suggestions';
+    suggestionsDiv.className = 'suggestions-popup';
+    suggestionsDiv.style.position = 'absolute';
+    suggestionsDiv.style.border = '1px solid #444'; // Darker border for dark mode
+    suggestionsDiv.style.backgroundColor = '#1e1e1e'; // Dark background (VSCode-like)
+    suggestionsDiv.style.color = '#c5c5c5'; // Light text color for contrast
+    suggestionsDiv.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.5)'; // Darker shadow
+    suggestionsDiv.style.padding = '10px';
+    suggestionsDiv.style.zIndex = '1000';
     suggestionsDiv.style.display = 'none'; // Initially hidden
-    div.appendChild(suggestionsDiv);
+    document.body.appendChild(suggestionsDiv);
 
     // Initialize with existing selected values
     const selectedValues = child.value || [];
@@ -584,6 +591,9 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
         // Show suggestions when input is focused
         input.addEventListener('focus', () => {
             updateSuggestions(input, suggestionsDiv, selectedItemsDiv, selectedValues, child);
+            const rect = input.getBoundingClientRect();
+            suggestionsDiv.style.top = `${rect.top + window.scrollY}px`;
+            suggestionsDiv.style.left = `${rect.right + window.scrollX}px`; // Position to the right of the input
             suggestionsDiv.style.display = 'block';
         });
 
@@ -592,7 +602,7 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
 
         // Hide suggestions when clicking outside
         document.addEventListener('click', (event) => {
-            if (!div.contains(event.target)) {
+            if (!containerDiv.contains(event.target) && !suggestionsDiv.contains(event.target)) {
                 suggestionsDiv.style.display = 'none';
             }
         });
@@ -601,10 +611,11 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
     function updateSuggestions(input, suggestionsDiv, selectedItemsDiv, selectedValues, child) {
         const query = input.value.toLowerCase();
         const tagsFilter = child.schema.items.const;
-        const tags = child.$tags.filter(tag => tag.$tag.some(t => tagsFilter.includes(t)));
-        const filteredTags = tags
-            .filter(tag => tag.$label.toLowerCase().includes(query) && !selectedValues.includes(tag.$id))
-            .map(tag => tag.$label);
+        const dependencies = child.dependencies;
+        const links = child.$links.filter(link => link.$tags.some(t => tagsFilter.includes(t))).filter(link => dependencies.includes(link.$id));
+        const filteredTags = links
+            .filter(link => link.$label.toLowerCase().includes(query) && !selectedValues.includes(link.$id))
+            .map(link => link.$label);
         renderSuggestions(suggestionsDiv, filteredTags, selectedItemsDiv, selectedValues, child);
     }
 
@@ -614,15 +625,20 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
             const suggestionItem = document.createElement('div');
             suggestionItem.className = 'suggestion-item';
             suggestionItem.textContent = option;
+            suggestionItem.style.cursor = 'pointer';
+            suggestionItem.style.padding = '5px';
+            suggestionItem.style.borderBottom = '1px solid #444'; // Divider between items
+            suggestionItem.onmouseover = () => suggestionItem.style.backgroundColor = '#333'; // Hover effect
+            suggestionItem.onmouseout = () => suggestionItem.style.backgroundColor = '#1e1e1e';
             suggestionItem.onclick = () => handleSuggestionClick(option, suggestionsDiv, selectedItemsDiv, selectedValues, child);
             suggestionsDiv.appendChild(suggestionItem);
         });
     }
 
     function handleSuggestionClick(optionLabel, suggestionsDiv, selectedItemsDiv, selectedValues, child) {
-        const tag = child.$tags.find(tag => tag.$label === optionLabel);
-        if (tag && tag.$id) {
-            selectedValues.push(tag.$id);
+        const link = child.$links.find(link => link.$label === optionLabel);
+        if (link && link.$id) {
+            selectedValues.push(link.$id);
             renderSelectedItems(selectedItemsDiv, selectedValues, child);
             suggestionsDiv.style.display = 'none';
         }
@@ -631,18 +647,22 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
     function renderSelectedItems(selectedItemsDiv, selectedValues, child) {
         selectedItemsDiv.innerHTML = '';
         selectedValues.forEach((id, index) => {
-            const tag = child.$tags.find(tag => tag.$id === id);
-            if (tag) {
+            const link = child.$links.find(link => link.$id === id);
+            if (link) {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'selected-item';
 
                 const itemLabel = document.createElement('span');
-                itemLabel.textContent = tag.$label;
+                itemLabel.textContent = link.$label;
+                itemLabel.style.color = '#c5c5c5'; // Light text color
                 itemDiv.appendChild(itemLabel);
 
                 const removeButton = document.createElement('button');
                 removeButton.textContent = 'X';
                 removeButton.className = 'remove-button';
+                removeButton.style.marginLeft = '5px';
+                removeButton.style.backgroundColor = '#444'; // Darker button
+                removeButton.style.color = '#c5c5c5'; // Light text color
                 removeButton.onclick = () => handleRemoveSelectedItem(index, selectedValues, selectedItemsDiv, child);
                 itemDiv.appendChild(removeButton);
 

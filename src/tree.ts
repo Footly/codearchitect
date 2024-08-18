@@ -625,17 +625,17 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
 
       const selectedOption = options.find(option => option[0] === optionName);
       const selectedChild = parent.hidden_children[selectedOption![1]];
-
+      const schemaItems = this.resolveRef(selectedChild.schema.items, parent.root_schema);
       let index = 0;
       for (const child of parent.children) {
-        if (child.schema === selectedChild.schema.items) {
+        if (child.schema.title === schemaItems.title) {
           index++;
         }
       }
-
-      selectedChild.jsonPath.push(index.toString());
-      jsonPath = selectedChild.jsonPath;
-      items = selectedChild.schema.items;
+      const selectedChildCopy = JSON.parse(JSON.stringify(selectedChild));
+      selectedChildCopy.jsonPath.push(index.toString());
+      jsonPath = selectedChildCopy.jsonPath;
+      items = selectedChildCopy.schema.items;
     } else if (parent.schema.type === 'array') {
       // Push the new value to the array
       parent.jsonPath.push(parent.children.length.toString());
