@@ -46,7 +46,7 @@ export function activate(context: vscode.ExtensionContext) {
 							const dereferencedSchema = await $RefParser.bundle(pathFileProfile);
 							schemas.push(dereferencedSchema);
 						}
-				
+
 					} catch (fileError) {
 						vscode.window.showErrorMessage(`Error processing file ${file}: ${fileError}`);
 					}
@@ -90,6 +90,14 @@ export function activate(context: vscode.ExtensionContext) {
 	const newProjectCommand = vscode.commands.registerCommand('codearchitect.newProject', async () => {
 		// Call the createParent method from the tree.ts file
 		await itemTreeProvider.createParent();
+		//Wait 50ms for the item to be created
+		await new Promise(resolve => setTimeout(resolve, 50));
+		//Get the created item
+		const newItem = itemTreeProvider.getLastItemCreated();
+		if (newItem) {
+			//Edit the created item
+			vscode.commands.executeCommand('codearchitect.editObject', newItem);
+		}
 	});
 
 	const refreshProjectsCommand = vscode.commands.registerCommand('codearchitect.refresh', () => {
@@ -109,18 +117,18 @@ export function activate(context: vscode.ExtensionContext) {
 		const filePath = item.filePath;
 		//Create a child from the item
 		await itemTreeProvider.createChildFrom(item);
-		//Wait 100ms for the item to be created
+		//Wait 50ms for the item to be created
 		await new Promise(resolve => setTimeout(resolve, 50));
 		//Get parent Object
 		const parentObject = itemTreeProvider.getItem(jsonPath, filePath);
-		if(parentObject) {
+		if (parentObject) {
 			//First reveal the item
-			await itemTreeView?.reveal(parentObject, {expand: true });
+			await itemTreeView?.reveal(parentObject, { expand: true });
 			//Wait 50ms for the item to be created
 			await new Promise(resolve => setTimeout(resolve, 50));
 			//Get the created item
 			const newItem = itemTreeProvider.getLastItemCreated();
-			if(newItem) {
+			if (newItem) {
 				//Edit the created item
 				vscode.commands.executeCommand('codearchitect.editObject', newItem);
 			}
@@ -151,9 +159,23 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const editObjectCommand = vscode.commands.registerCommand('codearchitect.editObject', async (item: Item) => {
 		//First reveal the item
-		await itemTreeView?.reveal(item, {select: true, focus: true });
+		await itemTreeView?.reveal(item, { select: true, focus: true });
 		const itemCopy = JSON.parse(JSON.stringify(item));
-		itemCopy.children = itemCopy.children.concat(itemCopy.hidden_children);
+		// Combine children and hidden_children
+		const combinedChildren = itemCopy.children.concat(itemCopy.hidden_children);
+
+		// Create a Set to track unique labels
+		const seenLabels = new Set();
+
+		// Filter combinedChildren to only include items with unique $label values
+		itemCopy.children = combinedChildren.filter((child: Item) => {
+			const label = child.$label;
+			if (!seenLabels.has(label)) {
+				seenLabels.add(label);
+				return true;
+			}
+			return false;
+		});
 		//Get the rootJSON
 		const rootJSON = JSON.parse(fs.readFileSync(item.filePath, 'utf8'));
 		//Open and parse the JSON file
@@ -165,9 +187,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 		itemCopy.dependencies = [];
 
-		while(jsonPath.length > 0) {
+		while (jsonPath.length > 0) {
 			let current = rootJSON;
-			for(const key of jsonPath) {
+			for (const key of jsonPath) {
 				current = current[key];
 			}
 			if (current?.$link?.scope !== undefined && current?.$link?.scope !== 'parent') {
@@ -234,10 +256,10 @@ function handleMessage(message: any) {
 		// Handle the objectEdited command
 		// Call the saveObject method from the tree.ts file
 		itemTreeProvider.updateItem(message.item);
-	} else if(message.command === 'createItem') {
+	} else if (message.command === 'createItem') {
 		// Call the deleteObject method from the tree.ts file
 		itemTreeProvider.createChildFrom(message.item);
-	} else if(message.command === 'removeItem') {
+	} else if (message.command === 'removeItem') {
 		// Call the deleteObject method from the tree.ts file
 		itemTreeProvider.removeItem(message.item);
 	}

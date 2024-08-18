@@ -18,6 +18,14 @@
       "type": "string",
       "format": "hidden"
     },
+    "version": {
+      "format": "input-string",
+      "type": "string"
+    },
+    "documentation": {
+      "format": "text-area",
+      "type": "string"
+    },
     "Classes": {
       "format": "array-parent-objects",
       "contentMediaType": "folder",

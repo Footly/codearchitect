@@ -5,6 +5,10 @@
   "format": "parent-object",
   "contentMediaType": "symbol-field",
   "properties": {
+    "$id": {
+      "type": "string",
+      "format": "hidden"
+    },
     "$label": {
       "type": "string",
       "format": "hidden"

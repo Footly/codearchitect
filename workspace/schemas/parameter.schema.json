@@ -5,6 +5,10 @@
   "contentMediaType": "symbol-parameter",
   "format": "parent-object",
   "properties": {
+    "$id": {
+      "type": "string",
+      "format": "hidden"
+    },
     "$label": {
       "type": "string",
       "format": "hidden"

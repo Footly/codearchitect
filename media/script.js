@@ -221,7 +221,6 @@ function renderTextArea(child, div, vscode) {
     // Create the toggle button
     const toggleButton = document.createElement('button');
     toggleButton.textContent = '▼'; // Default to "expanded" icon
-    toggleButton.style.marginLeft = '10px';
     toggleButton.style.background = 'none';
     toggleButton.style.border = 'none';
     toggleButton.style.cursor = 'pointer';
@@ -233,8 +232,6 @@ function renderTextArea(child, div, vscode) {
     contentDiv.style.display = 'none'; // Initially hidden
     // Create a margin at the top
     contentDiv.style.marginTop = '10px';
-    // Make a small tabulation, padding
-    contentDiv.style.paddingLeft = '10px';
     collapsibleDiv.appendChild(contentDiv);
 
     // Create the textarea element
@@ -690,7 +687,6 @@ function renderSubObjectChild(child, div, vscode) {
     // Create the toggle button
     const toggleButton = document.createElement('button');
     toggleButton.textContent = '▼'; // Default to "expanded" icon
-    toggleButton.style.marginLeft = '10px';
     toggleButton.style.background = 'none';
     toggleButton.style.border = 'none';
     toggleButton.style.cursor = 'pointer';
