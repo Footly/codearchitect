@@ -58,6 +58,10 @@
           "items": {
             "type": "string"
           }
+        },
+        "scope": {
+          "$ref": "./scope.schema.json",
+          "const": "global"
         }
       }
     },

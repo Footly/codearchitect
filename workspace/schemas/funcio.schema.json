@@ -13,6 +13,10 @@
       "type": "string",
       "format": "hidden"
     },
+    "visibility": {
+      "format": "dropdown-select",
+      "$ref": "./visibility.schema.json"
+    },
     "returntype": {
       "format": "sub-object",
       "type":"object",
@@ -31,10 +35,6 @@
           "type": "boolean"
         }
       }
-    },
-    "$visibility": {
-      "format": "dropdown-select",
-      "$ref": "./visibility.schema.json"
     },
     "parameters": {
       "format": "folder",
@@ -61,7 +61,7 @@
           }
         },
         "scope": {
-          "type": "string",
+          "$ref": "./scope.schema.json",
           "const": "parent"
         }
       }

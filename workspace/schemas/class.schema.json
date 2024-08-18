@@ -13,6 +13,11 @@
       "type": "string",
       "format": "hidden"
     },
+    "visibility": {
+      "format": "hidden",
+      "$ref": "./visibility.schema.json",
+      "const": "public"
+    },
     "requirements": {
       "type": "array",
       "format": "pool-dropdown-select-tag",
@@ -81,8 +86,8 @@
           }
         },
         "scope": {
-          "type": "string",
-          "const": "parent"
+          "$ref": "./scope.schema.json",
+          "const": "local"
         }
       }
     }

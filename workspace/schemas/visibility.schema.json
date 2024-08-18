@@ -4,5 +4,6 @@
   "enum": [
     "public",
     "private"
-  ]
+  ],
+  "default": "public"
 }

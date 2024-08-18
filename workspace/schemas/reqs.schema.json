@@ -13,6 +13,11 @@
       "type": "string",
       "format": "hidden"
     },
+    "visibility": {
+      "format": "hidden",
+      "$ref": "./visibility.schema.json",
+      "const": "public"
+    },
     "description": {
       "format": "text-area",
       "type": "string"
@@ -35,8 +40,8 @@
           }
         },
         "scope": {
-          "type": "string",
-          "const": "parent"
+          "$ref": "./scope.schema.json",
+          "const": "global"
         }
       }
     }

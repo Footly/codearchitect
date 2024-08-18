@@ -13,6 +13,10 @@
       "type": "string",
       "format": "hidden"
     },
+    "visibility": {
+      "format": "dropdown-select",
+      "$ref": "./visibility.schema.json"
+    },
     "members": {
       "format": "folder",
       "type": "array",
@@ -38,7 +42,7 @@
           }
         },
         "scope": {
-          "type": "string",
+          "$ref": "./scope.schema.json",
           "const": "parent"
         }
       }

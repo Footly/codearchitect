@@ -13,6 +13,11 @@
       "type": "string",
       "format": "hidden"
     },
+    "visibility": {
+      "format": "hidden",
+      "$ref": "./visibility.schema.json",
+      "const": "public"
+    },
     "$link": {
       "format": "hidden",
       "type": "object",
@@ -31,8 +36,8 @@
           }
         },
         "scope": {
-          "type": "string",
-          "const": "parent"
+          "$ref": "./scope.schema.json",
+          "const": "global"
         }
       }
     }

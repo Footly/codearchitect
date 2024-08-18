@@ -11,8 +11,11 @@
       "format": "hidden"
     },
     "$path": {
-      "type": "string",
-      "format": "hidden"
+      "type": "array",
+      "format": "hidden",
+      "items": {
+        "type": "string"
+      }
     },
     "$tags": {
       "type": "array",
@@ -23,6 +26,9 @@
     },
     "$visibility": {
       "$ref": "./visibility.schema.json"
+    },
+    "$scope": {
+      "$ref": "./scope.schema.json"
     }
   }
 }

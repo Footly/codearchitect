@@ -56,7 +56,7 @@
           }
         },
         "scope": {
-          "type": "string",
+          "$ref": "./scope.schema.json",
           "const": "parent"
         }
       }

@@ -13,6 +13,11 @@
       "type": "string",
       "format": "hidden"
     },
+    "visibility": {
+      "format": "hidden",
+      "$ref": "./visibility.schema.json",
+      "const": "public"
+    },
     "to": {
       "type": "string",
       "format": "dropdown-select-tag",
@@ -41,7 +46,7 @@
           }
         },
         "scope": {
-          "type": "string",
+          "$ref": "./scope.schema.json",
           "const": "parent"
         }
       }

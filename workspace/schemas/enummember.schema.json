@@ -13,6 +13,11 @@
       "type": "string",
       "format": "hidden"
     },
+    "visibility": {
+      "format": "hidden",
+      "$ref": "./visibility.schema.json",
+      "const": "public"
+    },
     "value": {
       "format": "input-string",
       "type":"string"
@@ -35,7 +40,7 @@
           }
         },
         "scope": {
-          "type": "string",
+          "$ref": "./scope.schema.json",
           "const": "parent"
         }
       }

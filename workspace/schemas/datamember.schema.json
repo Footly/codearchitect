@@ -5,13 +5,14 @@
   "format": "parent-object",
   "contentMediaType": "symbol-field",
   "properties": {
-    "$id": {
-      "type": "string",
-      "format": "hidden"
-    },
     "$label": {
       "type": "string",
       "format": "hidden"
+    },
+    "visibility": {
+      "format": "hidden",
+      "$ref": "./visibility.schema.json",
+      "const": "public"
     },
     "datatype": {
       "format": "dropdown-select-tag",
@@ -33,29 +34,6 @@
     "isConst": {
       "format": "checkbox",
       "type": "boolean"
-    },
-    "$link": {
-      "format": "hidden",
-      "type": "object",
-      "properties": {
-        "tags": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "const": ["*", "datamember"]
-        },
-        "dependencies": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "scope": {
-          "type": "string",
-          "const": "parent"
-        }
-      }
     }
   }
 }
