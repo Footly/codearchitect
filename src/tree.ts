@@ -764,6 +764,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     const parentJSON = JSON.parse(fs.readFileSync(item.filePath, 'utf-8'));
 
     const updateItemInJSON = (jsonObject: any, item: Item): void => {
+      let id_item_changed = undefined;
       let current = jsonObject;
       for (let i = 0; i < item.jsonPath.length - 1; i++) {
         const key = item.jsonPath[i];
@@ -796,15 +797,26 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
           item.filePath = newFilePath;
         }
         if (child.value !== undefined) {
+          if(childLastKey === '$id') {
+            id_item_changed = child.value;
+          }
           childCurrent[childLastKey] = child.value;
         }
         if (child.children.length > 0) {
           updateItemInJSON(jsonObject, child);
         }
       });
+
+      return id_item_changed;
     };
 
-    updateItemInJSON(parentJSON, item);
+    const $update_id = updateItemInJSON(parentJSON, item);
+
+    parentJSON.$links.forEach((link: any) => {
+      if (link.$id === $update_id) {
+        link.$label = item.$label;
+      }
+    });
 
     try {
       fs.writeFileSync(item.filePath, JSON.stringify(parentJSON, null, 2), 'utf-8');

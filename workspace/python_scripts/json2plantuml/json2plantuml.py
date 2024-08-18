@@ -1,29 +1,31 @@
 import argparse
 import json
 
-#Create function to search in list of tags given an id
-def search_tag(tags, id):
-    for tag in tags:
-        if tag['$id'] == id:
-            return tag
+#Create function to search in list of links given an id
+def search_id(links, id):
+    for link in links:
+        if link['$id'] == id:
+            return link
     return None
 
     
 #Create funcio to convert JSON Class to PlantUML Class
-def json2plantuml(json_class, tags=[]):
+def json2plantuml(json_class, links=[]):
     class_name = json_class['$label']
     variables = json_class.get('variables', [])
     funcions = json_class.get('funcions', [])
     plantuml_class = f'class {class_name} {{\n'
 
     for variable in variables:
+        found_id = search_id(links, variable['datatype'])
+        datatype = found_id['$label'] if found_id else variable['datatype']
         visibility = variable['visibility']
         if visibility == 'protected':
-            plantuml_class += f'    ~{variable["$label"]}\n'
+            plantuml_class += f'    ~{variable["$label"]} : {datatype}\n'
         elif visibility == 'private':
-            plantuml_class += f'    -{variable["$label"]}\n'
+            plantuml_class += f'    -{variable["$label"]} : {datatype}\n'
         else:
-            plantuml_class += f'    +{variable["$label"]}\n'
+            plantuml_class += f'    +{variable["$label"]} : {datatype}\n'
     
     plantuml_class += '\n'
     
@@ -40,8 +42,8 @@ def json2plantuml(json_class, tags=[]):
         for i, parameter in enumerate(parameters):
             if i > 0:
                 plantuml_class += ', '
-            found_tag = search_tag(tags, parameter['datatype'])
-            datatype = found_tag['$label'] if found_tag else "Unknown"
+            found_id = search_id(links, parameter['datatype'])
+            datatype = found_id['$label'] if found_id else parameter['datatype']
             plantuml_class += f'{parameter["$label"]}: {datatype}'
         plantuml_class += ')\n'
     
@@ -58,7 +60,7 @@ def parse_json(json_path):
     
     #Loop through classes and print them
     for classs in classes:
-        print(json2plantuml(classs, data['$tags']))
+        print(json2plantuml(classs, data['$links']))
 
     return classes
 def main():
