@@ -9,11 +9,6 @@
       "type": "string",
       "format": "hidden"
     },
-    "visibility": {
-      "format": "hidden",
-      "$ref": "./visibility.schema.json",
-      "const": "public"
-    },
     "datatype": {
       "format": "dropdown-select-tag",
       "type": "string",
