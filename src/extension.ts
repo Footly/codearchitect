@@ -155,13 +155,27 @@ export function activate(context: vscode.ExtensionContext) {
 		const itemCopy = JSON.parse(JSON.stringify(item));
 		itemCopy.children = itemCopy.children.concat(itemCopy.hidden_children);
 		//Get the rootJSON
-		const rootJSON = item.filePath;
+		const rootJSON = JSON.parse(fs.readFileSync(item.filePath, 'utf8'));
 		//Open and parse the JSON file
-		const $links = JSON.parse(fs.readFileSync(rootJSON, 'utf8')).$links
+		const $links = rootJSON.$links;
 		//Add the $links to the item
 		itemCopy.$links = $links;
-		if(itemCopy?.value.$link?.dependencies) itemCopy.dependencies = itemCopy.value.$link.dependencies;
-		else itemCopy.dependencies = [];
+		//Get the JSON path
+		const jsonPath = [...item.jsonPath];
+
+		itemCopy.dependencies = [];
+
+		while(jsonPath.length > 0) {
+			let current = rootJSON;
+			for(const key of jsonPath) {
+				current = current[key];
+			}
+			if (current?.$link?.scope !== undefined && current?.$link?.scope !== 'parent') {
+				itemCopy.dependencies = current.$link.dependencies;
+				break;
+			}
+			jsonPath.pop();
+		}
 		if (webviewPanel) {
 			webviewPanel.webview.postMessage({ command: 'editObject', item: itemCopy });
 		} else {

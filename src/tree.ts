@@ -297,7 +297,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       parent.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
     }
   }
-  
+
   async getChildren(element?: Item): Promise<Item[]> {
     if (!this.rootPath) {
       vscode.window.showInformationMessage('No folder or workspace opened');
@@ -358,7 +358,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     const children: { [key: string]: any } = {};
     let tags: string[] = [];
     let visibility: string = 'public';
-    let scope: string = 'local';
+    let scope: string = 'global';
 
     schema = this.resolveRef(schema, rootSchema);
 
@@ -381,9 +381,10 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       } else if (key === '$link') {
         if (property?.properties?.tags?.const) tags = property.properties.tags.const;
         if (property?.properties?.scope?.const) scope = property.properties.scope.const;
-      } else if (key === '$visibility') {
-        children[key] = 'public';
-        visibility = property.const;
+      } else if (key === 'visibility') {
+        children[key] = property.default;
+        if (property.const) children[key] = property.const;
+        visibility = children[key];
       } else if (type === 'string') {
         children[key] = '';
       } else if (type === 'number') {
@@ -403,10 +404,18 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       return [rootJSON, children];
     }
 
-    //Drill down to the desired part of the JSON
+    // Drill down to the desired part of the JSON
     let current = rootJSON;
     for (const key of jsonPath) {
-      current = current[key];
+      // If current is an array, ensure key is treated as an index (number)
+      const index = Array.isArray(current) ? Number(key) : key;
+      //Check if current is an array and if tke key does not exist in the array
+      if (Array.isArray(current) && !current[Number(index)]) {
+        current[Number(index)] = {};
+        break;
+      } else {
+        current = current[index];
+      }
     }
 
     //check if jsonPath is empty
@@ -414,57 +423,22 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       //Add the children to the rootJSON
       rootJSON = children;
     } else {
-      current.push(children);
+      if (Array.isArray(current)) {
+        //Substitute the current array with the children
+        current[Number(jsonPath[jsonPath.length - 1])] = children;
+      } else {
+        //Add the children to the current object
+        current.push(children);
+      }
     }
 
     if (tags.length > 0) {
       children.$link = {};
-      children.$link.tags = tags;
-      children.$link.dependencies = [];
-      children.$link.dependencies.push(children.$id);
+      if(scope === 'local') {
+        children.$link.dependencies = [];
+        children.$link.dependencies.push(children.$id);
+      }
       children.$link.scope = scope;
-
-      //Check the scope of the children
-      if (scope === 'parent') {
-        //Get the parent of the children
-        let tempJSON = rootJSON;
-        for (const key of jsonPath) {
-          tempJSON = tempJSON[key];
-        }
-
-        //While $link is not found, keep going up the inverse way
-        while (!tempJSON.$link) {
-          let tempJSONPath = [...jsonPath];
-          tempJSONPath.pop();
-          tempJSON = rootJSON;
-          for (const key of tempJSONPath) {
-            tempJSON = tempJSON[key];
-          }
-        }
-        //Add the children to the parent
-        tempJSON.$link.dependencies.push(children.$id);
-      }
-
-      const populateLinks = (json: any, dependencies: string[] = []): void => {
-        //Check if key $link exists
-        let json_dependencies = dependencies;
-        if (json.$link) {
-            // Concat the json_dependencies with the json.$link.dependencies, excluding repeated values
-            json_dependencies = [...new Set(json_dependencies.concat(json.$link.dependencies))];
-        }
-        for (const key in json) {
-          if(key === '$link') {
-            json.$link.dependencies = json_dependencies;
-          }
-          //check if json[key] is an object
-          if (typeof json[key] === 'object') {
-            //Recursively call the function
-            populateLinks(json[key], json_dependencies);
-          }
-        }
-      }
-
-      populateLinks(rootJSON);
 
       //Create object for the tags
       const obj = {
@@ -472,12 +446,78 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         $tags: tags,
         $visibility: visibility,
         $label: children.$label,
-        $path: jsonPath.join('/')
+        $path: jsonPath,
+        $scope: scope
       }
+
       //Add the tags to the rootJSON
       rootJSON.$links.push(obj);
-    }
 
+      //Populate the dependencies
+      const populateDependencies = (json: any, link: any, rootLinks: any): void => {
+        const searchOnPath = (path: string[], json: any): any => {
+          let current = json;
+          for (const key of path) {
+            current = current[key];
+          }
+          return current;
+        }
+
+        if (link.$scope === 'global') {
+          for (const key in json) {
+            if (key === '$link') {
+              if (json[key].dependencies) {
+                //Only add link.$id to the dependencies if it is not already in the dependencies
+                if (!json[key].dependencies.includes(link.$id)) {
+                  json[key].dependencies.push(link.$id);
+                }
+              }
+            }
+            if (typeof json[key] === 'object') {
+              populateDependencies(json[key], link, rootLinks);
+            }
+          }
+        } else if (link.$scope === 'parent') {
+          const jsonPath = [...link.$path];
+          let endPath = [];
+          while (jsonPath.length > 0) {
+            jsonPath.pop();
+            const parentJSON = searchOnPath(jsonPath, json);
+            if (parentJSON?.$link?.scope !== undefined && parentJSON.$link.scope !== 'parent') {
+              endPath = jsonPath;
+              break;
+            }
+          }
+
+          // Function to check if a path starts with a given prefix
+          const startsWith = (path: string[], prefix: string[]): boolean => {
+            return prefix.every((part, index) => path[index] === part);
+          };
+
+          // Find all paths that start with endPath
+          const pathsFound = rootLinks.filter((link: any) => startsWith(link.$path, endPath)).map((link: any) => link.$path);
+
+          for(const pathFound of pathsFound) {
+            const parentJSON = searchOnPath(pathFound, json);
+            if (parentJSON?.$link?.dependencies) {
+              //Only add link.$id to the dependencies if it is not already in the dependencies
+              if (!parentJSON.$link.dependencies.includes(link.$id)) {
+                parentJSON.$link.dependencies.push(link.$id);
+              }
+            }
+          }
+
+          console.log(pathsFound);
+        }
+      }
+
+      //Get the Links Object
+      const rootLinks = rootJSON.$links;
+
+      for (const link of rootLinks) {
+        populateDependencies(rootJSON, link, rootLinks);
+      }
+    }
     return [rootJSON, children];
   }
 
@@ -557,8 +597,8 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       return;
     }
 
-    let jsonPath = parent.jsonPath;
-    let items = parent.schema.items;
+    let jsonPath = [];
+    let items = undefined;
 
     if (parent.schema.type === 'object') {
       let options: Array<[string, number]> = [];
@@ -586,8 +626,25 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       const selectedOption = options.find(option => option[0] === optionName);
       const selectedChild = parent.hidden_children[selectedOption![1]];
 
+      let index = 0;
+      for (const child of parent.children) {
+        if (child.schema === selectedChild.schema.items) {
+          index++;
+        }
+      }
+
+      selectedChild.jsonPath.push(index.toString());
       jsonPath = selectedChild.jsonPath;
       items = selectedChild.schema.items;
+    } else if (parent.schema.type === 'array') {
+      // Push the new value to the array
+      parent.jsonPath.push(parent.children.length.toString());
+      // Then, assign the updated array to jsonPath
+      jsonPath = parent.jsonPath;
+      items = parent.schema.items;
+    } else {
+      vscode.window.showErrorMessage('Child object can only be created for type object or array');
+      return;
     }
 
     const rootJSONfile = parent.filePath;
