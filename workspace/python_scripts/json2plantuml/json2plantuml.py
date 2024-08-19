@@ -168,7 +168,7 @@ def parse_json(json_path):
     if 'Classes' in data:
         classes = data['Classes']
         for classs in classes:
-            print(json2plantuml(classs, data['$links']))
+            #print(json2plantuml(classs, data['$links']))
             # Check if there are state machines (HSMs) to parse
             if 'hsm' in classs:
                 hsms = classs['hsm']
@@ -190,7 +190,6 @@ def main():
     if args.input:
         json_file = args.input
         # Process the JSON file here
-        print(f"Processing JSON file: {json_file}")
         parse_json(json_file)
     else:
         print("Please provide the path to the JSON file using the -i/--input argument.")

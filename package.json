@@ -25,6 +25,11 @@
         "icon": "$(file-directory-create)"
       },
       {
+        "command": "codearchitect.previewPlantuml",
+        "title": "Preview Plantuml",
+        "icon": "$(symbol-color)"
+      },
+      {
         "command": "codearchitect.refresh",
         "title": "Refresh",
         "icon": "$(refresh)"
@@ -125,16 +130,6 @@
           "group": "inline"
         },
         {
-          "command": "codearchitect.editObject",
-          "when": "view == codearchitect-treeview && viewItem == parent-object",
-          "group": "inline"
-        },
-        {
-          "command": "codearchitect.editObject",
-          "when": "view == codearchitect-treeview && viewItem == root-object",
-          "group": "inline"
-        },
-        {
           "command": "codearchitect.addItem",
           "when": "view == codearchitect-treeview && viewItem == root-object",
           "group": "inline"
@@ -157,6 +152,11 @@
         {
           "command": "codearchitect.lookUp",
           "when": "view == codearchitect-treeview && viewItem == root-object",
+          "group": "inline"
+        },
+        {
+          "command": "codearchitect.previewPlantuml",
+          "when": "view == codearchitect-treeview && viewItem == parent-object",
           "group": "inline"
         }
       ]
@@ -197,7 +197,7 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.7",
-    "@types/node": "20.x",
+    "@types/node": "^20.16.1",
     "@types/vscode": "^1.92.0",
     "@typescript-eslint/eslint-plugin": "^7.14.1",
     "@typescript-eslint/parser": "^7.11.0",
@@ -205,7 +205,7 @@
     "@vscode/test-electron": "^2.4.0",
     "eslint": "^8.57.0",
     "ts-loader": "^9.5.1",
-    "typescript": "^5.4.5",
+    "typescript": "^5.5.4",
     "webpack": "^5.92.1",
     "webpack-cli": "^5.1.4"
   },

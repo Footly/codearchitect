@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { ItemTreeProvider, Item } from './tree';
 import $RefParser from "@apidevtools/json-schema-ref-parser";
-import { decode } from 'punycode';
+import { JSON2plantuml } from './json2plantuml';
 
 let schemas: any = [];
 let itemTreeProvider: ItemTreeProvider; // Declare the itemTreeProvider variable at the top level
@@ -57,6 +57,14 @@ export function activate(context: vscode.ExtensionContext) {
 				if (schemas.length !== 0) {
 					itemTreeProvider = new ItemTreeProvider(pathProjects, schemas);
 					itemTreeView = vscode.window.createTreeView('codearchitect-treeview', { treeDataProvider: itemTreeProvider });
+					// Handle selection changes
+					itemTreeView.onDidChangeSelection(event => {
+						if (event.selection.length > 0) {
+							const selectedItem = event.selection[0];
+							// Handle the selected item, e.g., open or edit it
+							vscode.commands.executeCommand('codearchitect.editObject', selectedItem);
+						}
+					});
 				} else {
 					vscode.window.showErrorMessage('No valid schema files found in the schema directory.');
 				}
@@ -100,7 +108,8 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	const refreshProjectsCommand = vscode.commands.registerCommand('codearchitect.refresh', () => {
+	const refreshProjectsCommand = vscode.commands.registerCommand('codearchitect.refresh', async () => {
+		// Assuming itemTreeProvider is a valid object
 		if (itemTreeProvider) {
 			itemTreeProvider.refresh();
 			vscode.window.showInformationMessage('Projects refreshed successfully!');
@@ -155,6 +164,34 @@ export function activate(context: vscode.ExtensionContext) {
 				handleMessage(message);
 			});
 		}
+	});
+
+	const previewPlantUmlCommand = vscode.commands.registerCommand('codearchitect.previewPlantuml', async (item: Item) => {
+		//Get the rootJSON
+		const rootJSON = JSON.parse(fs.readFileSync(item.filePath, 'utf8'));
+
+		let current = rootJSON;
+		for (const key of item.jsonPath) {
+			current = current[key];
+		}
+		await JSON2plantuml(item.filePath, current.$id);
+
+		try {
+			const tempPath = path.resolve(__dirname, '../py_scripts/temp.puml');
+			// Open the file
+			const document = await vscode.workspace.openTextDocument(tempPath);
+			await vscode.window.showTextDocument(document);
+
+			//Wait 250ms for the item to be created
+			await new Promise(resolve => setTimeout(resolve, 250));
+
+			// Execute the plantuml.preview command
+			await vscode.commands.executeCommand('plantuml.preview');
+		} catch (error) {
+			console.error('Error opening file:', error);
+			vscode.window.showErrorMessage('Failed to open PlantUML file.');
+		}
+
 	});
 
 	const editObjectCommand = vscode.commands.registerCommand('codearchitect.editObject', async (item: Item) => {
@@ -231,7 +268,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(propertiesProvider);
 	context.subscriptions.push(removeItemCommand);
 	context.subscriptions.push(lookUpCommand);
-
+	context.subscriptions.push(previewPlantUmlCommand);
 }
 
 export function deactivate() { }
