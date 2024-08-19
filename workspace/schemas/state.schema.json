@@ -25,12 +25,30 @@
         "$ref": "./state.schema.json"
       }
     },
+    "internaltransitions": {
+      "type": "array",
+      "format": "folder",
+      "items": {
+        "$ref": "./internaltransition.schema.json"
+      }
+    },
     "transitions": {
       "type": "array",
       "format": "folder",
       "items": {
         "$ref": "./transition.schema.json"
       }
+    },
+    "guards": {
+      "type": "array",
+      "format": "folder",
+      "items": {
+        "$ref": "./guard.schema.json"
+      }
+    },
+    "isInit": {
+      "type":"boolean",
+      "format": "checkbox"
     },
     "$link": {
       "format": "hidden",

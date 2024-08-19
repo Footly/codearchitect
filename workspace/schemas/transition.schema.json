@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "title": "Transition",
-  "contentMediaType": "symbol-event",
+  "contentMediaType": "arrow-right",
   "format": "parent-object",
   "properties": {
     "$id": {
@@ -18,12 +18,34 @@
       "$ref": "./visibility.schema.json",
       "const": "public"
     },
-    "to": {
-      "type": "string",
+    "event": {
       "format": "dropdown-select-tag",
+      "type": "string",
       "const": [
-        "state"
+        "event"
       ]
+    },
+    "transition": {
+      "type": "object",
+      "format": "sub-object",
+      "properties": {
+        "to": {
+          "format": "dropdown-select-tag",
+          "type": "string",
+          "const": [
+            "state",
+            "guard"
+          ]
+        },
+        "activity": {
+          "format": "dropdown-select-tag",
+          "type": "string",
+          "const": [
+            "state",
+            "activity"
+          ]
+        }
+      }
     },
     "$link": {
       "format": "hidden",

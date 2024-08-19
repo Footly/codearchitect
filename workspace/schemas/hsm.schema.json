@@ -19,11 +19,25 @@
       "const": "public"
       
     },
+    "events": {
+      "type": "array",
+      "format": "folder",
+      "items": {
+        "$ref": "./event.schema.json"
+      }
+    },
     "states": {
       "type": "array",
       "format": "folder",
       "items": {
         "$ref": "./state.schema.json"
+      }
+    },
+    "activities": {
+      "type": "array",
+      "format": "folder",
+      "items": {
+        "$ref": "./activity.schema.json"
       }
     },
     "$link": {
@@ -48,7 +62,7 @@
         },
         "scope": {
           "$ref": "./scope.schema.json",
-          "const": "parent"
+          "const": "local"
         }
       }
     }

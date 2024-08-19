@@ -1,44 +1,21 @@
 import argparse
 import json
 
+colors = [
+    "lightblue",
+    "lightcoral",
+    "lightsalmon",
+    "lightseagreen",
+    "ligthyellow"
+]
+
 # Create a function to search in the list of links given an id
 def search_id(links, id):
     for link in links:
         if link['$id'] == id:
             return link
     return None
-
-# Function to convert JSON HSM to PlantUML
-def json2plantuml_hsm(hsm, links=[]):
-    def generate_plantuml_state_machine(state, indent=0):
-        plantuml = ""
-        indent_str = "    " * indent
-
-        # Add the state label
-        plantuml += f"{indent_str}state {state['$label']} {{\n"
-
-        # Process the nested states recursively
-        for substate in state.get('states', []):
-            plantuml += generate_plantuml_state_machine(substate, indent + 1)
-
-         # Process transitions within this state
-        for transition in state.get('transitions', []):
-            target_state = search_id(links, transition['to'])['$label']
-            plantuml += f"{indent_str}    {state['$label']} --> {target_state} : {transition['$label']}\n"
-
-        plantuml += f"{indent_str}}}\n"
-        return plantuml
-
-    plantuml = "@startuml\n"
-    plantuml += "[*] --> top\n"  # Initial state transition
-
-    # Start the recursive generation from the top-level state
-    for state in hsm.get('states', []):
-        plantuml += generate_plantuml_state_machine(state)
-
-    plantuml += "@enduml\n"
-    return plantuml
-
+    
 # Function to convert JSON Class to PlantUML Class
 def json2plantuml(json_class, links=[]):
     class_name = json_class['$label']
@@ -118,6 +95,69 @@ def json2plantuml(json_class, links=[]):
 
     plantuml_class += '}\n'
     return plantuml_class
+
+def json2plantuml_hsm(hsm, links=[]):
+    def generate_plantuml_state_machine(state, indent=0):
+        plantuml = ""
+        indent_str = "    " * indent
+
+        is_initial = state.get('isInit', True)
+        if is_initial:
+            plantuml += f"{indent_str}[*] --> {state['$label']}\n"
+
+        # Add the state label
+        plantuml += f"{indent_str}state \"{state['$label']}\" as {state['$label']} #{colors[indent]} {{\n"
+
+        # Process the nested states recursively
+        for substate in state.get('states', []):
+            plantuml += generate_plantuml_state_machine(substate, indent + 1)
+
+        # Process guards within this state
+        for guard in state.get('guards', []):
+            choice_state = f"{guard['$label']}"
+            
+            # Extract the condition
+            condition = guard.get('condition', 'undefined condition')
+            
+            # Add the state with the condition
+            plantuml += f"{indent_str}    state {choice_state} <<choice>> : {condition}\n"
+            
+            # Retrieve the target states based on guard conditions
+            true_target_state = search_id(links, guard['true']['to'])['$label']
+            false_target_state = search_id(links, guard['false']['to'])['$label']
+            
+            # Add transitions to the PlantUML
+            plantuml += f"{indent_str}    {choice_state} --> {true_target_state} : [{guard['condition']}=true]\n"
+            plantuml += f"{indent_str}    {choice_state} --> {false_target_state} : [{guard['condition']}=false]\n"
+
+        # Process transitions within this state
+        for transition in state.get('transitions', []):
+            event = search_id(links, transition['event'])['$label']
+            target_state = search_id(links, transition['transition']['to'])['$label']
+            if(target_state != state['$label']):
+                plantuml += f"{indent_str}    {state['$label']} --> {target_state} : {event}\n"
+            else:
+                plantuml += f"{indent_str}    {target_state} : {event}\n"
+    
+        plantuml += f"{indent_str}}}\n"
+        return plantuml
+
+    plantuml = "@startuml\n"
+
+    # Generate the state machine
+    for state in hsm.get('states', []):
+        plantuml += generate_plantuml_state_machine(state)
+
+    # Add the legend at the top left corner
+    plantuml += "legend left\n"
+    plantuml += "  <b><u>HSM levels:</u></b>\n"
+    for idx, color in enumerate(colors):
+        plantuml += f"  <back:{color}>  </back> level {idx} ↓\n"
+    plantuml += "endlegend\n\n"
+
+
+    plantuml += "@enduml\n"
+    return plantuml
 
 # Function to parse JSON file
 def parse_json(json_path):
