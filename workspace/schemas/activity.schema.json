@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "title": "Event",
-  "contentMediaType": "symbol-event",
+  "title": "Activity",
+  "contentMediaType": "type-hierarchy",
   "format": "parent-object",
   "properties": {
     "$id": {

@@ -25,13 +25,6 @@
         "$ref": "./state.schema.json"
       }
     },
-    "internaltransitions": {
-      "type": "array",
-      "format": "folder",
-      "items": {
-        "$ref": "./internaltransition.schema.json"
-      }
-    },
     "transitions": {
       "type": "array",
       "format": "folder",
