@@ -1,4 +1,6 @@
 {
   "codearchitect.pathSchema": "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect_3\\workspace\\schemas",
-  "codearchitect.pathProjects": "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect_3\\workspace\\jsons"
+  "codearchitect.pathProjects": "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect_3\\workspace\\jsons",
+  "codearchitect.pathPyPreviewScript": "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\json2plantuml.py",
+  "workbench.tree.expandMode": "doubleClick"
 }

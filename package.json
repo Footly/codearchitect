@@ -169,16 +169,15 @@
             "type": "string",
             "default": "",
             "description": "Path to where the schemas are located"
-          }
-        }
-      },
-      {
-        "title": "Code Architect",
-        "properties": {
+          },
           "codearchitect.pathProjects": {
             "type": "string",
             "default": "",
             "description": "Path to the projects"
+          },
+          "codearchitect.pathPyPreviewScript": {
+            "type":"string",
+            "description": "Defines the py path to preview diagrams if implemented"
           }
         }
       }

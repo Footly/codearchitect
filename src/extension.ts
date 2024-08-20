@@ -71,8 +71,7 @@ export function activate(context: vscode.ExtensionContext) {
 			return;
 		}
 
-		if(itemTreeView)
-		{
+		if (itemTreeView) {
 			itemTreeProvider.schemas = schemas;
 			return;
 		}
@@ -113,6 +112,8 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	const refreshProjectsCommand = vscode.commands.registerCommand('codearchitect.refresh', async () => {
+		const pathSchema = config.get<string>('pathSchema', '');
+		const pathProjects = config.get<string>('pathProjects', '');
 		//Reset schemas
 		schemas = [];
 		await readSchemaFiles(pathSchema, pathProjects);
@@ -170,6 +171,9 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	const previewPlantUmlCommand = vscode.commands.registerCommand('codearchitect.previewPlantuml', async (item: Item) => {
+		//Get the python script
+		const pyScript = config.get<string>('pathPyPreviewScript', '');
+
 		//Get the rootJSON
 		const rootJSON = JSON.parse(fs.readFileSync(item.filePath, 'utf8'));
 
@@ -177,12 +181,17 @@ export function activate(context: vscode.ExtensionContext) {
 		for (const key of item.jsonPath) {
 			current = current[key];
 		}
-		await JSON2plantuml(item.filePath, current.$id);
+		await JSON2plantuml(pyScript, item.filePath, current.$id);
 
 		try {
-			const tempPath = path.resolve(__dirname, '../py_scripts/temp.puml');
+			// Get the directory where the Python script is located
+			const scriptDir = path.dirname(pyScript);
+
+			// Specify the path where you want to save the PlantUML content (same directory as the Python script)
+			const filePath = path.resolve(scriptDir, 'output.puml');
+
 			// Open the file
-			const document = await vscode.workspace.openTextDocument(tempPath);
+			const document = await vscode.workspace.openTextDocument(filePath);
 			await vscode.window.showTextDocument(document);
 
 			//Wait 250ms for the item to be created
