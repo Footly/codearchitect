@@ -15,10 +15,22 @@
     },
     "visibility": {
       "hidden": true,
-      "$ref": "./visibility.schema.json",
+      "$ref": "./visibility.model.json",
       "const": "public"
     },
+    "dependencies": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "scope": {
+      "hidden": true,
+      "type": "string"
+    },
     "event": {
+      "hidden": true,
       "modelType": "dropdown-select-tag",
       "type": "string",
       "const": [
@@ -26,6 +38,7 @@
       ]
     },
     "transition": {
+      "hidden": true,
       "type": "object",
       "modelType": "sub-object",
       "properties": {

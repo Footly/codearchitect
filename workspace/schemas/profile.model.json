@@ -1,6 +1,6 @@
 {
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
-  "$id": "profile.schema.json",
+  "$id": "profile.model.json",
   "title": "Project",
   "vscodeIcon": "symbol-method",
   "type": "object",
@@ -16,18 +16,31 @@
     },
     "visibility": {
       "hidden": true,
-      "$ref": "./visibility.schema.json",
+      "$ref": "./visibility.model.json",
       "const": "public"
     },
-    "$schema": {
+    "dependencies": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "scope": {
+      "hidden": true,
+      "type": "string"
+    },
+    "$model": {
       "type": "string",
       "hidden": true
     },
     "version": {
+      "hidden": true,
       "modelType": "input-string",
       "type": "string"
     },
     "documentation": {
+      "hidden": true,
       "modelType": "text-area",
       "type": "string"
     },
@@ -36,7 +49,7 @@
       "vscodeIcon": "folder",
       "type": "array",
       "items": {
-        "$ref": "./class.schema.json"
+        "$ref": "./class.model.json"
       }
     },
     "Requirements": {
@@ -44,7 +57,7 @@
       "vscodeIcon": "folder",
       "type": "array",
       "items": {
-        "$ref": "./reqs.schema.json"
+        "$ref": "./reqs.model.json"
       }
     },
     "Primitive Types": {
@@ -52,14 +65,14 @@
       "vscodeIcon": "folder",
       "type": "array",
       "items": {
-        "$ref": "./primitivetypes.schema.json"
+        "$ref": "./primitivetypes.model.json"
       }
     },
     "$links": {
       "type": "array",
       "hidden": true,
       "items": {
-        "$ref": "./tags.schema.json"
+        "$ref": "./tags.model.json"
       }
     }
   },

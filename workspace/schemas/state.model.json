@@ -15,15 +15,26 @@
     },
     "visibility": {
       "hidden": true,
-      "$ref": "./visibility.schema.json",
+      "$ref": "./visibility.model.json",
       "const": "public"
+    },
+    "dependencies": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "scope": {
+      "hidden": true,
+      "type": "string"
     },
     "states": {
       "type": "array",
       "modelType": "folder",
       "hidden": true,
       "items": {
-        "$ref": "./state.schema.json"
+        "$ref": "./state.model.json"
       }
     },
     "transitions": {
@@ -31,7 +42,7 @@
       "modelType": "folder",
       "hidden": true,
       "items": {
-        "$ref": "./transition.schema.json"
+        "$ref": "./transition.model.json"
       }
     },
     "guards": {
@@ -39,10 +50,11 @@
       "modelType": "folder",
       "hidden": true,
       "items": {
-        "$ref": "./guard.schema.json"
+        "$ref": "./guard.model.json"
       }
     },
     "isInit": {
+      "hidden": true,
       "type":"boolean",
       "modelType": "checkbox"
     }

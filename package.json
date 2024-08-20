@@ -116,47 +116,32 @@
       "view/item/context": [
         {
           "command": "codearchitect.addItem",
-          "when": "view == codearchitect-treeview && viewItem == array-parent-objects",
-          "group": "inline"
-        },
-        {
-          "command": "codearchitect.addItem",
-          "when": "view == codearchitect-treeview && viewItem == parent-object",
+          "when": "view == codearchitect-treeview && viewItem =~ /.add/",
           "group": "inline"
         },
         {
           "command": "codearchitect.removeItem",
-          "when": "view == codearchitect-treeview && viewItem == parent-object",
-          "group": "inline"
-        },
-        {
-          "command": "codearchitect.addItem",
-          "when": "view == codearchitect-treeview && viewItem == root-object",
-          "group": "inline"
-        },
-        {
-          "command": "codearchitect.removeItem",
-          "when": "view == codearchitect-treeview && viewItem == root-object",
+          "when": "view == codearchitect-treeview && viewItem =~ /.rm/",
           "group": "inline"
         },
         {
           "command": "codearchitect.navigateBack",
-          "when": "view == codearchitect-treeview && viewItem == root-object",
+          "when": "view == codearchitect-treeview && viewItem =~ /root/",
           "group": "inline"
         },
         {
           "command": "codearchitect.navigateForward",
-          "when": "view == codearchitect-treeview && viewItem == root-object",
+          "when": "view == codearchitect-treeview && viewItem =~ /root/",
           "group": "inline"
         },
         {
           "command": "codearchitect.lookUp",
-          "when": "view == codearchitect-treeview && viewItem == root-object",
+          "when": "view == codearchitect-treeview && viewItem =~ /root/",
           "group": "inline"
         },
         {
           "command": "codearchitect.previewPlantuml",
-          "when": "view == codearchitect-treeview && viewItem == parent-object",
+          "when": "view == codearchitect-treeview && viewItem =~ /.preview/",
           "group": "inline"
         }
       ]
@@ -176,7 +161,7 @@
             "description": "Path to the projects"
           },
           "codearchitect.pathPyPreviewScript": {
-            "type":"string",
+            "type": "string",
             "description": "Defines the py path to preview diagrams if implemented"
           }
         }

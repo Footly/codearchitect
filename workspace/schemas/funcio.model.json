@@ -15,10 +15,22 @@
     },
     "visibility": {
       "hidden": true,
-      "$ref": "./visibility.schema.json",
+      "$ref": "./visibility.model.json",
       "const": "public"
     },
+    "dependencies": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "scope": {
+      "hidden": true,
+      "type": "string"
+    },
     "returntype": {
+      "hidden": true,
       "modelType": "sub-object",
       "type":"object",
       "properties": {
@@ -38,10 +50,11 @@
       }
     },
     "parameters": {
+      "hidden": true,
       "modelType": "folder",
       "type": "array",
       "items": {
-        "$ref": "./parameter.schema.json"
+        "$ref": "./parameter.model.json"
       }
     }
   },

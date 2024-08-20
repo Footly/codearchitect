@@ -15,11 +15,23 @@
     },
     "visibility": {
       "hidden": true,
-      "$ref": "./visibility.schema.json",
+      "$ref": "./visibility.model.json",
       "const": "public"
+    },
+    "dependencies": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "scope": {
+      "hidden": true,
+      "type": "string"
     },
     "requirements": {
       "type": "array",
+      "hidden": true,
       "modelType": "pool-dropdown-select-tag",
       "items": {
         "type": "string",
@@ -28,49 +40,56 @@
     },
     "variables": {
       "type": "array",
+      "hidden": true,
       "modelType": "folder",
       "items": {
-        "$ref": "./variable.schema.json"
+        "$ref": "./variable.model.json"
       }
     },
     "funcions": {
       "type": "array",
+      "hidden": true,
       "modelType": "folder",
       "items": {
-        "$ref": "./funcio.schema.json"
+        "$ref": "./funcio.model.json"
       }
     },
     "datastructures": {
       "type": "array",
+      "hidden": true,
       "modelType": "folder",
       "items": {
-        "$ref": "./datastructure.schema.json"
+        "$ref": "./datastructure.model.json"
       }
     },
     "typedefs": {
       "type": "array",
+      "hidden": true,
       "modelType": "folder",
       "items": {
-        "$ref": "./typedefs.schema.json"
+        "$ref": "./typedefs.model.json"
       }
     },
     "enumerators": {
       "type": "array",
+      "hidden": true,
       "modelType": "folder",
       "items": {
-        "$ref": "./enumerator.schema.json"
+        "$ref": "./enumerator.model.json"
       }
     },
     "hsm": {
+      "hidden": true,
       "type": "array",
       "modelType": "folder",
       "items": {
-        "$ref": "./hsm.schema.json"
+        "$ref": "./hsm.model.json"
       }
     }
   },
   "$link": {
     "scope": "local",
     "tags": ["*", "class"]
-  }
+  },
+  "preview": true
 }

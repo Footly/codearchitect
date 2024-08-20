@@ -14,10 +14,23 @@
       "hidden": true
     },
     "visibility": {
+      "hidden": true,
       "modelType": "dropdown-select",
-      "$ref": "./visibility.schema.json"
+      "$ref": "./visibility.model.json"
+    },
+    "dependencies": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "scope": {
+      "hidden": true,
+      "type": "string"
     },
     "datatype": {
+      "hidden": true,
       "modelType": "dropdown-select-tag",
       "type": "string",
       "const": ["types"]

@@ -15,10 +15,22 @@
     },
     "visibility": {
       "hidden": true,
-      "$ref": "./visibility.schema.json",
+      "$ref": "./visibility.model.json",
       "const": "public"
     },
+    "dependencies": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "scope": {
+      "hidden": true,
+      "type": "string"
+    },
     "activity": {
+      "hidden": true,
       "modelType": "dropdown-select-tag",
       "type": "string",
       "const": [
@@ -26,10 +38,12 @@
       ]
     },
     "condition": {
+      "hidden": true,
       "type": "string",
       "modelType": "input-string"
     },
     "true": {
+      "hidden": true,
       "type": "object",
       "modelType": "sub-object",
       "properties": {
@@ -51,6 +65,7 @@
       }
     },
     "false": {
+      "hidden": true,
       "type": "object",
       "modelType": "sub-object",
       "properties": {

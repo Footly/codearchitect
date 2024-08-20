@@ -15,27 +15,43 @@
     },
     "visibility": {
       "hidden": true,
-      "$ref": "./visibility.schema.json",
+      "$ref": "./visibility.model.json",
       "const": "public"
+    },
+    "dependencies": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "scope": {
+      "hidden": true,
+      "type": "string"
     },
     "datatype": {
       "modelType": "dropdown-select-tag",
+      "hidden": true,
       "type": "string",
       "const": ["types"]
     },
     "isArray": {
       "modelType": "input-string",
+      "hidden": true,
       "type": "string"
     },
     "isPointer": {
+      "hidden": true,
       "modelType": "checkbox",
       "type": "boolean"
     },
     "isVolatile": {
+      "hidden": true,
       "modelType": "checkbox",
       "type": "boolean"
     },
     "isConst": {
+      "hidden": true,
       "modelType": "checkbox",
       "type": "boolean"
     }

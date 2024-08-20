@@ -15,14 +15,26 @@
     },
     "visibility": {
       "hidden": true,
-      "$ref": "./visibility.schema.json",
+      "$ref": "./visibility.model.json",
       "const": "public"
     },
+    "dependencies": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "scope": {
+      "hidden": true,
+      "type": "string"
+    },
     "members": {
+      "hidden": true,
       "modelType": "folder",
       "type": "array",
       "items": {
-        "$ref": "./enummember.schema.json"
+        "$ref": "./enummember.model.json"
       }
     }
   },

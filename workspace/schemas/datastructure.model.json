@@ -15,19 +15,32 @@
     },
     "visibility": {
       "hidden": true,
-      "$ref": "./visibility.schema.json",
+      "$ref": "./visibility.model.json",
       "const": "public"
     },
+    "dependencies": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "scope": {
+      "hidden": true,
+      "type": "string"
+    },
     "type": {
+      "hidden": true,
       "modelType": "dropdown-select",
       "type": "string",
       "enum": ["struct", "union"]
     },
     "members": {
+      "hidden": true,
       "modelType": "folder",
       "type": "array",
       "items": {
-        "$ref": "./datamember.schema.json"
+        "$ref": "./datamember.model.json"
       }
     }
   },

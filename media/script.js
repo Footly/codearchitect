@@ -169,11 +169,6 @@ function renderChild(child, div, vscode) {
         case 'text-area':
             renderTextArea(child, div, vscode);
             break;
-        case 'array-creator':
-            renderArrayCreator(child, div, vscode);
-            break;
-        case 'hidden':
-            break;
         default:
             console.error(`Unsupported modelType: ${modelType}`);
             break;
@@ -339,92 +334,6 @@ function renderDropdownSelectTag(child, div, vscode) {
         child.value = event.target.value;
         vscode.postMessage({ command: 'saveObject', item: child });
     });
-}
-
-function renderArrayCreator(child, div, vscode) {
-    // Create a new div for the array creator
-    const arrayCreatorDiv = document.createElement('div');
-    arrayCreatorDiv.style.marginBottom = '10px';
-    div.appendChild(arrayCreatorDiv);
-
-    // Create and append the $label
-    const $label = document.createElement('label');
-    $label.textContent = child.$label;
-    $label.style.marginBottom = '10px';
-    arrayCreatorDiv.appendChild($label);
-
-    const modelType = child.schema.items.modelType;
-
-    // Create and append the add button
-    const addButton = document.createElement('button');
-    addButton.textContent = 'Add';
-    addButton.onclick = () => {
-        if (modelType === 'sub-object') {
-            createElement(child, vscode);
-        } else {
-            child.value.push('');
-            //Remove previous div
-            arrayCreatorDiv.remove();
-            renderArrayCreator(child, div, vscode);
-        }
-    };
-    arrayCreatorDiv.appendChild(addButton);
-
-    if (modelType === 'sub-object') {
-        // For children of the array creator
-        child.hidden_children.forEach(subChild => {
-            //Copy the $links of the parent to the child
-            subChild.$links = child.$links;
-            //Copy dependencies of the parent to the child
-            subChild.dependencies = child.dependencies;
-            renderChild(subChild, arrayCreatorDiv, vscode);
-            //Create a remove button in this div
-            const removeButton = document.createElement('button');
-            removeButton.textContent = 'Remove';
-            removeButton.onclick = () => {
-                removeElement(subChild, vscode);
-            }
-            arrayCreatorDiv.appendChild(removeButton);
-            //Copy subchild into child
-            child.children.push(subChild);
-        });
-    } else {
-        for (value of child.value) {
-            // Create a child
-            const fake_child = {
-                value: value,
-                schema: child.schema.items
-            }
-
-            // Create a listener to update child when fake_child changes
-            Object.defineProperty(fake_child, 'value', {
-                set: function (newValue) {
-                    child.value[child.value.indexOf(value)] = newValue;
-                },
-                get: function () {
-                    return child.value[child.value.indexOf(value)];
-                }
-            });
-
-            //Copy the $links of the parent to the child
-            fake_child.$links = child.$links;
-            //Copy dependencies of the parent to the child
-            fake_child.dependencies = child.dependencies;
-
-            renderChild(fake_child, arrayCreatorDiv, vscode);
-
-            // Create a remove button in this div
-            const removeButton = document.createElement('button');
-            removeButton.textContent = 'Remove';
-            removeButton.onclick = () => {
-                child.value.splice(child.value.indexOf(value), 1);
-                // Remove previous div
-                arrayCreatorDiv.remove();
-                renderArrayCreator(child, div, vscode);
-            }
-            arrayCreatorDiv.appendChild(removeButton);
-        }
-    }
 }
 
 function renderPoolDropdownSelect(child, div, vscode) {
@@ -723,7 +632,7 @@ function renderSubObjectChild(child, div, vscode) {
     subObjectDiv.appendChild(contentDiv);
 
     // Add sub-children to the collapsible content
-    child.hidden_children.forEach(subChild => {
+    child.children.forEach(subChild => {
         //Copy the $links of the parent to the child
         subChild.$links = child.$links;
         //Copy dependencies of the parent to the child

@@ -15,33 +15,48 @@
     },
     "visibility": {
       "hidden": true,
-      "$ref": "./visibility.schema.json",
+      "$ref": "./visibility.model.json",
       "const": "public"
     },
-    "events": {
+    "dependencies": {
+      "hidden": true,
       "type": "array",
-      "modelType": "folder",
       "items": {
-        "$ref": "./event.schema.json"
+        "type": "string"
       }
+    },
+    "scope": {
+      "hidden": true,
+      "type": "string"
     },
     "states": {
+      "hidden": true,
       "type": "array",
       "modelType": "folder",
       "items": {
-        "$ref": "./state.schema.json"
+        "$ref": "./state.model.json"
       }
     },
-    "activities": {
+    "Events": {
       "type": "array",
       "modelType": "folder",
+      "vscodeIcon": "folder",
       "items": {
-        "$ref": "./activity.schema.json"
+        "$ref": "./event.model.json"
+      }
+    },
+    "Activities": {
+      "type": "array",
+      "modelType": "folder",
+      "vscodeIcon": "folder",
+      "items": {
+        "$ref": "./activity.model.json"
       }
     }
   },
   "$link": {
     "scope": "local",
     "tags": ["*", "hsm"]
-  }
+  },
+  "preview": true
 }

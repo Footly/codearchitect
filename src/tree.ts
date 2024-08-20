@@ -208,41 +208,31 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       );
     };
 
-    const addItemToParent = (item: Item, modelType: string): void => {
+    const addItemToParent = (item: Item, modelType: string, hidden: boolean): void => {
       switch (modelType) {
-        case 'parent-object':
-        case 'array-parent-objects':
-        case 'root-object':
-          parent.children.push(item);
-          break;
         case 'folder':
-          this.decodeChildrenFromJson(jsonObject[item.$label], item.schema, item.jsonPath, parent);
-          parent.hidden_children.push(item);
+          if (hidden)
+            this.decodeChildrenFromJson(jsonObject[item.$label], item.schema, item.jsonPath, parent);
           break;
-        case 'hidden':
-        case 'pool-dropdown-select-tag':
-        case 'dropdown-select-tag':
-        case 'input-string':
-        case 'text-area':
-        case 'checkbox':
-        case 'dropdown-select':
-          parent.hidden_children.push(item);
-          break;
-        case 'array-creator':
         case 'sub-object':
           // Decode the sub-object
-          this.decodeChildrenFromJson(item.value, item.schema, item.jsonPath, item);
-          parent.hidden_children.push(item);
+          if (hidden)
+            this.decodeChildrenFromJson(item.value, item.schema, item.jsonPath, item);
           break;
         default:
-          vscode.window.showErrorMessage(`Type ${modelType} is not supported`);
           break;
+      }
+
+      if (hidden == true) {
+        parent.hidden_children.push(item);
+      } else {
+        parent.children.push(item);
       }
     };
 
     const processArray = (array: any[]): void => {
       array.forEach((itemValue, index) => {
-        let itemSchema = this.resolveRef(schema.items, parent.root_schema);
+        let itemSchema = this.resolveRef(schema?.items, parent.root_schema);
 
         const item = createItem(index.toString(), itemSchema, parentPath.concat(index.toString()), itemValue?.$label);
 
@@ -253,12 +243,17 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
           item.value = itemValue;
         }
 
-        addItemToParent(item, itemSchema.modelType);
+        let hidden = false;
+
+        if (itemSchema?.hidden == true)
+          hidden = true;
+
+        addItemToParent(item, itemSchema?.modelType, hidden);
       });
     };
 
     const processObject = (object: { [key: string]: any }): void => {
-      const properties = this.resolveRef(schema.properties, parent.root_schema);
+      const properties = this.resolveRef(schema?.properties, parent.root_schema);
 
 
       for (const key in object) {
@@ -279,7 +274,12 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
             item.value = jsonKey;
           }
 
-          addItemToParent(item, keyProperties.modelType);
+          let hidden = false;
+
+          if (item.schema?.hidden == true)
+            hidden = true;
+
+          addItemToParent(item, keyProperties?.modelType, hidden);
         }
       }
     };
@@ -323,17 +323,17 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       jsonFiles.forEach(file => {
         // Read the JSON file
         const content = fs.readFileSync(path.join(this.rootPath, file), 'utf-8');
-        //Look for the $schema in the JSON file
+        //Look for the $model in the JSON file
         const rootSchema = JSON.parse(content);
-        //Check if rootSchema has a $schema
-        if (!rootSchema.$schema) {
-          vscode.window.showWarningMessage(`$schema not found for ${file}`);
+        //Check if rootSchema has a $model
+        if (!rootSchema.$model) {
+          vscode.window.showWarningMessage(`$model not found for ${file}`);
           return;
         }
-        //Check if the $schema is in the schemas
-        const schema = this.schemas.find(schema => schema.$id === rootSchema.$schema);
+        //Check if the $model is in the schemas
+        const schema = this.schemas.find(schema => schema.$id === rootSchema.$model);
         if (!schema) {
-          vscode.window.showWarningMessage(`Schema ${rootSchema.$schema} not found for ${file}`);
+          vscode.window.showWarningMessage(`model ${rootSchema.$model} not found for ${file}`);
           return;
         }
         const item = new Item(
@@ -365,16 +365,15 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     //Convert the path to a JSON file and create a variable for the parentJSON
     let rootJSON = JSON.parse(fs.readFileSync(rootJSONpath, 'utf-8'));
 
-    if(schema?.$link)
-    {
+    if (schema?.$link) {
       tags = schema?.$link?.tags;
       scope = schema?.$link?.scope;
     }
 
-    for (const key in schema.properties) {
+    for (const key in schema?.properties) {
       const jsonPathKey = [...jsonPath];
       jsonPathKey.push(key);
-      const property = this.resolveRef(schema.properties[key], rootSchema);
+      const property = this.resolveRef(schema?.properties[key], rootSchema);
       const type = property.type;
 
       if (key === '$label') {
@@ -382,8 +381,8 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       } else if (key === '$id') {
         children.$id = generateUUID();
         this.lastIDCreated = children.$id;
-      } else if (key === '$schema') {
-        children.$schema = rootSchema.$id;
+      } else if (key === '$model') {
+        children.$model = rootSchema.$id;
       } else if (key === 'visibility') {
         children[key] = property.default;
         if (property.const) children[key] = property.const;
@@ -436,12 +435,11 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     }
 
     if (tags.length > 0) {
-      children.$link = {};
-      if(scope === 'local') {
-        children.$link.dependencies = [];
-        children.$link.dependencies.push(children.$id);
+      children.dependencies = [];
+      if (scope === 'local') {
+        children.dependencies.push(children.$id);
       }
-      children.$link.scope = scope;
+      children.scope = scope;
 
       //Create object for the tags
       const obj = {
@@ -450,7 +448,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         $visibility: visibility,
         $label: children.$label,
         $path: jsonPath,
-        $scope: scope
+        scope: scope
       }
 
       //Add the tags to the rootJSON
@@ -466,27 +464,22 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
           return current;
         }
 
-        if (link.$scope === 'global') {
+        if (link.scope === 'global') {
           for (const key in json) {
-            if (key === '$link') {
-              if (json[key].dependencies) {
-                //Only add link.$id to the dependencies if it is not already in the dependencies
-                if (!json[key].dependencies.includes(link.$id)) {
-                  json[key].dependencies.push(link.$id);
-                }
-              }
+            if (key === 'dependencies' && !json.dependencies.includes(link.$id)) {
+              json.dependencies.push(link.$id);
             }
             if (typeof json[key] === 'object') {
               populateDependencies(json[key], link, rootLinks);
             }
           }
-        } else if (link.$scope === 'parent') {
+        } else if (link.scope === 'parent') {
           const jsonPath = [...link.$path];
           let endPath = [];
           while (jsonPath.length > 0) {
             jsonPath.pop();
             const parentJSON = searchOnPath(jsonPath, json);
-            if (parentJSON?.$link?.scope !== undefined && parentJSON.$link.scope !== 'parent') {
+            if (parentJSON?.scope !== undefined && parentJSON.scope !== 'parent') {
               endPath = jsonPath;
               break;
             }
@@ -500,12 +493,12 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
           // Find all paths that start with endPath
           const pathsFound = rootLinks.filter((link: any) => startsWith(link.$path, endPath)).map((link: any) => link.$path);
 
-          for(const pathFound of pathsFound) {
+          for (const pathFound of pathsFound) {
             const parentJSON = searchOnPath(pathFound, json);
-            if (parentJSON?.$link?.dependencies) {
+            if (parentJSON?.dependencies) {
               //Only add link.$id to the dependencies if it is not already in the dependencies
-              if (!parentJSON.$link.dependencies.includes(link.$id)) {
-                parentJSON.$link.dependencies.push(link.$id);
+              if (!parentJSON.dependencies.includes(link.$id)) {
+                parentJSON.dependencies.push(link.$id);
               }
             }
           }
@@ -534,7 +527,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     const options: Array<[string, number]> = [];
 
     this.schemas.forEach((schema, index) => {
-      if (schema.modelType === 'root-object') {
+      if (schema?.modelType === 'root') {
         options.push([schema.$id, index]);
       }
     });
@@ -603,14 +596,14 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     let jsonPath = [];
     let items = undefined;
 
-    if (parent.schema.type === 'object') {
+    if (parent.schema?.type === 'object') {
       let options: Array<[string, number]> = [];
       //Check options for creating a child object
       parent.hidden_children.forEach((child) => {
         const schema = this.resolveRef(child.schema, parent.root_schema);
-        const type = schema.type;
-        const items = this.resolveRef(schema.items, parent.root_schema);
-        if (items?.modelType === 'parent-object' || items?.modelType === 'root-object') {
+        const type = schema?.type;
+        const items = this.resolveRef(schema?.items, parent.root_schema);
+        if (items?.modelType === 'parent-object' || items?.modelType === 'root') {
           options.push([items.title, parent.hidden_children.indexOf(child)]);
         }
       });
@@ -628,23 +621,23 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
 
       const selectedOption = options.find(option => option[0] === optionName);
       const selectedChild = parent.hidden_children[selectedOption![1]];
-      const schemaItems = this.resolveRef(selectedChild.schema.items, parent.root_schema);
+      const schemaItems = this.resolveRef(selectedChild.schema?.items, parent.root_schema);
       let index = 0;
       for (const child of parent.children) {
-        if (child.schema.title === schemaItems.title) {
+        if (child.schema?.title === schemaItems.title) {
           index++;
         }
       }
       const selectedChildCopy = JSON.parse(JSON.stringify(selectedChild));
       selectedChildCopy.jsonPath.push(index.toString());
       jsonPath = selectedChildCopy.jsonPath;
-      items = selectedChildCopy.schema.items;
-    } else if (parent.schema.type === 'array') {
+      items = selectedChildCopy.schema?.items;
+    } else if (parent.schema?.type === 'array') {
       // Push the new value to the array
       parent.jsonPath.push(parent.children.length.toString());
       // Then, assign the updated array to jsonPath
       jsonPath = parent.jsonPath;
-      items = parent.schema.items;
+      items = parent.schema?.items;
     } else {
       vscode.window.showErrorMessage('Child object can only be created for type object or array');
       return;
@@ -723,7 +716,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
 
     const rootJSON = JSON.parse(fs.readFileSync(item.filePath, 'utf-8'));
 
-    if (item.contextValue === 'root-object') {
+    if (item?.contextValue?.includes('root')) {
       //Add another prompt to confirm the removal of the root object in the disk
       const response = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: `The root object ${item.$label}.json will be removed from the disk. Are you sure you want to proceed?` });
       if (response !== 'Yes') {
@@ -793,14 +786,14 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         }
         const childLastKey = child.jsonPath[child.jsonPath.length - 1];
         if (child.value !== childCurrent[childLastKey] && childLastKey === '$label' &&
-          item.contextValue === 'root-object') {
+          item.contextValue === 'root') {
           //Change the name of the file
           const newFilePath = path.join(this.rootPath, `${child.value}.json`);
           fs.renameSync(item.filePath, newFilePath);
           item.filePath = newFilePath;
         }
         if (child.value !== undefined) {
-          if(childLastKey === '$id') {
+          if (childLastKey === '$id') {
             id_item_changed = child.value;
           }
           childCurrent[childLastKey] = child.value;
@@ -850,20 +843,34 @@ export class Item extends vscode.TreeItem {
     public parentJsonPath: string[]
   ) {
     super($label, collapsibleState);
-    if (this.schema.title) {
-      this.description = this.schema.title;
-      //this.tooltip = this.schema.title;
+    if (this.schema?.title) {
+      this.description = this.schema?.title;
+      //this.tooltip = this.schema?.title;
     }
 
     if (this.schema?.vscodeIcon) {
-      this.iconPath = new vscode.ThemeIcon(this.schema.vscodeIcon);
+      this.iconPath = new vscode.ThemeIcon(this.schema?.vscodeIcon);
     }
-    this.contextValue = this.schema.modelType;
+
+    if (this.schema?.modelType) {
+      this.contextValue = this.schema?.modelType;
+      if (this.schema.modelType === 'root' || this.schema.modelType === 'parent-object') {
+        this.contextValue += ".add";
+        this.contextValue += ".rm";
+      } else if (this.schema.modelType === 'folder') {
+        this.contextValue += ".add";
+      }
+    } else {
+      this.contextValue = "";
+    }
+
+    if (this.schema?.preview && this.schema?.preview === true) {
+      this.contextValue += ".preview";
+    }
 
     this.children = []; // Initialize children[] as an empty array
     this.hidden_children = []; // Initialize hidden_children[] as an empty array
   }
-
 }
 
 function generateUUID(): string {

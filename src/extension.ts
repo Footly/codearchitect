@@ -32,7 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
 					const data = await fs.promises.readFile(pathFileProfile, 'utf8');
 					const jsonData = JSON.parse(data);
 
-					if (jsonData?.modelType === 'root-object') {
+					if (jsonData?.modelType === 'root') {
 						// Dereference the schema
 						const dereferencedSchema = await $RefParser.bundle(pathFileProfile);
 						schemas.push(dereferencedSchema);
@@ -241,8 +241,8 @@ export function activate(context: vscode.ExtensionContext) {
 			for (const key of jsonPath) {
 				current = current[key];
 			}
-			if (current?.$link?.scope !== undefined && current?.$link?.scope !== 'parent') {
-				itemCopy.dependencies = current.$link.dependencies;
+			if (current?.scope !== undefined && current?.scope !== 'parent') {
+				itemCopy.dependencies = current.dependencies;
 				break;
 			}
 			jsonPath.pop();
