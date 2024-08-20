@@ -12,6 +12,10 @@
   "activationEvents": [
     "onStartupFinished"
   ],
+  "extensionDependencies": [
+    "jebbs.plantuml"
+  ],
+  "publisher": "narcisoriol",
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
