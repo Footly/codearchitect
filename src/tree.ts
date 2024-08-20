@@ -359,7 +359,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     const children: { [key: string]: any } = {};
     let tags: string[] = [];
     let visibility: string = 'public';
-    let scope: string = 'global';
+    let scope: string = 'parent';
 
     schema = this.resolveRef(schema, rootSchema);
 
@@ -440,7 +440,10 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       if (scope === 'local') {
         children.dependencies.push(children.$id);
       }
-      children.scope = scope;
+      if (scope === 'local' || scope === 'global' || scope === 'parent')
+        children.scope = scope;
+      else
+        children.scope = undefined;
 
       //Create object for the tags
       const obj = {

@@ -236,7 +236,7 @@ export function activate(context: vscode.ExtensionContext) {
 			for (const key of newJsonPath) {
 				current = current[key];
 			}
-			if (current?.scope !== undefined && current?.scope !== 'parent') {
+			if (current?.scope && current?.scope !== 'parent') {
 				itemCopy.dependencies = current.dependencies;
 				break;
 			}
