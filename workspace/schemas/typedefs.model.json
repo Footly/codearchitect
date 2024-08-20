@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/NarcisOriol/codearchitect_3/bb3542a490d833055f4b86ddf22a5bf56e4f75a6/resources/codearchitect.schema.json",
+  "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Typedef",
   "vscode-icon": "references",
@@ -7,11 +7,11 @@
   "properties": {
     "$id": {
       "type": "string",
-      "modelType": "hidden"
+      "hidden": true
     },
     "$label": {
       "type": "string",
-      "modelType": "hidden"
+      "hidden": true
     },
     "visibility": {
       "modelType": "dropdown-select",
@@ -21,29 +21,10 @@
       "modelType": "dropdown-select-tag",
       "type": "string",
       "const": ["types"]
-    },
-    "$link": {
-      "modelType": "hidden",
-      "type": "object",
-      "properties": {
-        "tags": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "const": ["*", "types"]
-        },
-        "dependencies": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "scope": {
-          "$ref": "./scope.schema.json",
-          "const": "parent"
-        }
-      }
     }
+  },
+  "$link": {
+    "scope": "parent",
+    "tags": ["*", "types"]
   }
 }

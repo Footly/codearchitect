@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/NarcisOriol/codearchitect_3/bb3542a490d833055f4b86ddf22a5bf56e4f75a6/resources/codearchitect.schema.json",
+  "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Class",
   "modelType": "parent-object",
@@ -7,14 +7,14 @@
   "properties": {
     "$id": {
       "type": "string",
-      "modelType": "hidden"
+      "hidden": true
     },
     "$label": {
       "type": "string",
-      "modelType": "hidden"
+      "hidden": true
     },
     "visibility": {
-      "modelType": "hidden",
+      "hidden": true,
       "$ref": "./visibility.schema.json",
       "const": "public"
     },
@@ -67,29 +67,10 @@
       "items": {
         "$ref": "./hsm.schema.json"
       }
-    },
-    "$link": {
-      "modelType": "hidden",
-      "type": "object",
-      "properties": {
-        "tags": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "const": ["*", "class"]
-        },
-        "dependencies": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "scope": {
-          "$ref": "./scope.schema.json",
-          "const": "local"
-        }
-      }
     }
+  },
+  "$link": {
+    "scope": "local",
+    "tags": ["*", "class"]
   }
 }

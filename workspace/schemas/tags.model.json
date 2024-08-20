@@ -1,34 +1,34 @@
 {
-  "$schema": "https://raw.githubusercontent.com/NarcisOriol/codearchitect_3/bb3542a490d833055f4b86ddf22a5bf56e4f75a6/resources/codearchitect.schema.json",
+  "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "properties": {
     "$id": {
       "type": "string",
-      "modelType": "hidden"
+      "hidden": true
     },
     "$label": {
       "type": "string",
-      "modelType": "hidden"
+      "hidden": true
     },
     "$path": {
       "type": "array",
-      "modelType": "hidden",
+      "hidden": true,
       "items": {
         "type": "string"
       }
     },
     "$tags": {
       "type": "array",
-      "modelType": "hidden",
+      "hidden": true,
       "items": {
         "type": "string"
       }
     },
     "$visibility": {
-      "$ref": "./visibility.schema.json"
+      "type": "string"
     },
     "$scope": {
-      "$ref": "./scope.schema.json"
+      "type": "string"
     }
   }
 }

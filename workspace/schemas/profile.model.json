@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/NarcisOriol/codearchitect_3/bb3542a490d833055f4b86ddf22a5bf56e4f75a6/resources/codearchitect.schema.json",
+  "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "$id": "profile.schema.json",
   "title": "Project",
   "vscode-icon": "symbol-method",
@@ -8,15 +8,20 @@
   "properties": {
     "$id": {
       "type": "string",
-      "modelType": "hidden"
+      "hidden": true
     },
     "$label": {
       "type": "string",
-      "modelType": "hidden"
+      "hidden": true
+    },
+    "visibility": {
+      "hidden": true,
+      "$ref": "./visibility.schema.json",
+      "const": "public"
     },
     "$schema": {
       "type": "string",
-      "modelType": "hidden"
+      "hidden": true
     },
     "version": {
       "modelType": "input-string",
@@ -27,7 +32,7 @@
       "type": "string"
     },
     "Classes": {
-      "modelType": "array-parent-objects",
+      "modelType": "folder",
       "vscode-icon": "folder",
       "type": "array",
       "items": {
@@ -35,7 +40,7 @@
       }
     },
     "Requirements": {
-      "modelType": "array-parent-objects",
+      "modelType": "folder",
       "vscode-icon": "folder",
       "type": "array",
       "items": {
@@ -43,42 +48,23 @@
       }
     },
     "Primitive Types": {
-      "modelType": "array-parent-objects",
+      "modelType": "folder",
       "vscode-icon": "folder",
       "type": "array",
       "items": {
         "$ref": "./primitivetypes.schema.json"
       }
     },
-    "$link": {
-      "modelType": "hidden",
-      "type": "object",
-      "properties": {
-        "tags": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "const": ["*"]
-        },
-        "dependencies": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "scope": {
-          "$ref": "./scope.schema.json",
-          "const": "global"
-        }
-      }
-    },
     "$links": {
       "type": "array",
-      "modelType": "hidden",
+      "hidden": true,
       "items": {
         "$ref": "./tags.schema.json"
       }
     }
+  },
+  "$link": {
+    "scope": "local",
+    "tags": ["*"]
   }
 }

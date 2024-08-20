@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/NarcisOriol/codearchitect_3/bb3542a490d833055f4b86ddf22a5bf56e4f75a6/resources/codearchitect.schema.json",
+  "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Event",
   "vscode-icon": "symbol-event",
@@ -7,42 +7,20 @@
   "properties": {
     "$id": {
       "type": "string",
-      "modelType": "hidden"
+      "hidden": true
     },
     "$label": {
       "type": "string",
-      "modelType": "hidden"
+      "hidden": true
     },
     "visibility": {
-      "modelType": "hidden",
+      "hidden": true,
       "$ref": "./visibility.schema.json",
       "const": "public"
-    },
-    "$link": {
-      "modelType": "hidden",
-      "type": "object",
-      "properties": {
-        "tags": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "const": [
-            "*",
-            "event"
-          ]
-        },
-        "dependencies": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "scope": {
-          "$ref": "./scope.schema.json",
-          "const": "parent"
-        }
-      }
     }
+  },
+  "$link": {
+    "scope": "parent",
+    "tags": ["*", "event"]
   }
 }
