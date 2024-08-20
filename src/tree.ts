@@ -211,25 +211,33 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     };
 
     const addItemToParent = (item: Item, modelType: string, hidden: boolean): void => {
+      // Decode based on modelType if hidden
       switch (modelType) {
         case 'folder':
-          if (hidden)
+          if (hidden) {
             this.decodeChildrenFromJson(jsonObject[item.$label], item.schema, item.jsonPath, parent);
+          }
           break;
         case 'sub-object':
-          // Decode the sub-object
-          if (hidden)
+          if (hidden) {
             this.decodeChildrenFromJson(item.value, item.schema, item.jsonPath, item);
+          }
           break;
         default:
           break;
       }
-
-      if (hidden == false) {
-        parent.children.push(item);
+    
+      // Check if the item already exists in parent.children
+      if (!hidden) {
+        if (!parent.children.some(child => child === item)) {
+          parent.children.push(item);
+        }
       }
-      
-      parent.hidden_children.push(item);
+    
+      // Check if the item already exists in parent.hidden_children
+      if (!parent.hidden_children.some(child => child === item)) {
+        parent.hidden_children.push(item);
+      }
     };
 
     const processArray = (array: any[]): void => {
@@ -717,7 +725,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         current[lastKey] = item.value;
       }
 
-      item.children.forEach((child) => {
+      item.hidden_children.forEach((child) => {
         let childCurrent = jsonObject;
         for (let i = 0; i < child.jsonPath.length - 1; i++) {
           const key = child.jsonPath[i];
@@ -728,7 +736,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         }
         const childLastKey = child.jsonPath[child.jsonPath.length - 1];
         if (child.value !== childCurrent[childLastKey] && childLastKey === '$label' &&
-          item.contextValue === 'root') {
+          item?.contextValue?.includes('root')) {
           //Change the name of the file
           const newFilePath = path.join(this.rootPath, `${child.value}.json`);
           fs.renameSync(item.filePath, newFilePath);
@@ -796,7 +804,9 @@ export class Item extends vscode.TreeItem {
 
     if (this.schema?.modelType) {
       this.contextValue = this.schema?.modelType;
-      if (this.schema.modelType === 'root' || this.schema.modelType === 'parent-object') {
+      if (this.schema.modelType === 'root'){
+        this.contextValue += ".rm";
+      }else if (this.schema.modelType === 'parent-object') {
         this.contextValue += ".add";
         this.contextValue += ".rm";
       } else if (this.schema.modelType === 'folder') {

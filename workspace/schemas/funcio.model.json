@@ -15,8 +15,8 @@
     },
     "visibility": {
       "hidden": true,
-      "$ref": "./visibility.model.json",
-      "const": "public"
+      "modelType": "dropdown-select",
+      "$ref": "./visibility.model.json"
     },
     "returntype": {
       "hidden": true,

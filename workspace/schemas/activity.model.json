@@ -20,6 +20,6 @@
     }
   },
   "$link": {
-    "tags": ["*", "reqs"]
+    "tags": ["*", "activity"]
   }
 }

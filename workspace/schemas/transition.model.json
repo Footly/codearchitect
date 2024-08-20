@@ -43,7 +43,6 @@
           "modelType": "dropdown-select-tag",
           "type": "string",
           "const": [
-            "state",
             "activity"
           ]
         }

@@ -141,6 +141,7 @@ function handleTitleInputFocusOut(title, item, vscode) {
 }
 
 function renderChild(child, div, vscode, depth = 0) {
+    console.log(child);
     const modelType = child.schema.modelType;
     switch (modelType) {
         case 'sub-object':
@@ -157,9 +158,6 @@ function renderChild(child, div, vscode, depth = 0) {
             break;
         case 'dropdown-select-tag':
             renderDropdownSelectTag(child, div, vscode);
-            break;
-        case 'pool-dropdown-select':
-            renderPoolDropdownSelect(child, div, vscode);
             break;
         case 'pool-dropdown-select-tag':
             renderPoolDropdownSelectTag(child, div, vscode);
@@ -367,7 +365,6 @@ function renderDropdownSelectTag(child, div, vscode) {
     valueDisplay.style.backgroundColor = '#333';
     valueDisplay.style.color = '#eee'; // Lighter text color for better contrast
     valueDisplay.style.cursor = 'pointer';
-    valueDisplay.textContent = child.value ? `Selected: ${child.$label}` : 'Select a value';
     div.appendChild(valueDisplay);
 
     // Create the popup container (hidden by default)
@@ -477,6 +474,9 @@ function renderDropdownSelectTag(child, div, vscode) {
 
             if (currentNode.__isLeaf) {
                 div.style.backgroundColor = '#555';
+                if (child.value === currentNode.__id) {
+                    div.style.backgroundColor = '#777'; // Highlight selected node
+                }
                 div.addEventListener('click', () => {
                     // Handle leaf node selection
                     child.value = currentNode.__id;
@@ -518,319 +518,281 @@ function renderDropdownSelectTag(child, div, vscode) {
 
     // Render the tree view inside the popup container
     renderTreeView(root, treeContainer, 0, maxDepth);
-}
 
-function renderPoolDropdownSelect(child, div, vscode) {
-    // Create and append the container for the filter input and selected items
-    const containerDiv = document.createElement('div');
-    containerDiv.style.marginBottom = '10px'; // Add margin
-    div.appendChild(containerDiv);
-
-    // Create and append the $label
-    const $label = document.createElement('label');
-    $label.textContent = child.$label;
-    $label.style.marginBottom = '10px';
-    containerDiv.appendChild($label);
-
-    // Create and append the input field for searching
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.placeholder = 'Start typing to filter...';
-    input.style.marginBottom = '10px';
-    containerDiv.appendChild(input);
-
-    // Create and append the selected items container within the same div
-    const selectedItemsDiv = document.createElement('div');
-    selectedItemsDiv.className = 'selected-items';
-    containerDiv.appendChild(selectedItemsDiv);
-
-    // Create and append the suggestions container
-    const suggestionsDiv = document.createElement('div');
-    suggestionsDiv.className = 'suggestions';
-    suggestionsDiv.style.display = 'none'; // Initially hidden
-    div.appendChild(suggestionsDiv);
-
-    // Initialize with existing selected values
-    const selectedValues = child.value || [];
-    renderSelectedItems(selectedItemsDiv, selectedValues, child);
-
-    // Setup event listeners
-    setupPoolDropdownListeners(input, suggestionsDiv, selectedItemsDiv, selectedValues, child);
-
-    // Helper functions
-    function setupPoolDropdownListeners(input, suggestionsDiv, selectedItemsDiv, selectedValues, child) {
-        // Show suggestions when input is focused
-        input.addEventListener('focus', () => {
-            updateSuggestions(input, suggestionsDiv, selectedItemsDiv, selectedValues, child);
-            suggestionsDiv.style.display = 'block';
-        });
-
-        // Update suggestions on input change
-        input.addEventListener('input', () => updateSuggestions(input, suggestionsDiv, selectedItemsDiv, selectedValues, child));
-
-        // Hide suggestions when clicking outside
-        document.addEventListener('click', (event) => {
-            if (!div.contains(event.target)) {
-                suggestionsDiv.style.display = 'none';
-            }
-        });
-    }
-
-    function updateSuggestions(input, suggestionsDiv, selectedItemsDiv, selectedValues, child) {
-        const query = input.value.toLowerCase();
-        const enumOptions = child.schema.items.enum;
-        const filteredOptions = enumOptions.filter(option =>
-            option.toLowerCase().includes(query) && !selectedValues.includes(option)
-        );
-        renderSuggestions(suggestionsDiv, filteredOptions, selectedItemsDiv, selectedValues, child);
-    }
-
-    function renderSuggestions(suggestionsDiv, options, selectedItemsDiv, selectedValues, child) {
-        suggestionsDiv.innerHTML = '';
-        options.forEach(option => {
-            const suggestionItem = document.createElement('div');
-            suggestionItem.className = 'suggestion-item';
-            suggestionItem.textContent = option;
-            suggestionItem.onclick = () => handleSuggestionClick(option, suggestionsDiv, selectedItemsDiv, selectedValues, child);
-            suggestionsDiv.appendChild(suggestionItem);
-        });
-    }
-
-    function handleSuggestionClick(option, suggestionsDiv, selectedItemsDiv, selectedValues, child) {
-        selectedValues.push(option);
-        renderSelectedItems(selectedItemsDiv, selectedValues, child);
-        suggestionsDiv.style.display = 'none';
-    }
-
-    function renderSelectedItems(selectedItemsDiv, selectedValues, child) {
-        selectedItemsDiv.innerHTML = '';
-        selectedValues.forEach((value, index) => {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'selected-item';
-
-            const itemLabel = document.createElement('span');
-            itemLabel.textContent = value;
-            itemDiv.appendChild(itemLabel);
-
-            const removeButton = document.createElement('button');
-            removeButton.textContent = 'X';
-            removeButton.className = 'remove-button';
-            removeButton.onclick = () => handleRemoveSelectedItem(index, selectedValues, selectedItemsDiv, child);
-            itemDiv.appendChild(removeButton);
-
-            selectedItemsDiv.appendChild(itemDiv);
-        });
-
-        updateChildValues(child, selectedValues);
-    }
-
-    function handleRemoveSelectedItem(index, selectedValues, selectedItemsDiv, child) {
-        selectedValues.splice(index, 1);
-        renderSelectedItems(selectedItemsDiv, selectedValues, child);
-    }
-
-    function updateChildValues(child, selectedValues) {
-        child.value = selectedValues;
-        vscode.postMessage({ command: 'saveObject', item: child });
+    // Initialize display with selected value
+    if (child.value) {
+        // Find the link with matching $id
+        const selectedLink = child.$links.find(link => link.$id === child.value);
+        if (selectedLink) {
+            valueDisplay.textContent = `Selected: ${selectedLink.$label}`;
+        }
     }
 }
 
 function renderPoolDropdownSelectTag(child, div, vscode) {
-    // Create and append the container for the filter input and selected items
+    // Create and append the container for the selected items
     const containerDiv = document.createElement('div');
-    containerDiv.style.marginBottom = '10px'; // Add margin
+    containerDiv.style.marginBottom = '10px';
     div.appendChild(containerDiv);
 
-    // Create and append the $label
+    // Create and append the label
     const $label = document.createElement('label');
     $label.textContent = child.$label;
+    $label.style.display = 'block';
     $label.style.marginBottom = '10px';
+    $label.style.color = '#eee'; // Lighter text color for better contrast
     containerDiv.appendChild($label);
 
-    // Create and append the input field for searching
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.placeholder = 'Start typing to filter...';
-    input.style.marginBottom = '10px';
-    containerDiv.appendChild(input);
+    // Create and append the button to open the dropdown
+    const button = document.createElement('button');
+    button.textContent = 'Select Items';
+    button.style.padding = '10px';
+    button.style.border = '1px solid #444';
+    button.style.borderRadius = '8px';
+    button.style.backgroundColor = '#333';
+    button.style.color = '#eee'; // Lighter text color for better contrast
+    button.style.cursor = 'pointer';
+    containerDiv.appendChild(button);
 
-    // Create and append the selected items container within the same div
-    const selectedItemsDiv = document.createElement('div');
-    selectedItemsDiv.className = 'selected-items';
-    containerDiv.appendChild(selectedItemsDiv);
+    // Create the popup container (hidden by default)
+    const popupContainer = document.createElement('div');
+    popupContainer.style.position = 'absolute';
+    popupContainer.style.backgroundColor = '#222';
+    popupContainer.style.border = '1px solid #444';
+    popupContainer.style.padding = '20px';
+    popupContainer.style.boxShadow = '0 4px 15px rgba(0,0,0,0.5)';
+    popupContainer.style.borderRadius = '10px';
+    popupContainer.style.display = 'none';
+    popupContainer.style.zIndex = 1000;
+    document.body.appendChild(popupContainer);
 
-    // Create and append the suggestions container as a popup window with dark mode styling
-    const suggestionsDiv = document.createElement('div');
-    suggestionsDiv.className = 'suggestions-popup';
-    suggestionsDiv.style.position = 'absolute';
-    suggestionsDiv.style.border = '1px solid #444'; // Darker border for dark mode
-    suggestionsDiv.style.backgroundColor = '#1e1e1e'; // Dark background (VSCode-like)
-    suggestionsDiv.style.color = '#c5c5c5'; // Light text color for contrast
-    suggestionsDiv.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.5)'; // Darker shadow
-    suggestionsDiv.style.padding = '10px';
-    suggestionsDiv.style.zIndex = '1000';
-    suggestionsDiv.style.display = 'none'; // Initially hidden
-    document.body.appendChild(suggestionsDiv);
+    // Add close button to the popup
+    const closePopupBtn = document.createElement('button');
+    closePopupBtn.textContent = 'Close';
+    closePopupBtn.style.backgroundColor = '#444';
+    closePopupBtn.style.color = '#eee'; // Lighter text color for better contrast
+    closePopupBtn.style.border = 'none';
+    closePopupBtn.style.borderRadius = '5px';
+    closePopupBtn.style.padding = '5px 10px';
+    closePopupBtn.style.cursor = 'pointer';
+    closePopupBtn.style.marginBottom = '10px';
+    popupContainer.appendChild(closePopupBtn);
+
+    closePopupBtn.addEventListener('click', () => {
+        popupContainer.style.display = 'none';
+    });
+
+    // Create container for tree view inside the popup
+    const treeContainer = document.createElement('div');
+    treeContainer.style.maxHeight = '300px';
+    treeContainer.style.overflowY = 'auto';
+    treeContainer.style.padding = '10px';
+    popupContainer.appendChild(treeContainer);
+
+    // Show the popup when the button is clicked
+    button.addEventListener('click', () => {
+        // Show the popup
+        popupContainer.style.display = 'block';
+
+        // Position the popup relative to the button
+        const rect = button.getBoundingClientRect();
+        popupContainer.style.top = `${rect.bottom + window.scrollY}px`;
+        popupContainer.style.left = `${rect.left + window.scrollX}px`;
+
+        // Update the tree view
+        updateSuggestions(popupContainer, child);
+    });
+
+    // Hide the popup when clicking outside
+    function handleClickOutside(event) {
+        if (!containerDiv.contains(event.target) && !popupContainer.contains(event.target)) {
+            popupContainer.style.display = 'none';
+        }
+    }
+
+    document.addEventListener('click', handleClickOutside);
+
+    // Remove the event listener when the popup is closed
+    closePopupBtn.addEventListener('click', () => {
+        document.removeEventListener('click', handleClickOutside);
+    });
 
     // Initialize with existing selected values
     const selectedValues = child.value || [];
-    renderSelectedItems(selectedItemsDiv, selectedValues, child);
+    renderSelectedItems(containerDiv, selectedValues, child);
 
-    // Setup event listeners
-    setupPoolDropdownListeners(input, suggestionsDiv, selectedItemsDiv, selectedValues, child);
-
-    // Helper functions
-    function setupPoolDropdownListeners(input, suggestionsDiv, selectedItemsDiv, selectedValues, child) {
-        // Show suggestions when input is focused
-        input.addEventListener('focus', () => {
-            updateSuggestions(input, suggestionsDiv, selectedItemsDiv, selectedValues, child);
-            const rect = input.getBoundingClientRect();
-            suggestionsDiv.style.top = `${rect.top + window.scrollY}px`;
-            suggestionsDiv.style.left = `${rect.right + window.scrollX}px`; // Position to the right of the input
-            suggestionsDiv.style.display = 'block';
-        });
-
-        // Update suggestions on input change
-        input.addEventListener('input', () => updateSuggestions(input, suggestionsDiv, selectedItemsDiv, selectedValues, child));
-
-        // Hide suggestions when clicking outside
-        document.addEventListener('click', (event) => {
-            if (!containerDiv.contains(event.target) && !suggestionsDiv.contains(event.target)) {
-                suggestionsDiv.style.display = 'none';
-            }
-        });
-    }
-
-    function updateSuggestions(input, suggestionsDiv, selectedItemsDiv, selectedValues, child) {
-        const query = input.value.toLowerCase();
+    function updateSuggestions(popupContainer, child) {
         const tagsFilter = child.schema.items.const;
-        const links = child.$links.filter(link => link.$tags.some(t => tagsFilter.includes(t)));
-        console.log(links);
-        const filteredLinks = links
-            .filter(link => link.$label.toLowerCase().includes(query) && !selectedValues.includes(link.$id));
-        console.log(filteredLinks);
-        renderSuggestions(suggestionsDiv, filteredLinks, selectedItemsDiv, selectedValues, child);
+
+        // First, filter links by tags and then filter the resulting links based on child.value
+        const links = child.$links
+            .filter(link => link.$tags.some(t => tagsFilter.includes(t))) // Filter by tags
+            .filter(link => !child.value.some(value => link.$id.includes(value))); // Filter by value
+
+        // Build and render the tree view
+        const { root, maxDepth } = buildTree(links);
+        treeContainer.innerHTML = ''; // Clear previous tree view
+        renderTreeView(root, treeContainer, 0, maxDepth, child);
     }
 
-    function renderSuggestions(suggestionsDiv, filteredLinks, selectedItemsDiv, selectedValues, child) {
-        suggestionsDiv.innerHTML = '';
-        filteredLinks.forEach(link => {
-            console.log(link);
-            const suggestionItem = document.createElement('div');
-            suggestionItem.className = 'suggestion-item';
-            suggestionItem.style.cursor = 'pointer';
-            suggestionItem.style.padding = '5px';
-            suggestionItem.style.borderBottom = '1px solid #444'; // Divider between items
-            suggestionItem.onmouseover = () => suggestionItem.style.backgroundColor = '#333'; // Hover effect
-            suggestionItem.onmouseout = () => suggestionItem.style.backgroundColor = '#1e1e1e';
+    function buildTree(data) {
+        const root = {};
+        let maxDepth = 0;
 
-            // Create the label div
-            const labelDiv = document.createElement('div');
-            labelDiv.textContent = link.$label;
-            labelDiv.style.fontWeight = 'bold';
-            suggestionItem.appendChild(labelDiv);
+        data.forEach(item => {
+            if (!item.$path || !Array.isArray(item.$path)) {
+                console.error("Invalid $path in item:", item);
+                return;
+            }
 
-            // Create the path div (Tree View)
-            const pathDiv = document.createElement('div');
-            pathDiv.style.marginTop = '5px';
-            pathDiv.style.color = '#888';
-            pathDiv.style.fontSize = 'smaller';
-            renderPath(pathDiv, link.$path);
-            suggestionItem.appendChild(pathDiv);
+            maxDepth = Math.max(maxDepth, item.$path.length);
 
-            // Handle click event
-            suggestionItem.onclick = () => handleSuggestionClick(link, suggestionsDiv, selectedItemsDiv, selectedValues, child);
-
-            // Append the suggestion item to the suggestions div
-            suggestionsDiv.appendChild(suggestionItem);
+            let currentNode = root;
+            item.$path.forEach((pathPart, index) => {
+                if (!currentNode[pathPart]) {
+                    currentNode[pathPart] = {
+                        __children: {},
+                        __label: pathPart,
+                        __id: item.$id,
+                        __depth: index
+                    };
+                }
+                if (index === item.$path.length - 1) {
+                    currentNode[pathPart].__isLeaf = true;
+                    currentNode[pathPart].__label = item.$label; // Update label to the final label
+                }
+                currentNode = currentNode[pathPart].__children;
+            });
         });
+
+        return { root, maxDepth };
     }
 
-    function renderPath(container, pathArray) {
-        let root = document.createElement('div'); // Changed from const to let
+    function renderTreeView(node, parentDiv, depth, maxDepth, child) {
+        Object.keys(node).forEach(key => {
+            if (key.startsWith("__")) return; // Skip internal properties
+            const currentNode = node[key];
+            const div = document.createElement('div');
+            div.style.marginLeft = `${depth * 10}px`;
+            div.style.padding = '6px';
+            div.style.borderRadius = '8px';
+            div.style.marginBottom = '5px';
+            div.style.backgroundColor = `rgba(0, 0, 0, ${0.2 + (maxDepth - depth) / maxDepth * 0.4})`;
+            div.style.color = '#eee'; // Lighter text color for better contrast
+            div.style.cursor = 'pointer';
+            div.style.fontSize = '14px';
 
-        pathArray.forEach((segment, index) => {
-            const segmentDiv = document.createElement('div');
-            segmentDiv.textContent = segment;
-            segmentDiv.style.marginLeft = `${index * 10}px`; // Indent for sub-levels
-            segmentDiv.style.cursor = 'pointer';
+            const label = document.createElement('span');
+            label.textContent = currentNode.__label;
 
-            // Add a toggle functionality for collapsible nodes
-            if (index < pathArray.length - 1) { // Only add collapse functionality to non-leaf nodes
-                const toggleButton = document.createElement('span');
-                toggleButton.textContent = '▸'; // Right-pointing arrow
-                toggleButton.style.marginRight = '5px';
-                toggleButton.style.color = '#ccc';
-                toggleButton.style.cursor = 'pointer';
+            div.appendChild(label);
+            parentDiv.appendChild(div);
 
-                // Child container to hold nested items
-                const childContainer = document.createElement('div');
-                childContainer.style.display = 'none'; // Hidden by default
-
-                // On click, toggle the visibility of the child container
-                toggleButton.onclick = () => {
-                    const isCollapsed = childContainer.style.display === 'none';
-                    childContainer.style.display = isCollapsed ? 'block' : 'none';
-                    toggleButton.textContent = isCollapsed ? '▾' : '▸'; // Change arrow direction
-                };
-
-                segmentDiv.prepend(toggleButton);
-                root.appendChild(segmentDiv);
-                root.appendChild(childContainer);
-                root = childContainer; // Reassign root to childContainer for nesting
+            if (currentNode.__isLeaf) {
+                div.style.backgroundColor = '#555';
+                div.addEventListener('click', () => {
+                    // Handle leaf node selection
+                    const selectedId = currentNode.__id;
+                    if (!selectedValues.includes(selectedId)) {
+                        selectedValues.push(selectedId);
+                        renderSelectedItems(containerDiv, selectedValues, child);
+                        vscode.postMessage({ command: 'saveObject', item: child });
+                    }
+                    popupContainer.style.display = 'none';
+                });
             } else {
-                root.appendChild(segmentDiv);
+                // Toggle children visibility
+                const toggleBtn = document.createElement('button');
+                toggleBtn.textContent = '-'; // Show collapse symbol by default
+                toggleBtn.style.backgroundColor = 'transparent';
+                toggleBtn.style.border = 'none';
+                toggleBtn.style.color = '#eee'; // Lighter text color for better contrast
+                toggleBtn.style.cursor = 'pointer';
+                toggleBtn.style.marginRight = '5px';
+                toggleBtn.style.fontSize = '16px'; // Increased font size for better visibility
+                div.prepend(toggleBtn);
+
+                const childrenDiv = document.createElement('div');
+                childrenDiv.classList.add('children');
+                childrenDiv.style.marginLeft = '10px';
+                childrenDiv.style.display = 'block'; // Show children by default
+                div.appendChild(childrenDiv);
+
+                toggleBtn.addEventListener('click', () => {
+                    const isVisible = childrenDiv.style.display === 'block';
+                    childrenDiv.style.display = isVisible ? 'none' : 'block';
+                    toggleBtn.textContent = isVisible ? '+' : '-';
+                });
+
+                renderTreeView(currentNode.__children, childrenDiv, depth + 1, maxDepth, child);
             }
         });
-
-        container.appendChild(root);
     }
 
+    function renderSelectedItems(containerDiv, selectedValues, child) {
+        // Ensure selectedValues is an array
+        if (!Array.isArray(selectedValues)) {
+            console.error("Expected selectedValues to be an array, but got:", selectedValues);
+            selectedValues = []; // Fallback to an empty array
+        }
 
-    function handleSuggestionClick(link, suggestionsDiv, selectedItemsDiv, selectedValues, child) {
-        selectedValues.push(link.$id);
-        renderSelectedItems(selectedItemsDiv, selectedValues, child);
-        suggestionsDiv.style.display = 'none';
-    }
+        const selectedItemsDiv = document.querySelector('.selected-items') || document.createElement('div');
+        selectedItemsDiv.className = 'selected-items';
+        selectedItemsDiv.style.marginTop = '10px'; // Space between the button and the list
+        selectedItemsDiv.style.marginBottom = '10px';
+        selectedItemsDiv.style.border = '1px solid #444';
+        selectedItemsDiv.style.borderRadius = '8px';
+        selectedItemsDiv.style.backgroundColor = '#333';
+        containerDiv.appendChild(selectedItemsDiv);
+        selectedItemsDiv.innerHTML = ''; // Clear previous items
 
-    function renderSelectedItems(selectedItemsDiv, selectedValues, child) {
-        selectedItemsDiv.innerHTML = '';
         selectedValues.forEach((id, index) => {
             const link = child.$links.find(link => link.$id === id);
             if (link) {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'selected-item';
+                itemDiv.style.padding = '6px';
+                itemDiv.style.borderRadius = '8px';
+                itemDiv.style.marginBottom = '5px';
+                itemDiv.style.backgroundColor = '#444';
+                itemDiv.style.color = '#eee'; // Lighter text color for better contrast
+                itemDiv.style.display = 'flex';
+                itemDiv.style.alignItems = 'center';
+                itemDiv.style.justifyContent = 'space-between';
+                itemDiv.style.fontSize = '14px';
 
-                const itemLabel = document.createElement('span');
-                itemLabel.textContent = link.$label;
-                itemLabel.style.color = '#c5c5c5'; // Light text color
-                itemDiv.appendChild(itemLabel);
+                const label = document.createElement('span');
+                label.textContent = link.$label;
+                itemDiv.appendChild(label);
 
-                const removeButton = document.createElement('button');
-                removeButton.textContent = 'X';
-                removeButton.className = 'remove-button';
-                removeButton.style.marginLeft = '5px';
-                removeButton.style.backgroundColor = '#444'; // Darker button
-                removeButton.style.color = '#c5c5c5'; // Light text color
-                removeButton.onclick = () => handleRemoveSelectedItem(index, selectedValues, selectedItemsDiv, child);
-                itemDiv.appendChild(removeButton);
+                // Remove button
+                const removeBtn = document.createElement('button');
+                removeBtn.textContent = 'x';
+                removeBtn.style.backgroundColor = '#555';
+                removeBtn.style.border = 'none';
+                removeBtn.style.color = '#eee'; // Lighter text color for better contrast
+                removeBtn.style.borderRadius = '50%';
+                removeBtn.style.width = '20px';
+                removeBtn.style.height = '20px';
+                removeBtn.style.cursor = 'pointer';
+                removeBtn.style.fontSize = '12px';
+                removeBtn.style.display = 'flex';
+                removeBtn.style.alignItems = 'center';
+                removeBtn.style.justifyContent = 'center';
+                itemDiv.appendChild(removeBtn);
+
+                removeBtn.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    selectedValues.splice(index, 1); // Remove item from selectedValues
+                    renderSelectedItems(containerDiv, selectedValues, child); // Re-render selected items
+                    vscode.postMessage({ command: 'saveObject', item: child });
+                });
 
                 selectedItemsDiv.appendChild(itemDiv);
             }
         });
-
-        updateChildValues(child, selectedValues);
     }
 
-    function handleRemoveSelectedItem(index, selectedValues, selectedItemsDiv, child) {
-        selectedValues.splice(index, 1);
-        renderSelectedItems(selectedItemsDiv, selectedValues, child);
-    }
-
-    function updateChildValues(child, selectedValues) {
-        child.value = selectedValues;
-        vscode.postMessage({ command: 'saveObject', item: child });
-    }
 }
 
 function renderSubObjectChild(child, div, vscode, depth = 0) {
@@ -881,7 +843,6 @@ function renderSubObjectChild(child, div, vscode, depth = 0) {
 
     // Add sub-children to the collapsible content
     child.hidden_children.forEach(subChild => {
-        console.log(subChild);
         // Copy the $links of the parent to the child
         subChild.$links = child.$links;
         renderChild(subChild, contentDiv, vscode, depth + 1);
