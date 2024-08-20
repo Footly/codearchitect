@@ -15,13 +15,9 @@ export function activate(context: vscode.ExtensionContext) {
 	const pathSchema = config.get<string>('pathSchema', '');
 	const pathProjects = config.get<string>('pathProjects', '');
 
-	if (pathSchema) {
-		// Look for all .schema.json files in the pathSchema directory
-		fs.readdir(pathSchema, async (err, files) => {
-			if (err) {
-				vscode.window.showErrorMessage('Error reading the schema directory.');
-				return;
-			}
+	const readSchemaFiles = async (pathSchema: string, pathProjects: string) => {
+		try {
+			const files = await fs.promises.readdir(pathSchema);
 
 			const schemaFiles = files.filter(file => file.endsWith('.schema.json'));
 
@@ -30,66 +26,74 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
-			try {
-				const schemaPromises = schemaFiles.map(async (file) => {
-					const pathFileProfile = path.join(pathSchema, file);
+			const schemaPromises = schemaFiles.map(async (file) => {
+				const pathFileProfile = path.join(pathSchema, file);
+				try {
+					const data = await fs.promises.readFile(pathFileProfile, 'utf8');
+					const jsonData = JSON.parse(data);
 
-					try {
-						// Read file data
-						const data = await fs.promises.readFile(pathFileProfile, 'utf8');
-
-						// Parse JSON data
-						const jsonData = JSON.parse(data);
-
-						if (jsonData?.format === 'root-object') {
-							// Dereference the schema
-							const dereferencedSchema = await $RefParser.bundle(pathFileProfile);
-							schemas.push(dereferencedSchema);
-						}
-
-					} catch (fileError) {
-						vscode.window.showErrorMessage(`Error processing file ${file}: ${fileError}`);
+					if (jsonData?.format === 'root-object') {
+						// Dereference the schema
+						const dereferencedSchema = await $RefParser.bundle(pathFileProfile);
+						schemas.push(dereferencedSchema);
 					}
-				});
 
-				await Promise.all(schemaPromises);
-
-				if (schemas.length !== 0) {
-					itemTreeProvider = new ItemTreeProvider(pathProjects, schemas);
-					itemTreeView = vscode.window.createTreeView('codearchitect-treeview', { treeDataProvider: itemTreeProvider });
-					// Handle selection changes
-					itemTreeView.onDidChangeSelection(event => {
-						if (event.selection.length > 0) {
-							const selectedItem = event.selection[0];
-							// Handle the selected item, e.g., open or edit it
-							vscode.commands.executeCommand('codearchitect.editObject', selectedItem);
-						}
-					});
-				} else {
-					vscode.window.showErrorMessage('No valid schema files found in the schema directory.');
+				} catch (fileError) {
+					vscode.window.showErrorMessage(`Error processing file ${file}: ${fileError}`);
 				}
-			} catch (error) {
-				vscode.window.showErrorMessage('Error processing schema files.');
-			}
-		});
-	}
+			});
 
-	// Check if in the pathProjects directory there is any json file
-	if (pathProjects) {
-		fs.readdir(pathProjects, (err, files) => {
-			if (err) {
-				vscode.window.showErrorMessage('Error reading the projects directory.');
-				return;
+			await Promise.all(schemaPromises);
+
+			if (schemas.length !== 0) {
+				initializeSchemaTree(pathProjects, schemas);
+			} else {
+				vscode.window.showErrorMessage('No valid schema files found in the schema directory.');
 			}
 
+		} catch (err) {
+			vscode.window.showErrorMessage('Error reading the schema directory.');
+		}
+	};
+
+	const initializeSchemaTree = (pathProjects: string, schemas: any[]) => {
+		// Check if there are any JSON files in the pathProjects directory
+		try {
+			const files = fs.readdirSync(pathProjects);
 			const jsonFiles = files.filter(file => file.endsWith('.json'));
 			if (jsonFiles.length > 0) {
 				vscode.window.showInformationMessage('JSON files found in the projects directory.');
 			} else {
 				vscode.window.showWarningMessage('No JSON files found in the projects directory.');
 			}
-		});
-	}
+		} catch (err) {
+			vscode.window.showErrorMessage('Error reading the projects directory.');
+			return;
+		}
+
+		if(itemTreeView)
+		{
+			itemTreeProvider.schemas = schemas;
+			return;
+		}
+
+		try {
+			// Create a new tree provider and tree view
+			itemTreeProvider = new ItemTreeProvider(pathProjects, schemas);
+			itemTreeView = vscode.window.createTreeView('codearchitect-treeview', { treeDataProvider: itemTreeProvider });
+
+			// Handle selection changes
+			itemTreeView.onDidChangeSelection(event => {
+				if (event.selection.length > 0) {
+					const selectedItem = event.selection[0];
+					// Handle the selected item, e.g., open or edit it
+					vscode.commands.executeCommand('codearchitect.editObject', selectedItem);
+				}
+			});
+		} catch (error) {
+			vscode.window.showErrorMessage('Error initializing the schema tree.');
+		}
+	};
 
 	const helloWorldCommand = vscode.commands.registerCommand('codearchitect.helloWorld', () => {
 		vscode.window.showInformationMessage('Hello World from codearchitect!');
@@ -109,11 +113,10 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	const refreshProjectsCommand = vscode.commands.registerCommand('codearchitect.refresh', async () => {
-		// Assuming itemTreeProvider is a valid object
-		if (itemTreeProvider) {
-			itemTreeProvider.refresh();
-			vscode.window.showInformationMessage('Projects refreshed successfully!');
-		}
+		//Reset schemas
+		schemas = [];
+		await readSchemaFiles(pathSchema, pathProjects);
+		itemTreeProvider.refresh();
 	});
 
 	const removeItemCommand = vscode.commands.registerCommand('codearchitect.removeItem', async (item) => {
@@ -259,6 +262,8 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('codearchitect.navigateForward', async (item: Item) => {
 		itemTreeProvider.navigateForward(item);
 	}));
+
+	readSchemaFiles(pathSchema, pathProjects);
 
 	context.subscriptions.push(helloWorldCommand);
 	context.subscriptions.push(newProjectCommand);

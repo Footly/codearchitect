@@ -110,7 +110,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
   private lastIDCreated: string = '';
   private lastItemCreated: Item | undefined;
 
-  constructor(private rootPath: string, private schemas: any[]) {
+  constructor(private rootPath: string, public schemas: any[]) {
     this.refresh();
   }
 
