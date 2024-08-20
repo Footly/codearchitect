@@ -98,7 +98,7 @@ export function activate(context: vscode.ExtensionContext) {
 		const newItem = itemTreeProvider.getLastItemCreated();
 		if (newItem) {
 			//Edit the created item
-			vscode.commands.executeCommand('codearchitect.editObject', newItem);
+			vscode.commands.executeCommand('codearchitect.editObject', newItem.jsonPath, newItem.filePath);
 		}
 	});
 
@@ -134,7 +134,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const newItem = itemTreeProvider.getLastItemCreated();
 			if (newItem) {
 				//Edit the created item
-				vscode.commands.executeCommand('codearchitect.editObject', newItem);
+				vscode.commands.executeCommand('codearchitect.editObject', newItem.jsonPath, newItem.filePath);
 			}
 		}
 	});
@@ -197,7 +197,11 @@ export function activate(context: vscode.ExtensionContext) {
 
 	});
 
-	const editObjectCommand = vscode.commands.registerCommand('codearchitect.editObject', async (item: Item) => {
+	const editObjectCommand = vscode.commands.registerCommand('codearchitect.editObject', async (jsonPath: string[], filePath: string) => {
+		//Get Item form jsonPath and filePath
+		const item = itemTreeProvider.getItem(jsonPath, filePath);
+		if(!item)
+			return;
 		//First reveal the item
 		await itemTreeView?.reveal(item, { select: true, focus: true });
 		const itemCopy = JSON.parse(JSON.stringify(item));
@@ -223,20 +227,20 @@ export function activate(context: vscode.ExtensionContext) {
 		//Add the $links to the item
 		itemCopy.$links = $links;
 		//Get the JSON path
-		const jsonPath = [...item.jsonPath];
+		const newJsonPath = [...item.jsonPath];
 
 		itemCopy.dependencies = [];
 
-		while (jsonPath.length > 0) {
+		while (newJsonPath.length > 0) {
 			let current = rootJSON;
-			for (const key of jsonPath) {
+			for (const key of newJsonPath) {
 				current = current[key];
 			}
 			if (current?.scope !== undefined && current?.scope !== 'parent') {
 				itemCopy.dependencies = current.dependencies;
 				break;
 			}
-			jsonPath.pop();
+			newJsonPath.pop();
 		}
 		if (webviewPanel) {
 			webviewPanel.webview.postMessage({ command: 'editObject', item: itemCopy });

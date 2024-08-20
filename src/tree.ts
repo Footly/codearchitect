@@ -204,8 +204,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         jsonPath,
         vscode.TreeItemCollapsibleState.Collapsed,
         parent.root_schema,
-        parent.jsonPath,
-        { command: 'codearchitect.editObject', title: 'Edit Object', arguments: [] }
+        parent.jsonPath
       );
     };
 
@@ -255,7 +254,6 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
 
     const processObject = (object: { [key: string]: any }): void => {
       const properties = this.resolveRef(schema?.properties, parent.root_schema);
-
 
       for (const key in object) {
         if (object.hasOwnProperty(key)) {
@@ -344,9 +342,10 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
           [],  // Root path
           vscode.TreeItemCollapsibleState.Collapsed,
           schema,
-          [],
-          { command: 'codearchitect.editObject', title: 'Edit Object', arguments: [] }
+          []
         );
+        // Add item into the itemMap. String is item.filePath + item.jsonPath.join('/')
+        this.itemMap.set(item.filePath + item.jsonPath.join('/'), item);
         ParentItems.push(item);
       });
 
@@ -842,8 +841,7 @@ export class Item extends vscode.TreeItem {
     public jsonPath: string[] = [], // New property to track JSON path
     public collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed,
     public root_schema: any,
-    public parentJsonPath: string[],
-    public readonly command: vscode.Command
+    public parentJsonPath: string[]
   ) {
     super($label, collapsibleState);
     if (this.schema?.title) {
@@ -870,6 +868,8 @@ export class Item extends vscode.TreeItem {
     if (this.schema?.preview && this.schema?.preview === true) {
       this.contextValue += ".preview";
     }
+
+    this.command = { command: 'codearchitect.editObject', title: 'Edit Object', arguments: [this.jsonPath, this.filePath] };
 
     this.children = []; // Initialize children[] as an empty array
     this.hidden_children = []; // Initialize hidden_children[] as an empty array
