@@ -434,7 +434,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       }
     }
 
-    if (tags.length > 0) {
+    if (tags?.length > 0) {
       children.dependencies = [];
       if (scope === 'local') {
         children.dependencies.push(children.$id);
