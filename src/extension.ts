@@ -80,15 +80,6 @@ export function activate(context: vscode.ExtensionContext) {
 			// Create a new tree provider and tree view
 			itemTreeProvider = new ItemTreeProvider(pathProjects, schemas);
 			itemTreeView = vscode.window.createTreeView('codearchitect-treeview', { treeDataProvider: itemTreeProvider });
-
-			// Handle selection changes
-			itemTreeView.onDidChangeSelection(event => {
-				if (event.selection.length > 0) {
-					const selectedItem = event.selection[0];
-					// Handle the selected item, e.g., open or edit it
-					vscode.commands.executeCommand('codearchitect.editObject', selectedItem);
-				}
-			});
 		} catch (error) {
 			vscode.window.showErrorMessage('Error initializing the schema tree.');
 		}

@@ -204,7 +204,8 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         jsonPath,
         vscode.TreeItemCollapsibleState.Collapsed,
         parent.root_schema,
-        parent.jsonPath
+        parent.jsonPath,
+        { command: 'codearchitect.editObject', title: 'Edit Object', arguments: [] }
       );
     };
 
@@ -343,7 +344,8 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
           [],  // Root path
           vscode.TreeItemCollapsibleState.Collapsed,
           schema,
-          []
+          [],
+          { command: 'codearchitect.editObject', title: 'Edit Object', arguments: [] }
         );
         ParentItems.push(item);
       });
@@ -840,7 +842,8 @@ export class Item extends vscode.TreeItem {
     public jsonPath: string[] = [], // New property to track JSON path
     public collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed,
     public root_schema: any,
-    public parentJsonPath: string[]
+    public parentJsonPath: string[],
+    public readonly command: vscode.Command
   ) {
     super($label, collapsibleState);
     if (this.schema?.title) {
