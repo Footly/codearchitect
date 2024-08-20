@@ -1,26 +1,26 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://raw.githubusercontent.com/NarcisOriol/codearchitect_3/bb3542a490d833055f4b86ddf22a5bf56e4f75a6/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Class",
-  "format": "parent-object",
-  "contentMediaType": "symbol-class",
+  "modelType": "parent-object",
+  "vscode-icon": "symbol-class",
   "properties": {
     "$id": {
       "type": "string",
-      "format": "hidden"
+      "modelType": "hidden"
     },
     "$label": {
       "type": "string",
-      "format": "hidden"
+      "modelType": "hidden"
     },
     "visibility": {
-      "format": "hidden",
+      "modelType": "hidden",
       "$ref": "./visibility.schema.json",
       "const": "public"
     },
     "requirements": {
       "type": "array",
-      "format": "pool-dropdown-select-tag",
+      "modelType": "pool-dropdown-select-tag",
       "items": {
         "type": "string",
         "const": ["reqs"]
@@ -28,48 +28,48 @@
     },
     "variables": {
       "type": "array",
-      "format": "folder",
+      "modelType": "folder",
       "items": {
         "$ref": "./variable.schema.json"
       }
     },
     "funcions": {
       "type": "array",
-      "format": "folder",
+      "modelType": "folder",
       "items": {
         "$ref": "./funcio.schema.json"
       }
     },
     "datastructures": {
       "type": "array",
-      "format": "folder",
+      "modelType": "folder",
       "items": {
         "$ref": "./datastructure.schema.json"
       }
     },
     "typedefs": {
       "type": "array",
-      "format": "folder",
+      "modelType": "folder",
       "items": {
         "$ref": "./typedefs.schema.json"
       }
     },
     "enumerators": {
       "type": "array",
-      "format": "folder",
+      "modelType": "folder",
       "items": {
         "$ref": "./enumerator.schema.json"
       }
     },
     "hsm": {
       "type": "array",
-      "format": "folder",
+      "modelType": "folder",
       "items": {
         "$ref": "./hsm.schema.json"
       }
     },
     "$link": {
-      "format": "hidden",
+      "modelType": "hidden",
       "type": "object",
       "properties": {
         "tags": {

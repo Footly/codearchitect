@@ -1,25 +1,25 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://raw.githubusercontent.com/NarcisOriol/codearchitect_3/bb3542a490d833055f4b86ddf22a5bf56e4f75a6/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Guard",
-  "contentMediaType": "merge",
-  "format": "parent-object",
+  "vscode-icon": "merge",
+  "modelType": "parent-object",
   "properties": {
     "$id": {
       "type": "string",
-      "format": "hidden"
+      "modelType": "hidden"
     },
     "$label": {
       "type": "string",
-      "format": "hidden"
+      "modelType": "hidden"
     },
     "visibility": {
-      "format": "hidden",
+      "modelType": "hidden",
       "$ref": "./visibility.schema.json",
       "const": "public"
     },
     "activity": {
-      "format": "dropdown-select-tag",
+      "modelType": "dropdown-select-tag",
       "type": "string",
       "const": [
         "activity"
@@ -27,14 +27,14 @@
     },
     "condition": {
       "type": "string",
-      "format": "input-string"
+      "modelType": "input-string"
     },
     "true": {
       "type": "object",
-      "format": "sub-object",
+      "modelType": "sub-object",
       "properties": {
         "to": {
-          "format": "dropdown-select-tag",
+          "modelType": "dropdown-select-tag",
           "type": "string",
           "const": [
             "state",
@@ -42,7 +42,7 @@
           ]
         },
         "activity": {
-          "format": "dropdown-select-tag",
+          "modelType": "dropdown-select-tag",
           "type": "string",
           "const": [
             "activity"
@@ -52,10 +52,10 @@
     },
     "false": {
       "type": "object",
-      "format": "sub-object",
+      "modelType": "sub-object",
       "properties": {
         "to": {
-          "format": "dropdown-select-tag",
+          "modelType": "dropdown-select-tag",
           "type": "string",
           "const": [
             "state",
@@ -63,7 +63,7 @@
           ]
         },
         "activity": {
-          "format": "dropdown-select-tag",
+          "modelType": "dropdown-select-tag",
           "type": "string",
           "const": [
             "activity"
@@ -72,7 +72,7 @@
       }
     },
     "$link": {
-      "format": "hidden",
+      "modelType": "hidden",
       "type": "object",
       "properties": {
         "tags": {

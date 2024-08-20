@@ -1,50 +1,50 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://raw.githubusercontent.com/NarcisOriol/codearchitect_3/bb3542a490d833055f4b86ddf22a5bf56e4f75a6/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Funcio",
-  "contentMediaType": "symbol-property",
-  "format": "parent-object",
+  "vscode-icon": "symbol-property",
+  "modelType": "parent-object",
   "properties": {
     "$id": {
       "type": "string",
-      "format": "hidden"
+      "modelType": "hidden"
     },
     "$label": {
       "type": "string",
-      "format": "hidden"
+      "modelType": "hidden"
     },
     "visibility": {
-      "format": "dropdown-select",
+      "modelType": "dropdown-select",
       "$ref": "./visibility.schema.json"
     },
     "returntype": {
-      "format": "sub-object",
+      "modelType": "sub-object",
       "type":"object",
       "properties": {
         "datatype": {
-          "format": "dropdown-select-tag",
+          "modelType": "dropdown-select-tag",
           "type": "string",
           "const": ["types"]
         },
         "isPointer": {
-          "format": "checkbox",
+          "modelType": "checkbox",
           "type":"boolean"
         },
         "isConst": {
-          "format": "checkbox",
+          "modelType": "checkbox",
           "type": "boolean"
         }
       }
     },
     "parameters": {
-      "format": "folder",
+      "modelType": "folder",
       "type": "array",
       "items": {
         "$ref": "./parameter.schema.json"
       }
     },
     "$link": {
-      "format": "hidden",
+      "modelType": "hidden",
       "type": "object",
       "properties": {
         "tags": {

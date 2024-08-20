@@ -1,25 +1,25 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://raw.githubusercontent.com/NarcisOriol/codearchitect_3/bb3542a490d833055f4b86ddf22a5bf56e4f75a6/resources/codearchitect.schema.json",
   "type": "object",
   "properties": {
     "$id": {
       "type": "string",
-      "format": "hidden"
+      "modelType": "hidden"
     },
     "$label": {
       "type": "string",
-      "format": "hidden"
+      "modelType": "hidden"
     },
     "$path": {
       "type": "array",
-      "format": "hidden",
+      "modelType": "hidden",
       "items": {
         "type": "string"
       }
     },
     "$tags": {
       "type": "array",
-      "format": "hidden",
+      "modelType": "hidden",
       "items": {
         "type": "string"
       }

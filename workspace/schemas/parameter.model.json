@@ -1,42 +1,42 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://raw.githubusercontent.com/NarcisOriol/codearchitect_3/bb3542a490d833055f4b86ddf22a5bf56e4f75a6/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Parameter",
-  "contentMediaType": "symbol-parameter",
-  "format": "parent-object",
+  "vscode-icon": "symbol-parameter",
+  "modelType": "parent-object",
   "properties": {
     "$id": {
       "type": "string",
-      "format": "hidden"
+      "modelType": "hidden"
     },
     "$label": {
       "type": "string",
-      "format": "hidden"
+      "modelType": "hidden"
     },
     "datatype": {
-      "format": "dropdown-select-tag",
+      "modelType": "dropdown-select-tag",
       "type": "string",
       "const": ["types"]
     },
     "isArray": {
-      "format": "input-string",
+      "modelType": "input-string",
       "type": "string"
     },
     "isPointer": {
-      "format": "checkbox",
+      "modelType": "checkbox",
       "type": "boolean"
     },
     "pointerDirection": {
-      "format": "dropdown-select",
+      "modelType": "dropdown-select",
       "type": "string",
       "enum": ["in", "out", "in/out"]
     },
     "isPointerToConst": {
-      "format": "checkbox",
+      "modelType": "checkbox",
       "type": "boolean"
     },
     "isConstPointer": {
-      "format": "checkbox",
+      "modelType": "checkbox",
       "type": "boolean"
     }
   },

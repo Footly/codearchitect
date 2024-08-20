@@ -1,45 +1,45 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://raw.githubusercontent.com/NarcisOriol/codearchitect_3/bb3542a490d833055f4b86ddf22a5bf56e4f75a6/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Variable",
-  "contentMediaType": "symbol-variable",
-  "format": "parent-object",
+  "vscode-icon": "symbol-variable",
+  "modelType": "parent-object",
   "properties": {
     "$id": {
       "type": "string",
-      "format": "hidden"
+      "modelType": "hidden"
     },
     "$label": {
       "type": "string",
-      "format": "hidden"
+      "modelType": "hidden"
     },
     "datatype": {
-      "format": "dropdown-select-tag",
+      "modelType": "dropdown-select-tag",
       "type": "string",
       "const": ["types"]
     },
     "visibility": {
-      "format": "dropdown-select",
+      "modelType": "dropdown-select",
       "$ref": "./visibility.schema.json"
     },
     "isArray": {
-      "format": "input-string",
+      "modelType": "input-string",
       "type": "string"
     },
     "isPointer": {
-      "format": "checkbox",
+      "modelType": "checkbox",
       "type": "boolean"
     },
     "isVolatile": {
-      "format": "checkbox",
+      "modelType": "checkbox",
       "type": "boolean"
     },
     "isConst": {
-      "format": "checkbox",
+      "modelType": "checkbox",
       "type": "boolean"
     },
     "$link": {
-      "format": "hidden",
+      "modelType": "hidden",
       "type": "object",
       "properties": {
         "tags": {

@@ -1,57 +1,57 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://raw.githubusercontent.com/NarcisOriol/codearchitect_3/bb3542a490d833055f4b86ddf22a5bf56e4f75a6/resources/codearchitect.schema.json",
   "$id": "profile.schema.json",
   "title": "Project",
-  "contentMediaType": "symbol-method",
+  "vscode-icon": "symbol-method",
   "type": "object",
-  "format": "root-object",
+  "modelType": "root",
   "properties": {
     "$id": {
       "type": "string",
-      "format": "hidden"
+      "modelType": "hidden"
     },
     "$label": {
       "type": "string",
-      "format": "hidden"
+      "modelType": "hidden"
     },
     "$schema": {
       "type": "string",
-      "format": "hidden"
+      "modelType": "hidden"
     },
     "version": {
-      "format": "input-string",
+      "modelType": "input-string",
       "type": "string"
     },
     "documentation": {
-      "format": "text-area",
+      "modelType": "text-area",
       "type": "string"
     },
     "Classes": {
-      "format": "array-parent-objects",
-      "contentMediaType": "folder",
+      "modelType": "array-parent-objects",
+      "vscode-icon": "folder",
       "type": "array",
       "items": {
         "$ref": "./class.schema.json"
       }
     },
     "Requirements": {
-      "format": "array-parent-objects",
-      "contentMediaType": "folder",
+      "modelType": "array-parent-objects",
+      "vscode-icon": "folder",
       "type": "array",
       "items": {
         "$ref": "./reqs.schema.json"
       }
     },
     "Primitive Types": {
-      "format": "array-parent-objects",
-      "contentMediaType": "folder",
+      "modelType": "array-parent-objects",
+      "vscode-icon": "folder",
       "type": "array",
       "items": {
         "$ref": "./primitivetypes.schema.json"
       }
     },
     "$link": {
-      "format": "hidden",
+      "modelType": "hidden",
       "type": "object",
       "properties": {
         "tags": {
@@ -75,7 +75,7 @@
     },
     "$links": {
       "type": "array",
-      "format": "hidden",
+      "modelType": "hidden",
       "items": {
         "$ref": "./tags.schema.json"
       }

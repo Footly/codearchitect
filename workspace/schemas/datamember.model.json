@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/NarcisOriol/codearchitect_3/bb3542a490d833055f4b86ddf22a5bf56e4f75a6/resources/codearchitect.schema.json",
+  "type": "object",
+  "title": "DataMember",
+  "modelType": "parent-object",
+  "vscode-icon": "symbol-field",
+  "properties": {
+    "$id": {
+      "type": "string",
+      "modelType": "hidden"
+    },
+    "$label": {
+      "type": "string",
+      "modelType": "hidden"
+    },
+    "datatype": {
+      "modelType": "dropdown-select-tag",
+      "type": "string",
+      "const": ["types"]
+    },
+    "isArray": {
+      "modelType": "input-string",
+      "type": "string"
+    },
+    "isPointer": {
+      "modelType": "checkbox",
+      "type": "boolean"
+    },
+    "isVolatile": {
+      "modelType": "checkbox",
+      "type": "boolean"
+    },
+    "isConst": {
+      "modelType": "checkbox",
+      "type": "boolean"
+    }
+  }
+}

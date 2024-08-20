@@ -1,31 +1,36 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://raw.githubusercontent.com/NarcisOriol/codearchitect_3/bb3542a490d833055f4b86ddf22a5bf56e4f75a6/resources/codearchitect.schema.json",
   "type": "object",
-  "title": "Enumerator",
-  "format": "parent-object",
-  "contentMediaType": "symbol-enum-member",
+  "title": "DataStructure",
+  "modelType": "parent-object",
+  "vscode-icon": "symbol-struct",
   "properties": {
     "$id": {
       "type": "string",
-      "format": "hidden"
+      "modelType": "hidden"
     },
     "$label": {
       "type": "string",
-      "format": "hidden"
+      "modelType": "hidden"
     },
     "visibility": {
-      "format": "dropdown-select",
+      "modelType": "dropdown-select",
       "$ref": "./visibility.schema.json"
     },
+    "type": {
+      "modelType": "dropdown-select",
+      "type": "string",
+      "enum": ["struct", "union"]
+    },
     "members": {
-      "format": "folder",
+      "modelType": "folder",
       "type": "array",
       "items": {
-        "$ref": "./enummember.schema.json"
+        "$ref": "./datamember.schema.json"
       }
     },
     "$link": {
-      "format": "hidden",
+      "modelType": "hidden",
       "type": "object",
       "properties": {
         "tags": {

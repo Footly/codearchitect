@@ -1,25 +1,25 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://raw.githubusercontent.com/NarcisOriol/codearchitect_3/bb3542a490d833055f4b86ddf22a5bf56e4f75a6/resources/codearchitect.schema.json",
   "type": "object",
-  "title": "Activity",
-  "contentMediaType": "type-hierarchy",
-  "format": "parent-object",
+  "title": "Primitive Types",
+  "vscode-icon": "symbol-type-parameter",
+  "modelType": "parent-object",
   "properties": {
     "$id": {
       "type": "string",
-      "format": "hidden"
+      "modelType": "hidden"
     },
     "$label": {
       "type": "string",
-      "format": "hidden"
+      "modelType": "hidden"
     },
     "visibility": {
-      "format": "hidden",
+      "modelType": "hidden",
       "$ref": "./visibility.schema.json",
       "const": "public"
     },
     "$link": {
-      "format": "hidden",
+      "modelType": "hidden",
       "type": "object",
       "properties": {
         "tags": {
@@ -27,10 +27,7 @@
           "items": {
             "type": "string"
           },
-          "const": [
-            "*",
-            "activity"
-          ]
+          "const": ["*", "primitivetypes", "types"]
         },
         "dependencies": {
           "type": "array",
@@ -40,7 +37,7 @@
         },
         "scope": {
           "$ref": "./scope.schema.json",
-          "const": "parent"
+          "const": "global"
         }
       }
     }
