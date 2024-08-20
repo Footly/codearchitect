@@ -3,7 +3,7 @@
   "type": "object",
   "title": "HSM",
   "modelType": "parent-object",
-  "vscode-icon": "circuit-board",
+  "vscodeIcon": "circuit-board",
   "properties": {
     "$id": {
       "type": "string",

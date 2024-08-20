@@ -2,7 +2,7 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Variable",
-  "vscode-icon": "symbol-variable",
+  "vscodeIcon": "symbol-variable",
   "modelType": "parent-object",
   "properties": {
     "$id": {

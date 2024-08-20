@@ -2,7 +2,7 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Transition",
-  "vscode-icon": "arrow-right",
+  "vscodeIcon": "arrow-right",
   "modelType": "parent-object",
   "properties": {
     "$id": {

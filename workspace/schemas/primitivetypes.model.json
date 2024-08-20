@@ -2,7 +2,7 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Primitive Types",
-  "vscode-icon": "symbol-type-parameter",
+  "vscodeIcon": "symbol-type-parameter",
   "modelType": "parent-object",
   "properties": {
     "$id": {

@@ -3,7 +3,7 @@
   "type": "object",
   "title": "Class",
   "modelType": "parent-object",
-  "vscode-icon": "symbol-class",
+  "vscodeIcon": "symbol-class",
   "properties": {
     "$id": {
       "type": "string",

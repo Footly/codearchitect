@@ -143,8 +143,8 @@ function handleTitleInputFocusOut(title, item, vscode) {
 }
 
 function renderChild(child, div, vscode) {
-    const format = child.schema.format;
-    switch (format) {
+    const modelType = child.schema.modelType;
+    switch (modelType) {
         case 'sub-object':
             renderSubObjectChild(child, div, vscode);
             break;
@@ -175,7 +175,7 @@ function renderChild(child, div, vscode) {
         case 'hidden':
             break;
         default:
-            console.error(`Unsupported format: ${format}`);
+            console.error(`Unsupported modelType: ${modelType}`);
             break;
     }
 }
@@ -353,13 +353,13 @@ function renderArrayCreator(child, div, vscode) {
     $label.style.marginBottom = '10px';
     arrayCreatorDiv.appendChild($label);
 
-    const format = child.schema.items.format;
+    const modelType = child.schema.items.modelType;
 
     // Create and append the add button
     const addButton = document.createElement('button');
     addButton.textContent = 'Add';
     addButton.onclick = () => {
-        if (format === 'sub-object') {
+        if (modelType === 'sub-object') {
             createElement(child, vscode);
         } else {
             child.value.push('');
@@ -370,7 +370,7 @@ function renderArrayCreator(child, div, vscode) {
     };
     arrayCreatorDiv.appendChild(addButton);
 
-    if (format === 'sub-object') {
+    if (modelType === 'sub-object') {
         // For children of the array creator
         child.hidden_children.forEach(subChild => {
             //Copy the $links of the parent to the child

@@ -12,27 +12,27 @@ let itemTreeView: vscode.TreeView<Item> | undefined; // To keep a reference to t
 
 export function activate(context: vscode.ExtensionContext) {
 	const config = vscode.workspace.getConfiguration('codearchitect');
-	const pathSchema = config.get<string>('pathSchema', '');
+	const pathModels = config.get<string>('pathModels', '');
 	const pathProjects = config.get<string>('pathProjects', '');
 
-	const readSchemaFiles = async (pathSchema: string, pathProjects: string) => {
+	const readSchemaFiles = async (pathModels: string, pathProjects: string) => {
 		try {
-			const files = await fs.promises.readdir(pathSchema);
+			const files = await fs.promises.readdir(pathModels);
 
-			const schemaFiles = files.filter(file => file.endsWith('.schema.json'));
+			const schemaFiles = files.filter(file => file.endsWith('.model.json'));
 
 			if (schemaFiles.length === 0) {
-				vscode.window.showErrorMessage('No schema files found in the schema directory.');
+				vscode.window.showErrorMessage('No model files found in the model directory.');
 				return;
 			}
 
 			const schemaPromises = schemaFiles.map(async (file) => {
-				const pathFileProfile = path.join(pathSchema, file);
+				const pathFileProfile = path.join(pathModels, file);
 				try {
 					const data = await fs.promises.readFile(pathFileProfile, 'utf8');
 					const jsonData = JSON.parse(data);
 
-					if (jsonData?.format === 'root-object') {
+					if (jsonData?.modelType === 'root-object') {
 						// Dereference the schema
 						const dereferencedSchema = await $RefParser.bundle(pathFileProfile);
 						schemas.push(dereferencedSchema);
@@ -112,11 +112,11 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	const refreshProjectsCommand = vscode.commands.registerCommand('codearchitect.refresh', async () => {
-		const pathSchema = config.get<string>('pathSchema', '');
+		const pathModels = config.get<string>('pathModels', '');
 		const pathProjects = config.get<string>('pathProjects', '');
 		//Reset schemas
 		schemas = [];
-		await readSchemaFiles(pathSchema, pathProjects);
+		await readSchemaFiles(pathModels, pathProjects);
 		itemTreeProvider.refresh();
 	});
 
@@ -272,7 +272,7 @@ export function activate(context: vscode.ExtensionContext) {
 		itemTreeProvider.navigateForward(item);
 	}));
 
-	readSchemaFiles(pathSchema, pathProjects);
+	readSchemaFiles(pathModels, pathProjects);
 
 	context.subscriptions.push(helloWorldCommand);
 	context.subscriptions.push(newProjectCommand);

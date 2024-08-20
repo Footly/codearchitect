@@ -125,7 +125,7 @@
         "hidden": {
             "type":"boolean"
         },
-        "vscode-icon": {
+        "vscodeIcon": {
             "type": "string"
         },
         "$link": {

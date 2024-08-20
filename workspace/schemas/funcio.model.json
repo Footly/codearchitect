@@ -2,7 +2,7 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Funcio",
-  "vscode-icon": "symbol-property",
+  "vscodeIcon": "symbol-property",
   "modelType": "parent-object",
   "properties": {
     "$id": {

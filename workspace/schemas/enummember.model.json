@@ -3,7 +3,7 @@
   "type": "object",
   "title": "EnumMember",
   "modelType": "parent-object",
-  "vscode-icon": "symbol-field",
+  "vscodeIcon": "symbol-field",
   "properties": {
     "$id": {
       "type": "string",

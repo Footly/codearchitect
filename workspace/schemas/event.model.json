@@ -2,7 +2,7 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Event",
-  "vscode-icon": "symbol-event",
+  "vscodeIcon": "symbol-event",
   "modelType": "parent-object",
   "properties": {
     "$id": {

@@ -3,7 +3,7 @@
   "type": "object",
   "title": "Enumerator",
   "modelType": "parent-object",
-  "vscode-icon": "symbol-enum-member",
+  "vscodeIcon": "symbol-enum-member",
   "properties": {
     "$id": {
       "type": "string",

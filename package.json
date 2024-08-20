@@ -165,10 +165,10 @@
       {
         "title": "Code Architect",
         "properties": {
-          "codearchitect.pathSchema": {
+          "codearchitect.pathModels": {
             "type": "string",
             "default": "",
-            "description": "Path to where the schemas are located"
+            "description": "Path to where the models are located"
           },
           "codearchitect.pathProjects": {
             "type": "string",

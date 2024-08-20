@@ -2,7 +2,7 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "$id": "profile.schema.json",
   "title": "Project",
-  "vscode-icon": "symbol-method",
+  "vscodeIcon": "symbol-method",
   "type": "object",
   "modelType": "root",
   "properties": {
@@ -33,7 +33,7 @@
     },
     "Classes": {
       "modelType": "folder",
-      "vscode-icon": "folder",
+      "vscodeIcon": "folder",
       "type": "array",
       "items": {
         "$ref": "./class.schema.json"
@@ -41,7 +41,7 @@
     },
     "Requirements": {
       "modelType": "folder",
-      "vscode-icon": "folder",
+      "vscodeIcon": "folder",
       "type": "array",
       "items": {
         "$ref": "./reqs.schema.json"
@@ -49,7 +49,7 @@
     },
     "Primitive Types": {
       "modelType": "folder",
-      "vscode-icon": "folder",
+      "vscodeIcon": "folder",
       "type": "array",
       "items": {
         "$ref": "./primitivetypes.schema.json"

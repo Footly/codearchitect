@@ -208,8 +208,8 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       );
     };
 
-    const addItemToParent = (item: Item, format: string): void => {
-      switch (format) {
+    const addItemToParent = (item: Item, modelType: string): void => {
+      switch (modelType) {
         case 'parent-object':
         case 'array-parent-objects':
         case 'root-object':
@@ -235,7 +235,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
           parent.hidden_children.push(item);
           break;
         default:
-          vscode.window.showErrorMessage(`Type ${format} is not supported`);
+          vscode.window.showErrorMessage(`Type ${modelType} is not supported`);
           break;
       }
     };
@@ -253,7 +253,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
           item.value = itemValue;
         }
 
-        addItemToParent(item, itemSchema.format);
+        addItemToParent(item, itemSchema.modelType);
       });
     };
 
@@ -279,7 +279,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
             item.value = jsonKey;
           }
 
-          addItemToParent(item, keyProperties.format);
+          addItemToParent(item, keyProperties.modelType);
         }
       }
     };
@@ -365,6 +365,12 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     //Convert the path to a JSON file and create a variable for the parentJSON
     let rootJSON = JSON.parse(fs.readFileSync(rootJSONpath, 'utf-8'));
 
+    if(schema?.$link)
+    {
+      tags = schema?.$link?.tags;
+      scope = schema?.$link?.scope;
+    }
+
     for (const key in schema.properties) {
       const jsonPathKey = [...jsonPath];
       jsonPathKey.push(key);
@@ -378,9 +384,6 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         this.lastIDCreated = children.$id;
       } else if (key === '$schema') {
         children.$schema = rootSchema.$id;
-      } else if (key === '$link') {
-        if (property?.properties?.tags?.const) tags = property.properties.tags.const;
-        if (property?.properties?.scope?.const) scope = property.properties.scope.const;
       } else if (key === 'visibility') {
         children[key] = property.default;
         if (property.const) children[key] = property.const;
@@ -531,7 +534,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     const options: Array<[string, number]> = [];
 
     this.schemas.forEach((schema, index) => {
-      if (schema.format === 'root-object') {
+      if (schema.modelType === 'root-object') {
         options.push([schema.$id, index]);
       }
     });
@@ -607,7 +610,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         const schema = this.resolveRef(child.schema, parent.root_schema);
         const type = schema.type;
         const items = this.resolveRef(schema.items, parent.root_schema);
-        if (items?.format === 'parent-object' || items?.format === 'root-object') {
+        if (items?.modelType === 'parent-object' || items?.modelType === 'root-object') {
           options.push([items.title, parent.hidden_children.indexOf(child)]);
         }
       });
@@ -852,10 +855,10 @@ export class Item extends vscode.TreeItem {
       //this.tooltip = this.schema.title;
     }
 
-    if (this.schema?.contentMediaType) {
-      this.iconPath = new vscode.ThemeIcon(this.schema.contentMediaType);
+    if (this.schema?.vscodeIcon) {
+      this.iconPath = new vscode.ThemeIcon(this.schema.vscodeIcon);
     }
-    this.contextValue = this.schema.format;
+    this.contextValue = this.schema.modelType;
 
     this.children = []; // Initialize children[] as an empty array
     this.hidden_children = []; // Initialize hidden_children[] as an empty array

@@ -3,7 +3,7 @@
   "type": "object",
   "title": "DataStructure",
   "modelType": "parent-object",
-  "vscode-icon": "symbol-struct",
+  "vscodeIcon": "symbol-struct",
   "properties": {
     "$id": {
       "type": "string",

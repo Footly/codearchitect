@@ -3,7 +3,7 @@
   "type": "object",
   "title": "Requirements",
   "modelType": "parent-object",
-  "vscode-icon": "book",
+  "vscodeIcon": "book",
   "properties": {
     "$id": {
       "type": "string",
