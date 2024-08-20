@@ -17,21 +17,9 @@
       "hidden": true,
       "$ref": "./visibility.model.json",
       "const": "public"
-    },
-    "dependencies": {
-      "hidden": true,
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "scope": {
-      "hidden": true,
-      "type": "string"
     }
   },
   "$link": {
-    "scope": "parent",
     "tags": ["*", "reqs"]
   }
 }

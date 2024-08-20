@@ -136,15 +136,6 @@
                     "items": {
                         "type": "string"
                     }
-                },
-                "scope": {
-                    "type": "string",
-                    "enum": [
-                        "global",
-                        "local",
-                        "parent",
-                        "none"
-                    ]
                 }
             }
         },

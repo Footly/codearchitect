@@ -205,14 +205,12 @@ export function activate(context: vscode.ExtensionContext) {
 		//First reveal the item
 		await itemTreeView?.reveal(item, { select: true, focus: true });
 		const itemCopy = JSON.parse(JSON.stringify(item));
-		// Combine children and hidden_children
-		const combinedChildren = itemCopy.children.concat(itemCopy.hidden_children);
 
 		// Create a Set to track unique labels
 		const seenLabels = new Set();
 
 		// Filter combinedChildren to only include items with unique $label values
-		itemCopy.children = combinedChildren.filter((child: Item) => {
+		itemCopy.hidden_children = itemCopy.hidden_children.filter((child: Item) => {
 			const label = child.$label;
 			if (!seenLabels.has(label)) {
 				seenLabels.add(label);
@@ -226,22 +224,7 @@ export function activate(context: vscode.ExtensionContext) {
 		const $links = rootJSON.$links;
 		//Add the $links to the item
 		itemCopy.$links = $links;
-		//Get the JSON path
-		const newJsonPath = [...item.jsonPath];
 
-		itemCopy.dependencies = [];
-
-		while (newJsonPath.length > 0) {
-			let current = rootJSON;
-			for (const key of newJsonPath) {
-				current = current[key];
-			}
-			if (current?.scope && current?.scope !== 'parent') {
-				itemCopy.dependencies = current.dependencies;
-				break;
-			}
-			newJsonPath.pop();
-		}
 		if (webviewPanel) {
 			webviewPanel.webview.postMessage({ command: 'editObject', item: itemCopy });
 		} else {

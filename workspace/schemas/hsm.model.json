@@ -18,17 +18,6 @@
       "$ref": "./visibility.model.json",
       "const": "public"
     },
-    "dependencies": {
-      "hidden": true,
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "scope": {
-      "hidden": true,
-      "type": "string"
-    },
     "states": {
       "hidden": true,
       "type": "array",
@@ -55,7 +44,6 @@
     }
   },
   "$link": {
-    "scope": "local",
     "tags": ["*", "hsm"]
   },
   "preview": true

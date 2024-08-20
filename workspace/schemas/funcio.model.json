@@ -18,30 +18,21 @@
       "$ref": "./visibility.model.json",
       "const": "public"
     },
-    "dependencies": {
-      "hidden": true,
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "scope": {
-      "hidden": true,
-      "type": "string"
-    },
     "returntype": {
       "hidden": true,
       "modelType": "sub-object",
-      "type":"object",
+      "type": "object",
       "properties": {
         "datatype": {
           "modelType": "dropdown-select-tag",
           "type": "string",
-          "const": ["types"]
+          "const": [
+            "types"
+          ]
         },
         "isPointer": {
           "modelType": "checkbox",
-          "type":"boolean"
+          "type": "boolean"
         },
         "isConst": {
           "modelType": "checkbox",
@@ -59,7 +50,9 @@
     }
   },
   "$link": {
-    "scope": "parent",
-    "tags": ["*", "funcions"]
+    "tags": [
+      "*",
+      "funcions"
+    ]
   }
 }

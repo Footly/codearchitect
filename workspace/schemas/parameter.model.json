@@ -18,17 +18,6 @@
       "$ref": "./visibility.model.json",
       "const": "public"
     },
-    "dependencies": {
-      "hidden": true,
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "scope": {
-      "hidden": true,
-      "type": "string"
-    },
     "datatype": {
       "hidden": true,
       "modelType": "dropdown-select-tag",
@@ -63,6 +52,6 @@
     }
   },
   "$link": {
-    "scope": "none"
+    "tags": ["*", "parameters"]
   }
 }

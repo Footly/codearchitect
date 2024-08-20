@@ -18,17 +18,6 @@
       "$ref": "./visibility.model.json",
       "const": "public"
     },
-    "dependencies": {
-      "hidden": true,
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "scope": {
-      "hidden": true,
-      "type": "string"
-    },
     "members": {
       "hidden": true,
       "modelType": "folder",
@@ -39,7 +28,6 @@
     }
   },
   "$link": {
-    "scope": "parent",
     "tags": ["*", "types"]
   }
 }
