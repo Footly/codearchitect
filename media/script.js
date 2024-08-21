@@ -451,17 +451,20 @@ function renderDropdownSelectTag(child, div, vscode) {
         return { root, maxDepth };
     }
 
-    // Render the tree view from the tree structure
     function renderTreeView(node, parentDiv, depth, maxDepth) {
         Object.keys(node).forEach(key => {
             if (key.startsWith("__")) return; // Skip internal properties
             const currentNode = node[key];
             const div = document.createElement('div');
+
+            // Adjust the background color based on the depth
+            const baseColorValue = 50 + (depth * 20); // Starting at 50, increase by 20 for each depth
+            div.style.backgroundColor = `rgb(${baseColorValue}, ${baseColorValue}, ${baseColorValue})`;
+
             div.style.marginLeft = `${depth * 10}px`; // Further reduced horizontal distance
             div.style.padding = '6px'; // Further reduced padding
             div.style.borderRadius = '8px';
             div.style.marginBottom = '5px';
-            div.style.backgroundColor = `rgba(0, 0, 0, ${0.2 + (maxDepth - depth) / maxDepth * 0.4})`;
             div.style.color = '#eee'; // Lighter text color for better contrast
             div.style.cursor = 'pointer';
             div.style.fontSize = '14px';
@@ -474,9 +477,6 @@ function renderDropdownSelectTag(child, div, vscode) {
 
             if (currentNode.__isLeaf) {
                 div.style.backgroundColor = '#555';
-                if (child.value === currentNode.__id) {
-                    div.style.backgroundColor = '#777'; // Highlight selected node
-                }
                 div.addEventListener('click', () => {
                     // Handle leaf node selection
                     child.value = currentNode.__id;
@@ -512,6 +512,7 @@ function renderDropdownSelectTag(child, div, vscode) {
             }
         });
     }
+
 
     // Convert the filtered links to tree structure
     const { root, maxDepth } = buildTree(links);
@@ -621,6 +622,72 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
     const selectedValues = child.value || [];
     renderSelectedItems(containerDiv, selectedValues, child);
 
+    function renderTreeView(node, parentDiv, depth, maxDepth) {
+        Object.keys(node).forEach(key => {
+            if (key.startsWith("__")) return; // Skip internal properties
+            const currentNode = node[key];
+            const div = document.createElement('div');
+
+            // Adjust the background color based on the depth
+            const baseColorValue = 50 + (depth * 20); // Starting at 50, increase by 20 for each depth
+            div.style.backgroundColor = `rgb(${baseColorValue}, ${baseColorValue}, ${baseColorValue})`;
+
+            div.style.marginLeft = `${depth * 10}px`; // Further reduced horizontal distance
+            div.style.padding = '6px'; // Further reduced padding
+            div.style.borderRadius = '8px';
+            div.style.marginBottom = '5px';
+            div.style.color = '#eee'; // Lighter text color for better contrast
+            div.style.cursor = 'pointer';
+            div.style.fontSize = '14px';
+
+            const label = document.createElement('span');
+            label.textContent = currentNode.__label;
+
+            div.appendChild(label);
+            parentDiv.appendChild(div);
+
+            if (currentNode.__isLeaf) {
+                div.style.backgroundColor = '#555';
+                div.addEventListener('click', () => {
+                    // Handle leaf node selection
+                    const selectedId = currentNode.__id;
+                    if (!selectedValues.includes(selectedId)) {
+                        selectedValues.push(selectedId);
+                        renderSelectedItems(containerDiv, selectedValues, child);
+                        vscode.postMessage({ command: 'saveObject', item: child });
+                    }
+                    popupContainer.style.display = 'none';
+                });
+            } else {
+                // Toggle children visibility
+                const toggleBtn = document.createElement('button');
+                toggleBtn.textContent = '-'; // Show collapse symbol by default
+                toggleBtn.style.backgroundColor = 'transparent';
+                toggleBtn.style.border = 'none';
+                toggleBtn.style.color = '#eee'; // Lighter text color for better contrast
+                toggleBtn.style.cursor = 'pointer';
+                toggleBtn.style.marginRight = '5px';
+                toggleBtn.style.fontSize = '16px'; // Increased font size for better visibility
+                div.prepend(toggleBtn);
+
+                const childrenDiv = document.createElement('div');
+                childrenDiv.classList.add('children');
+                childrenDiv.style.marginLeft = '10px'; // Further reduced indentation for children
+                childrenDiv.style.display = 'block'; // Show children by default
+                div.appendChild(childrenDiv);
+
+                toggleBtn.addEventListener('click', () => {
+                    const isVisible = childrenDiv.style.display === 'block';
+                    childrenDiv.style.display = isVisible ? 'none' : 'block';
+                    toggleBtn.textContent = isVisible ? '+' : '-';
+                });
+
+                renderTreeView(currentNode.__children, childrenDiv, depth + 1, maxDepth);
+            }
+        });
+    }
+
+
     function updateSuggestions(popupContainer, child) {
         const tagsFilter = child.schema.items.const;
 
@@ -628,6 +695,9 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
         const links = child.$links
             .filter(link => link.$tags.some(t => tagsFilter.includes(t))) // Filter by tags
             .filter(link => !child.value.some(value => link.$id.includes(value))); // Filter by value
+
+        console.log(child.$links);
+        console.log(links);
 
         // Build and render the tree view
         const { root, maxDepth } = buildTree(links);
@@ -666,67 +736,6 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
         });
 
         return { root, maxDepth };
-    }
-
-    function renderTreeView(node, parentDiv, depth, maxDepth, child) {
-        Object.keys(node).forEach(key => {
-            if (key.startsWith("__")) return; // Skip internal properties
-            const currentNode = node[key];
-            const div = document.createElement('div');
-            div.style.marginLeft = `${depth * 10}px`;
-            div.style.padding = '6px';
-            div.style.borderRadius = '8px';
-            div.style.marginBottom = '5px';
-            div.style.backgroundColor = `rgba(0, 0, 0, ${0.2 + (maxDepth - depth) / maxDepth * 0.4})`;
-            div.style.color = '#eee'; // Lighter text color for better contrast
-            div.style.cursor = 'pointer';
-            div.style.fontSize = '14px';
-
-            const label = document.createElement('span');
-            label.textContent = currentNode.__label;
-
-            div.appendChild(label);
-            parentDiv.appendChild(div);
-
-            if (currentNode.__isLeaf) {
-                div.style.backgroundColor = '#555';
-                div.addEventListener('click', () => {
-                    // Handle leaf node selection
-                    const selectedId = currentNode.__id;
-                    if (!selectedValues.includes(selectedId)) {
-                        selectedValues.push(selectedId);
-                        renderSelectedItems(containerDiv, selectedValues, child);
-                        vscode.postMessage({ command: 'saveObject', item: child });
-                    }
-                    popupContainer.style.display = 'none';
-                });
-            } else {
-                // Toggle children visibility
-                const toggleBtn = document.createElement('button');
-                toggleBtn.textContent = '-'; // Show collapse symbol by default
-                toggleBtn.style.backgroundColor = 'transparent';
-                toggleBtn.style.border = 'none';
-                toggleBtn.style.color = '#eee'; // Lighter text color for better contrast
-                toggleBtn.style.cursor = 'pointer';
-                toggleBtn.style.marginRight = '5px';
-                toggleBtn.style.fontSize = '16px'; // Increased font size for better visibility
-                div.prepend(toggleBtn);
-
-                const childrenDiv = document.createElement('div');
-                childrenDiv.classList.add('children');
-                childrenDiv.style.marginLeft = '10px';
-                childrenDiv.style.display = 'block'; // Show children by default
-                div.appendChild(childrenDiv);
-
-                toggleBtn.addEventListener('click', () => {
-                    const isVisible = childrenDiv.style.display === 'block';
-                    childrenDiv.style.display = isVisible ? 'none' : 'block';
-                    toggleBtn.textContent = isVisible ? '+' : '-';
-                });
-
-                renderTreeView(currentNode.__children, childrenDiv, depth + 1, maxDepth, child);
-            }
-        });
     }
 
     function renderSelectedItems(containerDiv, selectedValues, child) {
