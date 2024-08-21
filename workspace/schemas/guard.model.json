@@ -78,5 +78,22 @@
   },
   "$link": {
     "tags": ["*", "guard"]
-  }
+  },
+  "$dependency": [
+    {
+      "tags": [
+        "state",
+        "event",
+        "transition",
+        "activity",
+        "guard"
+      ],
+      "visibility": [
+        "public",
+        "private"
+      ],
+      "relation": "parent",
+      "path": ["##"]
+    }
+  ]
 }

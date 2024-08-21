@@ -23,7 +23,7 @@
       "modelType": "dropdown-select-tag",
       "type": "string",
       "const": [
-        "*"
+        "types"
       ]
     },
     "isArray": {
@@ -45,6 +45,58 @@
       "hidden": true,
       "modelType": "checkbox",
       "type": "boolean"
+    },
+    "$dependencies": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "path": {
+            "type": "string"
+          },
+          "visibility": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "private",
+                "public"
+              ]
+            }
+          }
+        }
+      },
+      "const": [
+        {
+          "tags": [
+            "types"
+          ],
+          "visibility": [
+            "public",
+            "private"
+          ],
+          "path": [
+            "##"
+          ]
+        },
+        {
+          "tags": [
+            "primitivetypes"
+          ],
+          "visibility": [
+            "private",
+            "public"
+          ],
+          "path": []
+        }
+      ]
     }
   },
   "$link": {
@@ -52,18 +104,5 @@
       "*",
       "variable"
     ]
-  },
-  "$filter": [
-    {
-      "tags": [
-        "types"
-      ],
-      "visibility": [
-        "private",
-        "public"
-      ],
-      "relation": "parent",
-      "path": ["##"]
-    }
-  ]
+  }
 }

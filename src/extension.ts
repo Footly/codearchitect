@@ -93,7 +93,7 @@ export function activate(context: vscode.ExtensionContext) {
 		// Call the createParent method from the tree.ts file
 		await itemTreeProvider.createParent();
 		//Wait 50ms for the item to be created
-		await new Promise(resolve => setTimeout(resolve, 50));
+		await new Promise(resolve => setTimeout(resolve, 150));
 		//Get the created item
 		const newItem = itemTreeProvider.getLastItemCreated();
 		if (newItem) {
@@ -122,14 +122,14 @@ export function activate(context: vscode.ExtensionContext) {
 		//Create a child from the item
 		await itemTreeProvider.createChildFrom(item);
 		//Wait 50ms for the item to be created
-		await new Promise(resolve => setTimeout(resolve, 50));
+		await new Promise(resolve => setTimeout(resolve, 150));
 		//Get parent Object
 		const parentObject = itemTreeProvider.getItem(jsonPath, filePath);
 		if (parentObject) {
 			//First reveal the item
 			await itemTreeView?.reveal(parentObject, { expand: true });
-			//Wait 50ms for the item to be created
-			await new Promise(resolve => setTimeout(resolve, 50));
+			//Wait 150ms for the item to be created
+			await new Promise(resolve => setTimeout(resolve, 150));
 			//Get the created item
 			const newItem = itemTreeProvider.getLastItemCreated();
 			if (newItem) {
@@ -225,7 +225,7 @@ export function activate(context: vscode.ExtensionContext) {
 		// Variable to hold accumulated links
 		let itemLinks: Link[][] = [];
 
-		interface Filter {
+		interface Dependency {
 			path: string[];
 			tags: string[];
 			visibility: string[];
@@ -241,37 +241,65 @@ export function activate(context: vscode.ExtensionContext) {
 			$visibility: string;
 		}
 
-		// Check if any filter exists
-		if (itemCopy.schema?.$filter) {
-			// Assuming $filter.array is of type Filter[]
-			(itemCopy.schema.$filter as Filter[]).forEach((filter: Filter) => {
+		// Check if any dependency exists
+		if (itemCopy.schema?.$dependency) {
+			// Assuming $dependency.array is of type Dependency[]
+			(itemCopy.schema.$dependency as Dependency[]).forEach((dependency: Dependency) => {
 				// Skip if any of the important fields are not filled
-				if (!filter.tags?.length || !filter.visibility?.length) {
-					return; // Skip this filter if any required field is not filled
+				if (!dependency.tags?.length || !dependency.visibility?.length) {
+					return; // Skip this dependency if any required field is not filled
 				}
 
-				if (Array.isArray(filter.path) && filter.path.length === 1 && filter.path[0] === "#") {
-					filter.path = itemCopy.jsonPath;
-				} else if (Array.isArray(filter.path) && filter.path.length === 1 && filter.path[0] === "##") {
-					filter.path = itemCopy.parentJsonPath;
+				const path = [...itemCopy.jsonPath];
+				if (Array.isArray(dependency.path) && dependency.path.length != 0) {
+					let hashCount = (dependency.path[0].match(/#/g) || []).length;
+					let i = 0;
+					if (hashCount > 0) {
+						while (hashCount > 1 && path.length>0) {
+							path.pop();
+							// Drill down to the desired part of the JSON
+							const jsonObject = path.reduce((obj, key) => obj[key], rootJSON);
+							//Check if jsonObject contains scope == true
+							if(jsonObject?.scope === true)
+							{
+								hashCount--;
+							}
+						}
+						i = 1;
+					}
+					// Expand and push elements from dependency.path[1] to dependency.path[N]
+					for (; i < dependency.path.length; i++) {
+						if (Array.isArray(dependency.path[i])) {
+							path.push(...dependency.path[i]);
+						} else {
+							path.push(dependency.path[i]);
+						}
+					}
+				} else {
+					while(path.pop());
 				}
+
+				dependency.path = path;
 
 				// Filter links for tags and visibility
 				const itemLinksTags = rootLinks.filter((link: Link) =>
-					link.$tags?.some((t: string) => filter.tags.includes(t))
+					link.$tags?.some((t: string) => dependency.tags.includes(t))
 				).filter((link: Link) =>
-					filter.visibility.includes(link.$visibility)
+					dependency.visibility.includes(link.$visibility)
 				);
 
 				// Check relation
-				if (filter.relation === 'parent') {
-					// Find links where filter.path is a parent of link.$jsonPath
-					const parentLinks = itemLinksTags.filter((link: Link) => {
-						return filter.path.every((value, index) => value === link.$jsonPath[index])
-							&& filter.path.length < link.$jsonPath.length;
-					});
-
-					itemLinks.push(parentLinks);
+				if (dependency.relation === 'parent') {
+					if (dependency?.path || dependency.path.length !== 0) {
+						// Find links where dependency.path is a parent of link.$jsonPath
+						const parentLinks = itemLinksTags.filter((link: Link) => {
+							return dependency.path.every((value, index) => value === link.$jsonPath[index])
+								&& dependency.path.length < link.$jsonPath.length;
+						});
+						itemLinks.push(...parentLinks);
+					} else {
+						itemLinks.push(...itemLinksTags);
+					}
 				}
 			});
 		}
@@ -338,7 +366,7 @@ function handleMessage(message: any) {
 	if (message.command === 'saveObject') {
 		// Handle the objectEdited command
 		// Call the saveObject method from the tree.ts file
-		itemTreeProvider.updateItem(message.item);
+		itemTreeProvider.updateItem(message.item, message.id);
 	} else if (message.command === 'createItem') {
 		// Call the deleteObject method from the tree.ts file
 		itemTreeProvider.createChildFrom(message.item);

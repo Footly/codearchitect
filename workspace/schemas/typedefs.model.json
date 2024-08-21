@@ -27,5 +27,29 @@
   },
   "$link": {
     "tags": ["*", "types"]
-  }
+  },
+  "$dependency": [
+    {
+      "tags": [
+        "types"
+      ],
+      "visibility": [
+        "public",
+        "private"
+      ],
+      "relation": "parent",
+      "path": ["##"]
+    },
+    {
+      "tags": [
+        "primitivetypes"
+      ],
+      "visibility": [
+        "private",
+        "public"
+      ],
+      "relation": "parent",
+      "path": []
+    }
+  ]
 }

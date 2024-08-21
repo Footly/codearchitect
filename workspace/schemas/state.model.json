@@ -46,9 +46,43 @@
       "hidden": true,
       "type":"boolean",
       "modelType": "checkbox"
+    },
+    "funcio": {
+      "modelType": "dropdown-select-tag",
+      "hidden": true,
+      "type": "string",
+      "const": ["funcio"]
     }
   },
   "$link": {
     "tags": ["*", "state"]
-  }
+  },
+  "$dependency": [
+    {
+      "tags": [
+        "state",
+        "event",
+        "transition",
+        "activity",
+        "guard"
+      ],
+      "visibility": [
+        "public",
+        "private"
+      ],
+      "relation": "parent",
+      "path": ["##"]
+    },
+    {
+      "tags": [
+        "funcio"
+      ],
+      "visibility": [
+        "public",
+        "private"
+      ],
+      "relation": "parent",
+      "path": ["###"]
+    }
+  ]
 }

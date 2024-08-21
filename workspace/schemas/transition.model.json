@@ -51,5 +51,22 @@
   },
   "$link": {
     "tags": ["*", "transition"]
-  }
+  },
+  "$dependency": [
+    {
+      "tags": [
+        "state",
+        "event",
+        "transition",
+        "activity",
+        "guard"
+      ],
+      "visibility": [
+        "public",
+        "private"
+      ],
+      "relation": "parent",
+      "path": ["##"]
+    }
+  ]
 }

@@ -17,9 +17,28 @@
       "hidden": true,
       "$ref": "./visibility.model.json",
       "const": "public"
+    },
+    "funcio": {
+      "modelType": "dropdown-select-tag",
+      "hidden": true,
+      "type": "string",
+      "const": ["funcio"]
     }
   },
   "$link": {
     "tags": ["*", "activity"]
-  }
+  },
+  "$dependency": [
+    {
+      "tags": [
+        "funcio"
+      ],
+      "visibility": [
+        "public",
+        "private"
+      ],
+      "relation": "parent",
+      "path": ["###"]
+    }
+  ]
 }

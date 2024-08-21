@@ -121,7 +121,7 @@
                 "text-area"
             ]
         },
-        "$filter": {
+        "$dependencies": {
             "type": "array",
             "items": {
                 "type": "object",
@@ -133,11 +133,7 @@
                         }
                     },
                     "path": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "default": ["#"]
+                        "type": "string"
                     },
                     "visibility": {
                         "type": "array",
@@ -148,13 +144,6 @@
                                 "public"
                             ]
                         }
-                    },
-                    "relation": {
-                        "type": "string",
-                        "enum": [
-                            "parent",
-                            "sibling"
-                        ]
                     }
                 }
             }

@@ -19,6 +19,11 @@
       "$ref": "./visibility.model.json",
       "const": "public"
     },
+    "scope": {
+      "hidden": true,
+      "type": "boolean",
+      "const": true
+    },
     "$model": {
       "type": "string",
       "hidden": true
@@ -67,5 +72,6 @@
   },
   "$link": {
     "tags": ["*"]
-  }
+  },
+  "scope": true
 }

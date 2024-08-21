@@ -18,6 +18,11 @@
       "$ref": "./visibility.model.json",
       "const": "public"
     },
+    "scope": {
+      "hidden": true,
+      "type": "boolean",
+      "const": true
+    },
     "requirements": {
       "type": "array",
       "hidden": true,

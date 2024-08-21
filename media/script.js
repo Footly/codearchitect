@@ -1,3 +1,5 @@
+let item_id = '';
+
 document.addEventListener('DOMContentLoaded', () => {
     const vscode = acquireVsCodeApi();
 
@@ -20,6 +22,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // Give some css
             objectDiv.style.marginBottom = '10px';
             document.body.appendChild(objectDiv);
+
+            console.log(message.item);
+
+            const item = message.item.hidden_children.find(child => child.$label === '$id');
+            item_id = item ? item.value : null;
 
             // Render child elements
             message.item.hidden_children.forEach(child => {
@@ -137,11 +144,10 @@ function handleTitleInputFocusOut(title, item, vscode) {
         }
     });
 
-    vscode.postMessage({ command: 'saveObject', item: item });
+    vscode.postMessage({ command: 'saveObject', item: item, id: item_id});
 }
 
 function renderChild(child, div, vscode, depth = 0) {
-    console.log(child);
     const modelType = child.schema.modelType;
     switch (modelType) {
         case 'sub-object':
@@ -198,7 +204,7 @@ function renderInputString(child, div, vscode) {
     // Add event listener for input changes
     input.addEventListener('input', (event) => {
         child.value = event.target.value;
-        vscode.postMessage({ command: 'saveObject', item: child });
+        vscode.postMessage({ command: 'saveObject', item: child, id: item_id });
     });
 }
 
@@ -265,7 +271,7 @@ function renderTextArea(child, div, vscode) {
     // Add input event listener to the textarea
     textarea.addEventListener('input', (event) => {
         child.value = event.target.value;
-        vscode.postMessage({ command: 'saveObject', item: child });
+        vscode.postMessage({ command: 'saveObject', item: child, id: item_id });
     });
 
     // Toggle function for showing/hiding content
@@ -301,7 +307,7 @@ function renderCheckbox(child, div, vscode) {
     // Add event listener for checkbox changes
     checkbox.addEventListener('change', (event) => {
         child.value = event.target.checked;
-        vscode.postMessage({ command: 'saveObject', item: child });
+        vscode.postMessage({ command: 'saveObject', item: child, id: item_id });
     });
 }
 
@@ -344,7 +350,7 @@ function renderDropdownSelect(child, div, vscode) {
     // Event listener for when the select value changes
     select.addEventListener('change', (event) => {
         child.value = event.target.value;
-        vscode.postMessage({ command: 'saveObject', item: child });
+        vscode.postMessage({ command: 'saveObject', item: child , id: item_id});
     });
 }
 
@@ -413,23 +419,13 @@ function renderDropdownSelectTag(child, div, vscode) {
     // Tag to filter
     const tags_filter = child.schema.const;
 
-    console.log(child.$links);
-
     // Initialize an empty array to hold the filtered links
     const links = [];
 
-    // Iterate over each link in child.$links
+    // Iterate over each link in child.$links and filter based on tags
     child.$links.forEach(link => {
-        console.log(link);
-        // Ensure link.$tags is an array before proceeding
-        if (Array.isArray(link.$tags)) {
-            // Check if any of the tags in link.$tags are included in tags_filter
-            const matches = link.$tags.some(t => tags_filter.includes(t));
-
-            // If there is a match, add the link to the filtered links array
-            if (matches) {
-                links.push(link);
-            }
+        if (Array.isArray(link.$tags) && link.$tags.some(t => tags_filter.includes(t))) {
+            links.push(link);
         }
     });
 
@@ -499,7 +495,7 @@ function renderDropdownSelectTag(child, div, vscode) {
                     child.value = currentNode.__id;
                     valueDisplay.textContent = `Selected: ${currentNode.__label}`;
                     popupContainer.style.display = 'none';
-                    vscode.postMessage({ command: 'saveObject', item: child });
+                    vscode.postMessage({ command: 'saveObject', item: child, id: item_id });
                 });
             } else {
                 // Toggle children visibility
@@ -671,7 +667,7 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
                     if (!selectedValues.includes(selectedId)) {
                         selectedValues.push(selectedId);
                         renderSelectedItems(containerDiv, selectedValues, child);
-                        vscode.postMessage({ command: 'saveObject', item: child });
+                        vscode.postMessage({ command: 'saveObject', item: child, id: item_id });
                     }
                     popupContainer.style.display = 'none';
                 });
@@ -712,9 +708,6 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
         const links = child.$links
             .filter(link => link.$tags.some(t => tagsFilter.includes(t))) // Filter by tags
             .filter(link => !child.value.some(value => link.$id.includes(value))); // Filter by value
-
-        console.log(child.$links);
-        console.log(links);
 
         // Build and render the tree view
         const { root, maxDepth } = buildTree(links);
@@ -811,7 +804,7 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
                     event.stopPropagation();
                     selectedValues.splice(index, 1); // Remove item from selectedValues
                     renderSelectedItems(containerDiv, selectedValues, child); // Re-render selected items
-                    vscode.postMessage({ command: 'saveObject', item: child });
+                    vscode.postMessage({ command: 'saveObject', item: child, id: item_id });
                 });
 
                 selectedItemsDiv.appendChild(itemDiv);
