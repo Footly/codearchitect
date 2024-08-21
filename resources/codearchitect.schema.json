@@ -109,58 +109,21 @@
         "modelType": {
             "type": "string",
             "enum": [
-                "root",
-                "parent-object",
-                "folder",
-                "input-string",
-                "checkbox",
-                "dropdown-select",
-                "dropdown-select-tag",
-                "pool-dropdown-select-tag",
-                "sub-object",
-                "text-area"
-            ]
-        },
-        "$filter": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "tags": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    },
-                    "path": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "default": ["#"]
-                    },
-                    "visibility": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                            "enum": [
-                                "private",
-                                "public"
-                            ]
-                        }
-                    },
-                    "relation": {
-                        "type": "string",
-                        "enum": [
-                            "parent",
-                            "sibling"
-                        ]
-                    }
-                }
-            }
+              "root",
+              "parent-object",
+              "folder",
+              "input-string",
+              "checkbox",
+              "dropdown-select",
+              "dropdown-select-tag",
+              "sub-object",
+              "text-area",
+              "pool-dropdown-select-tag"
+
+          ]
         },
         "hidden": {
-            "type": "boolean"
+            "type":"boolean"
         },
         "vscodeIcon": {
             "type": "string"
@@ -177,7 +140,7 @@
             }
         },
         "preview": {
-            "type": "boolean"
+            "type":"boolean"
         },
         "default": true
     }

@@ -413,25 +413,8 @@ function renderDropdownSelectTag(child, div, vscode) {
     // Tag to filter
     const tags_filter = child.schema.const;
 
-    console.log(child.$links);
-
-    // Initialize an empty array to hold the filtered links
-    const links = [];
-
-    // Iterate over each link in child.$links
-    child.$links.forEach(link => {
-        console.log(link);
-        // Ensure link.$tags is an array before proceeding
-        if (Array.isArray(link.$tags)) {
-            // Check if any of the tags in link.$tags are included in tags_filter
-            const matches = link.$tags.some(t => tags_filter.includes(t));
-
-            // If there is a match, add the link to the filtered links array
-            if (matches) {
-                links.push(link);
-            }
-        }
-    });
+    // Filter the links using the tags_filter
+    const links = child.$links.filter(link => link.$tags.some(t => tags_filter.includes(t)));
 
     // Convert the filtered links into a tree structure
     function buildTree(data) {
