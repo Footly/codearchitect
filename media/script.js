@@ -1,3 +1,5 @@
+let item_id = '';
+
 document.addEventListener('DOMContentLoaded', () => {
     const vscode = acquireVsCodeApi();
 
@@ -20,6 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Give some css
             objectDiv.style.marginBottom = '10px';
             document.body.appendChild(objectDiv);
+
+            const item = message.item.hidden_children.find(child => child.$label === '$id');
+            item_id = item ? item.value : null;
 
             // Render child elements
             message.item.hidden_children.forEach(child => {
@@ -137,7 +142,7 @@ function handleTitleInputFocusOut(title, item, vscode) {
         }
     });
 
-    vscode.postMessage({ command: 'saveObject', item: item });
+    vscode.postMessage({ command: 'saveObject', item: item, id: item_id });
 }
 
 function renderChild(child, div, vscode, depth = 0) {
@@ -198,7 +203,7 @@ function renderInputString(child, div, vscode) {
     // Add event listener for input changes
     input.addEventListener('input', (event) => {
         child.value = event.target.value;
-        vscode.postMessage({ command: 'saveObject', item: child });
+        vscode.postMessage({ command: 'saveObject', item: child, id: item_id });
     });
 }
 
@@ -265,7 +270,7 @@ function renderTextArea(child, div, vscode) {
     // Add input event listener to the textarea
     textarea.addEventListener('input', (event) => {
         child.value = event.target.value;
-        vscode.postMessage({ command: 'saveObject', item: child });
+        vscode.postMessage({ command: 'saveObject', item: child, id: item_id });
     });
 
     // Toggle function for showing/hiding content
@@ -301,7 +306,7 @@ function renderCheckbox(child, div, vscode) {
     // Add event listener for checkbox changes
     checkbox.addEventListener('change', (event) => {
         child.value = event.target.checked;
-        vscode.postMessage({ command: 'saveObject', item: child });
+        vscode.postMessage({ command: 'saveObject', item: child, id: item_id });
     });
 }
 
@@ -344,7 +349,7 @@ function renderDropdownSelect(child, div, vscode) {
     // Event listener for when the select value changes
     select.addEventListener('change', (event) => {
         child.value = event.target.value;
-        vscode.postMessage({ command: 'saveObject', item: child });
+        vscode.postMessage({ command: 'saveObject', item: child, id: item_id });
     });
 }
 
@@ -482,7 +487,7 @@ function renderDropdownSelectTag(child, div, vscode) {
                     child.value = currentNode.__id;
                     valueDisplay.textContent = `Selected: ${currentNode.__label}`;
                     popupContainer.style.display = 'none';
-                    vscode.postMessage({ command: 'saveObject', item: child });
+                    vscode.postMessage({ command: 'saveObject', item: child, id: item_id });
                 });
             } else {
                 // Toggle children visibility
@@ -654,7 +659,7 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
                     if (!selectedValues.includes(selectedId)) {
                         selectedValues.push(selectedId);
                         renderSelectedItems(containerDiv, selectedValues, child);
-                        vscode.postMessage({ command: 'saveObject', item: child });
+                        vscode.postMessage({ command: 'saveObject', item: child, id: item_id });
                     }
                     popupContainer.style.display = 'none';
                 });
@@ -794,7 +799,7 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
                     event.stopPropagation();
                     selectedValues.splice(index, 1); // Remove item from selectedValues
                     renderSelectedItems(containerDiv, selectedValues, child); // Re-render selected items
-                    vscode.postMessage({ command: 'saveObject', item: child });
+                    vscode.postMessage({ command: 'saveObject', item: child, id: item_id });
                 });
 
                 selectedItemsDiv.appendChild(itemDiv);

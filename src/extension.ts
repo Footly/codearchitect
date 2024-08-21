@@ -92,8 +92,8 @@ export function activate(context: vscode.ExtensionContext) {
 	const newProjectCommand = vscode.commands.registerCommand('codearchitect.newProject', async () => {
 		// Call the createParent method from the tree.ts file
 		await itemTreeProvider.createParent();
-		//Wait 50ms for the item to be created
-		await new Promise(resolve => setTimeout(resolve, 50));
+		//Wait 150ms for the item to be created
+		await new Promise(resolve => setTimeout(resolve, 150));
 		//Get the created item
 		const newItem = itemTreeProvider.getLastItemCreated();
 		if (newItem) {
@@ -121,15 +121,15 @@ export function activate(context: vscode.ExtensionContext) {
 		const filePath = item.filePath;
 		//Create a child from the item
 		await itemTreeProvider.createChildFrom(item);
-		//Wait 50ms for the item to be created
-		await new Promise(resolve => setTimeout(resolve, 50));
+		//Wait 150ms for the item to be created
+		await new Promise(resolve => setTimeout(resolve, 150));
 		//Get parent Object
 		const parentObject = itemTreeProvider.getItem(jsonPath, filePath);
 		if (parentObject) {
 			//First reveal the item
 			await itemTreeView?.reveal(parentObject, { expand: true });
-			//Wait 50ms for the item to be created
-			await new Promise(resolve => setTimeout(resolve, 50));
+			//Wait 150ms for the item to be created
+			await new Promise(resolve => setTimeout(resolve, 150));
 			//Get the created item
 			const newItem = itemTreeProvider.getLastItemCreated();
 			if (newItem) {
@@ -185,8 +185,8 @@ export function activate(context: vscode.ExtensionContext) {
 			const document = await vscode.workspace.openTextDocument(filePath);
 			await vscode.window.showTextDocument(document);
 
-			//Wait 250ms for the item to be created
-			await new Promise(resolve => setTimeout(resolve, 250));
+			//Wait 2150ms for the item to be created
+			await new Promise(resolve => setTimeout(resolve, 2150));
 
 			// Execute the plantuml.preview command
 			await vscode.commands.executeCommand('plantuml.preview');
@@ -284,7 +284,7 @@ function handleMessage(message: any) {
 	if (message.command === 'saveObject') {
 		// Handle the objectEdited command
 		// Call the saveObject method from the tree.ts file
-		itemTreeProvider.updateItem(message.item);
+		itemTreeProvider.updateItem(message.item, message.id);
 	} else if (message.command === 'createItem') {
 		// Call the deleteObject method from the tree.ts file
 		itemTreeProvider.createChildFrom(message.item);

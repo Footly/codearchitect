@@ -701,7 +701,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     }
   }
 
-  async updateItem(item: Item): Promise<void> {
+  async updateItem(item: Item, id: string): Promise<void> {
     if (!this.rootPath) {
       vscode.window.showInformationMessage('No folder or workspace opened');
       return;
@@ -710,7 +710,6 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     const parentJSON = JSON.parse(fs.readFileSync(item.filePath, 'utf-8'));
 
     const updateItemInJSON = (jsonObject: any, item: Item): void => {
-      let id_item_changed = undefined;
       let current = jsonObject;
       for (let i = 0; i < item.jsonPath.length - 1; i++) {
         const key = item.jsonPath[i];
@@ -744,7 +743,6 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         }
         if (child.value !== undefined) {
           if (childLastKey === '$id') {
-            id_item_changed = child.value;
           }
           childCurrent[childLastKey] = child.value;
         }
@@ -752,17 +750,33 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
           updateItemInJSON(jsonObject, child);
         }
       });
-
-      return id_item_changed;
     };
 
-    const $update_id = updateItemInJSON(parentJSON, item);
+    updateItemInJSON(parentJSON, item);
 
-    parentJSON.$links.forEach((link: any) => {
-      if (link.$id === $update_id) {
-        link.$label = item.$label;
-      }
-    });
+    const jsonUpdated = this.findObjectByID(id, parentJSON);
+
+    interface Link {
+			$id: string;
+			$label: string;
+			$path: string[];
+			$jsonPath: string[];
+			$tags: string[];
+			$visibility: string;
+		}
+
+    if(parentJSON?.$links.length != 0)
+    {
+      (parentJSON.$links as Link[]).forEach((link: Link) => {
+        if(link.$id === jsonUpdated?.$id)
+        {
+          if(jsonUpdated?.$label)
+            link.$label = jsonUpdated.$label;
+          if(jsonUpdated?.visibility)
+            link.$visibility = jsonUpdated.visibility;
+        }
+      });
+    }
 
     try {
       fs.writeFileSync(item.filePath, JSON.stringify(parentJSON, null, 2), 'utf-8');
@@ -824,6 +838,8 @@ export class Item extends vscode.TreeItem {
 
     this.children = []; // Initialize children[] as an empty array
     this.hidden_children = []; // Initialize hidden_children[] as an empty array
+    if(schema?.hidden == true && schema?.modelType === 'folder')
+      return;
     this.keyPath.push(this.$label);
   }
 }
