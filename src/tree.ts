@@ -453,7 +453,8 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         $tags: tags,
         $visibility: visibility,
         $label: children.$label,
-        $path: keyPath
+        $path: keyPath,
+        $jsonPath: jsonPath
       }
 
       //Add the tags to the rootJSON

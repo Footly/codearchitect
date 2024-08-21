@@ -200,7 +200,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const editObjectCommand = vscode.commands.registerCommand('codearchitect.editObject', async (jsonPath: string[], filePath: string) => {
 		//Get Item form jsonPath and filePath
 		const item = itemTreeProvider.getItem(jsonPath, filePath);
-		if(!item)
+		if (!item)
 			return;
 		//First reveal the item
 		await itemTreeView?.reveal(item, { select: true, focus: true });
@@ -221,9 +221,63 @@ export function activate(context: vscode.ExtensionContext) {
 		//Get the rootJSON
 		const rootJSON = JSON.parse(fs.readFileSync(item.filePath, 'utf8'));
 		//Open and parse the JSON file
-		const $links = rootJSON.$links;
+		const rootLinks = [...rootJSON.$links];
+		// Variable to hold accumulated links
+		let itemLinks: Link[][] = [];
+
+		interface Filter {
+			path: string[];
+			tags: string[];
+			visibility: string[];
+			relation: string;
+		}
+
+		interface Link {
+			$id: string;
+			$label: string;
+			$path: string[];
+			$jsonPath: string[];
+			$tags: string[];
+			$visibility: string;
+		}
+
+		// Check if any filter exists
+		if (itemCopy.schema?.$filter) {
+			// Assuming $filter.array is of type Filter[]
+			(itemCopy.schema.$filter as Filter[]).forEach((filter: Filter) => {
+				// Skip if any of the important fields are not filled
+				if (!filter.tags?.length || !filter.visibility?.length) {
+					return; // Skip this filter if any required field is not filled
+				}
+
+				if (Array.isArray(filter.path) && filter.path.length === 1 && filter.path[0] === "#") {
+					filter.path = itemCopy.jsonPath;
+				} else if (Array.isArray(filter.path) && filter.path.length === 1 && filter.path[0] === "##") {
+					filter.path = itemCopy.parentJsonPath;
+				}
+
+				// Filter links for tags and visibility
+				const itemLinksTags = rootLinks.filter((link: Link) =>
+					link.$tags?.some((t: string) => filter.tags.includes(t))
+				).filter((link: Link) =>
+					filter.visibility.includes(link.$visibility)
+				);
+
+				// Check relation
+				if (filter.relation === 'parent') {
+					// Find links where filter.path is a parent of link.$jsonPath
+					const parentLinks = itemLinksTags.filter((link: Link) => {
+						return filter.path.every((value, index) => value === link.$jsonPath[index])
+							&& filter.path.length < link.$jsonPath.length;
+					});
+
+					itemLinks.push(parentLinks);
+				}
+			});
+		}
+
 		//Add the $links to the item
-		itemCopy.$links = $links;
+		itemCopy.$links = itemLinks;
 
 		if (webviewPanel) {
 			webviewPanel.webview.postMessage({ command: 'editObject', item: itemCopy });
