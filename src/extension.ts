@@ -85,6 +85,15 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	};
 
+	const duplicateCommand = vscode.commands.registerCommand('codearchitect.duplicate', async (item) => {
+		await itemTreeProvider.duplicateItem(item);
+		const newItem = itemTreeProvider.getLastItemCreated();
+		if (newItem) {
+			//Edit the created item
+			vscode.commands.executeCommand('codearchitect.editObject', newItem.jsonPath, newItem.filePath);
+		}
+	});
+
 	const helloWorldCommand = vscode.commands.registerCommand('codearchitect.helloWorld', () => {
 		vscode.window.showInformationMessage('Hello World from codearchitect!');
 	});
@@ -200,7 +209,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const editObjectCommand = vscode.commands.registerCommand('codearchitect.editObject', async (jsonPath: string[], filePath: string) => {
 		//Get Item form jsonPath and filePath
 		const item = itemTreeProvider.getItem(jsonPath, filePath);
-		if(!item)
+		if (!item)
 			return;
 		//First reveal the item
 		await itemTreeView?.reveal(item, { select: true, focus: true });
@@ -253,6 +262,7 @@ export function activate(context: vscode.ExtensionContext) {
 	readSchemaFiles(pathModels, pathProjects);
 
 	context.subscriptions.push(helloWorldCommand);
+	context.subscriptions.push(duplicateCommand);
 	context.subscriptions.push(newProjectCommand);
 	context.subscriptions.push(refreshProjectsCommand);
 	context.subscriptions.push(addItemCommand);

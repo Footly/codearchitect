@@ -64,6 +64,11 @@
         "icon": "$(arrow-right)"
       },
       {
+        "command": "codearchitect.duplicate",
+        "title": "Duplicate Item",
+        "icon": "$(explorer-view-icon)"
+      },
+      {
         "command": "codearchitect.lookUp",
         "title": "Look Up",
         "icon": "$(search)"
@@ -147,6 +152,11 @@
           "command": "codearchitect.previewPlantuml",
           "when": "view == codearchitect-treeview && viewItem =~ /.preview/",
           "group": "inline"
+        },
+        {
+          "command": "codearchitect.duplicate",
+          "when": "view == codearchitect-treeview && viewItem =~ /.duplicate/",
+          "group": "navigation"
         }
       ]
     },
