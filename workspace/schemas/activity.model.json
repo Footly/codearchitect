@@ -2,7 +2,7 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Activity",
-  "vscodeIcon": "type-hierarchy",
+  "vscodeIcon": "rocket",
   "modelType": "parent-object",
   "properties": {
     "$id": {

@@ -853,6 +853,12 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     let keyPath = [];
     let items = undefined;
 
+    const promptName = await vscode.window.showInputBox({ prompt: 'Enter child object name' });
+    if (!promptName) {
+      vscode.window.showWarningMessage('Child object creation cancelled');
+      return;
+    }
+
     //Get parent
     const parent = this.getParent(item);
 
@@ -888,7 +894,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
 
     const rootJSONfile = parent.filePath;
 
-    const childName = item.$label + "_copy";
+    const childName = promptName;
 
     keyPath.push(childName);
 
@@ -956,6 +962,11 @@ export class Item extends vscode.TreeItem {
     if (this.schema?.preview && this.schema?.preview === true) {
       this.contextValue += ".preview";
     }
+
+    if (this.schema?.commands && this.schema?.commands.length != 0) {
+      this.contextValue += ".command";
+    }
+
 
     this.command = { command: 'codearchitect.editObject', title: 'Edit Object', arguments: [this.jsonPath, this.filePath] };
 

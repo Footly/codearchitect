@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { ItemTreeProvider, Item } from './tree';
 import $RefParser from "@apidevtools/json-schema-ref-parser";
-import { JSON2plantuml } from './json2plantuml';
+import { JSON2plantuml, runCustomCommand, Step, Command } from './customCommand';
 
 let schemas: any = [];
 let itemTreeProvider: ItemTreeProvider; // Declare the itemTreeProvider variable at the top level
@@ -206,6 +206,57 @@ export function activate(context: vscode.ExtensionContext) {
 
 	});
 
+	const customCommand = vscode.commands.registerCommand('codearchitect.customCommand', async (item: Item) => {
+
+		//Get the commands
+		const commands: Command[] = item.schema.commands;
+
+		// Get options from the schemas provided
+		const options: Array<[string, number]> = [];
+
+		commands.forEach((command, index) => {
+			options.push([command.title, index]);
+		});
+
+		if (options.length === 0) {
+			vscode.window.showWarningMessage('No Command available for this item');
+			return;
+		}
+
+		// Show a quick pick dialog to select a schema
+		const optionName = await vscode.window.showQuickPick(options.map(option => option[0]),
+			{ placeHolder: 'Select command to execute' });
+
+		if (!optionName) {
+			vscode.window.showWarningMessage('Command cancelled');
+			return;
+		}
+
+		// Find the index of the selected option
+		const selectedIndex = options.find(option => option[0] === optionName)?.[1];
+		if (selectedIndex === undefined) {
+			vscode.window.showWarningMessage('Invalid selection');
+			return;
+		}
+
+		// Retrieve the selected command using the index
+		const selectedCommand = commands[selectedIndex];
+
+		// Display information about the selected command
+		vscode.window.showInformationMessage(`You selected: ${selectedCommand.title}\n`);
+
+		//Get the rootJSON
+		const rootJSON = JSON.parse(fs.readFileSync(item.filePath, 'utf8'));
+
+		let current = rootJSON;
+		for (const key of item.jsonPath) {
+			current = current[key];
+		}
+	
+		//Run the custom command
+		await runCustomCommand(current, selectedCommand);
+	});
+
 	const editObjectCommand = vscode.commands.registerCommand('codearchitect.editObject', async (jsonPath: string[], filePath: string) => {
 		//Get Item form jsonPath and filePath
 		const item = itemTreeProvider.getItem(jsonPath, filePath);
@@ -271,6 +322,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(removeItemCommand);
 	context.subscriptions.push(lookUpCommand);
 	context.subscriptions.push(previewPlantUmlCommand);
+	context.subscriptions.push(customCommand);
 }
 
 export function deactivate() { }

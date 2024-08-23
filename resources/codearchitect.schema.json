@@ -141,6 +141,34 @@
         "preview": {
             "type":"boolean"
         },
+        "commands": {
+            "type": "array",
+            "items": {
+                "properties": {
+                    "title": {
+                        "type": "array"
+                    },
+                    "steps": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "tool": {
+                                    "type": "string",
+                                    "enum": ["vscode", "shell", "python"]
+                                },
+                                "args": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "default": true
     }
 }

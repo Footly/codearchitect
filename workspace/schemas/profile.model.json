@@ -33,12 +33,12 @@
       "modelType": "text-area",
       "type": "string"
     },
-    "Classes": {
+    "Structure": {
       "modelType": "folder",
       "vscodeIcon": "folder",
       "type": "array",
       "items": {
-        "$ref": "./class.model.json"
+        "$ref": "./structure.model.json"
       }
     },
     "Requirements": {

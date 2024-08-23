@@ -34,6 +34,11 @@
         "icon": "$(symbol-color)"
       },
       {
+        "command": "codearchitect.customCommand",
+        "title": "Custom Code Architect Command",
+        "icon": "$(ellipsis)"
+      },
+      {
         "command": "codearchitect.refresh",
         "title": "Refresh",
         "icon": "$(refresh)"
@@ -151,6 +156,11 @@
         {
           "command": "codearchitect.previewPlantuml",
           "when": "view == codearchitect-treeview && viewItem =~ /.preview/",
+          "group": "inline"
+        },
+        {
+          "command": "codearchitect.customCommand",
+          "when": "view == codearchitect-treeview && viewItem =~ /.command/",
           "group": "inline"
         },
         {
