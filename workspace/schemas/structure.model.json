@@ -37,16 +37,5 @@
   },
   "$link": {
     "tags": ["*", "structure"]
-  },
-  "commands": [
-    {
-      "title": "Hello World!",
-      "steps": [
-        {
-          "tool": "shell",
-          "args": ["echo ${libraries}"]
-        }
-      ]
-    }
-  ]
+  }
 }

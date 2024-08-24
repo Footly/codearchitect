@@ -714,6 +714,31 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     }
   }
 
+  async selectDirectory(item: Item, id: string): Promise<void> {
+    const uri = await vscode.window.showOpenDialog({
+      canSelectFiles: false,
+      canSelectFolders: true,
+      canSelectMany: false,
+      openLabel: 'Select Directory'
+    });
+
+    if (!uri) {
+      vscode.window.showWarningMessage('No directory selected');
+      return;
+    }
+
+    const selectedDirectory = uri[0].fsPath;
+
+    // Fill current with the selected directory
+    item.value = selectedDirectory;
+
+    //Edit the object again
+    await this.updateItem(item, id);
+
+    //Send command to edit the object
+    vscode.commands.executeCommand('codearchitect.editObject', item.jsonPath, item.filePath);
+  }
+
   async removeItem(item: Item): Promise<void> {
     if (!this.rootPath) {
       vscode.window.showInformationMessage('No folder or workspace opened');

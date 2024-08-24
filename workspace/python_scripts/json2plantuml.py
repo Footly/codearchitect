@@ -12,85 +12,187 @@ colors = [
     "lightyellow"
 ]
 
-# Helper function to search for an ID in a list
 def search_id(links, id):
-    return next((link for link in links if link['$id'] == id), None)
+    """Retrieve the item from links by its ID."""
+    for item in links:
+        if item.get('$id') == id:
+            return item
+    return None
 
-# Convert JSON class to PlantUML class
+def get_datatype(datatype_id, links, default=None):
+    """Retrieve and format the datatype from links."""
+    if not datatype_id:
+        return default or 'UnknownType'
+    found_id = search_id(links, datatype_id)
+    return found_id.get('$label', default) if found_id else default or 'UnknownType'
+
+def apply_modifiers(datatype, item):
+    """Apply modifiers (pointer, const, volatile, etc.) to the datatype."""
+    if item.get('isConst'):
+        datatype = 'const ' + datatype
+    if item.get('isVolatile'):
+        datatype = 'volatile ' + datatype
+    if item.get('isPointer'):
+        datatype += '*'
+    if item.get('isArray'):
+        datatype += f"[{item['isArray']}]"
+    return datatype
+
+def get_visibility_symbol(visibility):
+    """Get the visibility symbol for PlantUML."""
+    if visibility == 'protected':
+        return '~'
+    elif visibility == 'private':
+        return '-'
+    else:  # default to public
+        return '+'
+
 def json_to_plantuml_class(json_class, links=[]):
     try:
-        class_name = json_class.get('$label')
+        class_name = json_class.get('$label', 'UnknownClass')
         variables = json_class.get('variables', [])
         functions = json_class.get('funcions', [])
+        datastructures = json_class.get('datastructures', [])
+        typedefs = json_class.get('typedefs', [])
+        enumerators = json_class.get('enumerators', [])
+        requirements = json_class.get('requirements', [])
 
-        plantuml_class = '@startuml\n'
-        plantuml_class += f'class {class_name} {{\n'
+        # Initialize PlantUML output
+        plantuml_output = '@startuml\n'
 
+        
+        # Process the Requirements package first
+        if requirements:
+            plantuml_output += 'package Requirements {\n'
+            for requirement_id in requirements:
+                requirement = search_id(links, requirement_id)
+                if requirement:
+                    requirement_name = requirement.get('$label', 'UnknownRequirement')
+                    # Use a custom symbol or notation for requirements and mark as abstract
+                    plantuml_output += f'    abstract {requirement_name} <<requirement>> {{}}\n'
+            plantuml_output += '}\n'
+
+
+        # Process non-class items into separate packages
+        non_class_items = {
+            'DataStructures': datastructures,
+            'Typedefs': typedefs,
+            'Enumerators': enumerators,
+        }
+
+        for package_name, items in non_class_items.items():
+            if items:
+                plantuml_output += f'package {package_name} {{\n'
+
+                if package_name == 'DataStructures':
+                    for ds in items:
+                        ds_name = ds.get('$label', 'UnknownDS')
+                        ds_type = ds.get('type', 'struct')
+                        visibility = ds.get('visibility', 'public')
+                        visibility_symbol = get_visibility_symbol(visibility)
+
+                        plantuml_output += f'class {ds_name} <<{ds_type}>> {{\n'
+
+                        for member in ds.get('members', []):
+                            member_name = member.get('$label', 'UnknownMember')
+                            datatype = get_datatype(member.get('datatype'), links)
+                            datatype = apply_modifiers(datatype, member)
+                            plantuml_output += f"    {visibility_symbol}{member_name} : {datatype}\n"
+
+                        plantuml_output += '}\n'
+
+                elif package_name == 'Typedefs':
+                    for typedef in items:
+                        typedef_name = typedef.get('$label', 'UnknownTypedef')
+                        typedef_datatype = get_datatype(typedef.get('datatype'), links)
+                        visibility = typedef.get('visibility', 'private')
+                        visibility_symbol = get_visibility_symbol(visibility)
+                        plantuml_output += f'class {typedef_name} <<typedef>> {{\n'
+                        plantuml_output += f"    {visibility_symbol}Type : {typedef_datatype}\n"
+                        plantuml_output += '}\n'
+
+                elif package_name == 'Enumerators':
+                    for enumerator in items:
+                        enum_name = enumerator.get('$label', 'UnknownEnum')
+                        visibility = enumerator.get('visibility', 'public')
+                        visibility_symbol = get_visibility_symbol(visibility)
+
+                        plantuml_output += f'class {enum_name} <<enumeration>> {{\n'
+
+                        for member in enumerator.get('members', []):
+                            member_name = member.get('$label', 'UnknownMember')
+                            value = member.get('value', 'UnknownValue')
+                            plantuml_output += f"    {visibility_symbol}{member_name} = {value}\n"
+
+                        plantuml_output += '}\n'
+
+                elif package_name == 'Requirements':
+                    for requirement_id in items:
+                        requirement = search_id(links, requirement_id)
+                        if requirement:
+                            requirement_name = requirement.get('$label', 'UnknownRequirement')
+                            # Use a custom symbol or notation for requirements and mark as abstract
+                            plantuml_output += f'class {requirement_name} <<requirement>> {{}}\n'
+
+                plantuml_output += '}\n'
+
+        # Process the main class
+        plantuml_output += f'class {class_name} {{\n'
+
+        # Process variables
         for variable in variables:
-            found_id = search_id(links, variable.get('datatype'))
-            datatype = found_id['$label'] if found_id else variable.get('datatype')
+            datatype = get_datatype(variable.get('datatype'), links)
+            datatype = apply_modifiers(datatype, variable)
 
-            # Handle modifiers
-            if variable.get('isArray') != '':
-                datatype += f"[{variable.get('isArray')}]"
-            if variable.get('isPointer'):
-                datatype += '*'
-            if variable.get('isVolatile'):
-                datatype = 'volatile ' + datatype
-            if variable.get('isConst'):
-                datatype = 'const ' + datatype
+            visibility = variable.get('visibility', 'public')
+            visibility_symbol = get_visibility_symbol(visibility)
+            plantuml_output += f"    {visibility_symbol}{variable['$label']} : {datatype}\n"
 
-            visibility = variable.get('visibility')
-            if visibility == 'protected':
-                plantuml_class += f"    ~{variable['$label']} : {datatype}\n"
-            elif visibility == 'private':
-                plantuml_class += f"    -{variable['$label']} : {datatype}\n"
-            else:
-                plantuml_class += f"    +{variable['$label']} : {datatype}\n"
+        plantuml_output += '\n'
 
-        plantuml_class += '\n'
-
+        # Process functions
         for func in functions:
-            visibility = func.get('visibility')
-            visibility_symbol = '~' if visibility == 'protected' else '-' if visibility == 'private' else '+'
-            plantuml_class += f"    {visibility_symbol}{func['$label']}("
+            visibility = func.get('visibility', 'public')
+            visibility_symbol = get_visibility_symbol(visibility)
 
+            # Parameters
             parameters = func.get('parameters', [])
-            for i, parameter in enumerate(parameters):
-                if i > 0:
-                    plantuml_class += ', '
-                found_id = search_id(links, parameter.get('datatype'))
-                datatype = found_id['$label'] if found_id else parameter.get('datatype')
+            param_strs = [f"{p['$label']}: {get_datatype(p.get('datatype'), links, p)}" for p in parameters]
 
-                # Handle parameter modifiers
-                if parameter.get('isArray') != '':
-                    datatype += f"[{parameter.get('isArray')}]"
-                if parameter.get('isPointer'):
-                    datatype += '*'
-                if parameter.get('isConstPointer'):
-                    datatype = 'const ' + datatype + '*'
-                elif parameter.get('isPointerToConst'):
-                    datatype += ' const*'
+            # Function signature
+            plantuml_output += f"    {visibility_symbol}{func['$label']}({', '.join(param_strs)})"
 
-                plantuml_class += f"{parameter['$label']}: {datatype}"
-
-            plantuml_class += ')'
-
+            # Return type
             return_type_info = func.get('returntype', {})
-            found_id = search_id(links, return_type_info.get('datatype', ''))
-            return_datatype = found_id['$label'] if found_id else return_type_info.get('datatype', '')
+            return_datatype = get_datatype(return_type_info.get('datatype'), links)
+            return_datatype = apply_modifiers(return_datatype, return_type_info)
+            
+            plantuml_output += f" : {return_datatype}\n"
 
-            # Handle return type modifiers
-            if return_type_info.get('isPointer', False):
-                return_datatype += '*'
-            if return_type_info.get('isConst', False):
-                return_datatype = 'const ' + return_datatype
+        plantuml_output += '}\n'
 
-            plantuml_class += f" : {return_datatype}\n"
+        # Add dependencies to packages
+        if datastructures or typedefs or enumerators:
+            plantuml_output += f'{class_name} --* DataStructures\n'
+            plantuml_output += f'{class_name} --* Typedefs\n'
+            plantuml_output += f'{class_name} --* Enumerators\n'
 
-        plantuml_class += '}\n'
-        plantuml_class += '@enduml\n'
-        return plantuml_class
+        if requirements:
+            plantuml_output += f'{class_name} .up.> Requirements : <<requirement>>\n'
+
+        plantuml_output += 'hide <<union>> methods\n' 
+        plantuml_output += 'hide <<union>> circle\n' 
+        plantuml_output += 'hide <<struct>> methods\n' 
+        plantuml_output += 'hide <<struct>> circle\n' 
+        plantuml_output += 'hide <<typedef>> methods\n' 
+        plantuml_output += 'hide <<typedef>> circle \n' 
+        plantuml_output += 'hide <<enumeration>> methods\n' 
+        plantuml_output += 'hide <<enumeration>> circle\n'
+        plantuml_output += 'hide <<requirement>> members\n' 
+        plantuml_output += 'hide <<requirement>> circle\n' 
+        plantuml_output += '@enduml\n'
+        return plantuml_output
+
     except Exception as e:
         print(f"Error in json_to_plantuml_class: {e}", file=sys.stderr)
         return ''
@@ -165,14 +267,16 @@ def json_to_plantuml(json_path, id):
 
         plantuml_content = ''
 
-        if 'Classes' in data:
-            for classs in data['Classes']:
-                if 'hsm' in classs:
-                    for hsm in classs['hsm']:
-                        if hsm['$id'] == id:
-                            plantuml_content += json_to_plantuml_hsm(hsm, data.get('$links', []))
-                if classs['$id'] == id:
-                    plantuml_content += json_to_plantuml_class(classs, data.get('$links', []))
+        # Check if 'Structure' and 'libraries' keys are present and non-empty
+        if 'Structure' in data and len(data['Structure']) > 0:
+            structures = data['Structure']
+            for structure in structures:
+                if'libraries' in structure and len(structure['libraries']) > 0: 
+                    libraries = structure['libraries']
+                    for library in libraries:
+                        #Check id mathces the one requested
+                        if('$id' in library and library['$id'] == id):
+                            plantuml_content = json_to_plantuml_class(library, data['$links'])
 
         return plantuml_content
     except Exception as e:
@@ -183,18 +287,28 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convert JSON to PlantUML")
     parser.add_argument("-f", "--file", required=True, help="Path to the JSON file")
     parser.add_argument("-i", "--id", required=True, help="ID to search for in the JSON")
+    parser.add_argument("-o", "--output", required=False, help="Where to store the PlantUML file")
 
     args = parser.parse_args()
 
     try:
+        
         plantuml_output = json_to_plantuml(args.file, args.id)
-        output_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output.puml')
-        
-        # Open a file to write the output in UTF-8 encoding
-        with open(output_file_path, 'w', encoding='utf-8') as output_file:
-            output_file.write(plantuml_output)
-        
-        print(f"PlantUML content has been written to {output_file_path}")
+        if(args.output):
+            # Ensure the output filename has a .puml extension
+            output_file_path = args.output
+            if not output_file_path.lower().endswith('.puml'):
+                output_file_path += '.puml'
+
+
+            # Open a file to write the output in UTF-8 encoding
+            with open(output_file_path, 'w', encoding='utf-8') as output_file:
+                output_file.write(plantuml_output)
+
+            print(f"PlantUML content has been written to {output_file_path}")
+        else: 
+            print(plantuml_output)
+            
 
     except Exception as e:
         print(f"Error in main execution: {e}", file=sys.stderr)

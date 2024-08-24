@@ -170,6 +170,9 @@ function renderChild(child, div, vscode, depth = 0) {
         case 'text-area':
             renderTextArea(child, div, vscode);
             break;
+        case 'vscode-fs':
+            renderVscodeFs(child, div, vscode);
+            break;
         default:
             console.error(`Unsupported modelType: ${modelType}`);
             break;
@@ -536,6 +539,11 @@ function renderDropdownSelectTag(child, div, vscode) {
 }
 
 function renderPoolDropdownSelectTag(child, div, vscode) {
+    // Create a unique container for this widget's popup
+    const widgetContainer = document.createElement('div');
+    widgetContainer.style.position = 'relative'; // Relative to handle absolute popup positioning
+    div.appendChild(widgetContainer);
+
     // Create and append the container for the selected items
     const containerDiv = document.createElement('div');
     containerDiv.style.marginBottom = '10px';
@@ -565,12 +573,12 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
     popupContainer.style.position = 'absolute';
     popupContainer.style.backgroundColor = '#222';
     popupContainer.style.border = '1px solid #444';
-    popupContainer.style.padding = '20px';
+    popupContainer.style.padding = '10px';
     popupContainer.style.boxShadow = '0 4px 15px rgba(0,0,0,0.5)';
     popupContainer.style.borderRadius = '10px';
     popupContainer.style.display = 'none';
-    popupContainer.style.zIndex = 1000;
-    document.body.appendChild(popupContainer);
+    popupContainer.style.top = '0'; // Position at the top
+    widgetContainer.appendChild(popupContainer); // Append to widget container
 
     // Add close button to the popup
     const closePopupBtn = document.createElement('button');
@@ -595,16 +603,14 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
     treeContainer.style.padding = '10px';
     popupContainer.appendChild(treeContainer);
 
-    // Show the popup when the button is clicked
     button.addEventListener('click', () => {
         // Show the popup
         popupContainer.style.display = 'block';
-
-        // Position the popup relative to the button
+    
+        // Position the popup at the same vertical level as the button
         const rect = button.getBoundingClientRect();
-        popupContainer.style.top = `${rect.bottom + window.scrollY}px`;
-        popupContainer.style.left = `${rect.left + window.scrollX}px`;
-
+        popupContainer.style.top = 0;
+    
         // Update the tree view
         updateSuggestions(popupContainer, child);
     });
@@ -659,7 +665,7 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
                     if (!selectedValues.includes(selectedId)) {
                         selectedValues.push(selectedId);
                         renderSelectedItems(containerDiv, selectedValues, child);
-                        vscode.postMessage({ command: 'saveObject', item: child, id: item_id });
+                        vscode.postMessage({ command: 'saveObject', item: child, id: selectedId });
                     }
                     popupContainer.style.display = 'none';
                 });
@@ -692,7 +698,6 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
         });
     }
 
-
     function updateSuggestions(popupContainer, child) {
         const tagsFilter = child.schema.items.const;
 
@@ -700,9 +705,6 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
         const links = child.$links
             .filter(link => link.$tags.some(t => tagsFilter.includes(t))) // Filter by tags
             .filter(link => !child.value.some(value => link.$id.includes(value))); // Filter by value
-
-        console.log(child.$links);
-        console.log(links);
 
         // Build and render the tree view
         const { root, maxDepth } = buildTree(links);
@@ -750,7 +752,7 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
             selectedValues = []; // Fallback to an empty array
         }
 
-        const selectedItemsDiv = document.querySelector('.selected-items') || document.createElement('div');
+        const selectedItemsDiv = containerDiv.querySelector('.selected-items') || document.createElement('div'); // Scoped to the containerDiv
         selectedItemsDiv.className = 'selected-items';
         selectedItemsDiv.style.marginTop = '10px'; // Space between the button and the list
         selectedItemsDiv.style.marginBottom = '10px';
@@ -799,14 +801,13 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
                     event.stopPropagation();
                     selectedValues.splice(index, 1); // Remove item from selectedValues
                     renderSelectedItems(containerDiv, selectedValues, child); // Re-render selected items
-                    vscode.postMessage({ command: 'saveObject', item: child, id: item_id });
+                    vscode.postMessage({ command: 'saveObject', item: child, id: id });
                 });
 
                 selectedItemsDiv.appendChild(itemDiv);
             }
         });
     }
-
 }
 
 function renderSubObjectChild(child, div, vscode, depth = 0) {
@@ -904,6 +905,44 @@ function renderSubObjectChild(child, div, vscode, depth = 0) {
 
         return `#${(0x1000000 + (R << 16) + (G << 8) + B).toString(16).slice(1)}`;
     }
+}
+
+function renderVscodeFs(child, div, vscode) {
+    // Create a label for the input field
+    const label = document.createElement('label');
+    label.textContent = child.label;
+    div.appendChild(label);
+
+    // Create a text field to display the selected path
+    const pathDisplay = document.createElement('input');
+    pathDisplay.type = 'text';
+    pathDisplay.readOnly = true; // Make the input field read-only
+    if (child.value && child.value != "") {
+        pathDisplay.value = child.value;
+    } else {
+        pathDisplay.placeholder = 'No path selected';
+    }
+
+    // Append the path display input to the div
+    div.appendChild(pathDisplay);
+
+    // Function to request file system access from VS Code
+    function requestFsAccess() {
+        // Send a message to the VS Code extension to open the file picker
+        vscode.postMessage({ command: 'selectDirectory', item:child, id:item_id });
+    }
+
+    // Example button to trigger file picker
+    const searchButton = document.createElement('searchButton');
+    searchButton.className = 'codicon codicon-search';
+    searchButton.style.marginLeft = '10px';
+    searchButton.style.background = 'none'; // Remove the background
+    searchButton.style.border = 'none'; // Remove the border
+    searchButton.style.padding = '0'; // Remove the padding
+    searchButton.style.cursor = 'pointer'; // Add cursor pointer
+    searchButton.style.color = '#6c6c6c'; // Set icon color to match VSCode light theme
+    searchButton.onclick = requestFsAccess;
+    div.appendChild(searchButton);
 }
 
 function createElement(item, vscode) {

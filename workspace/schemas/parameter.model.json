@@ -34,18 +34,12 @@
       "modelType": "checkbox",
       "type": "boolean"
     },
-    "pointerDirection": {
-      "hidden": true,
-      "modelType": "dropdown-select",
-      "type": "string",
-      "enum": ["in", "out", "in/out"]
-    },
-    "isPointerToConst": {
+    "isConst" : {
       "hidden": true,
       "modelType": "checkbox",
       "type": "boolean"
     },
-    "isConstPointer": {
+    "isPointerConst": {
       "hidden": true,
       "modelType": "checkbox",
       "type": "boolean"

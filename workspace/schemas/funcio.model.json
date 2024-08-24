@@ -18,6 +18,7 @@
       "modelType": "dropdown-select",
       "$ref": "./visibility.model.json"
     },
+
     "returntype": {
       "hidden": true,
       "modelType": "sub-object",
@@ -47,6 +48,11 @@
       "items": {
         "$ref": "./parameter.model.json"
       }
+    },
+    "documentation": {
+      "hidden": true,
+      "modelType": "text-area",
+      "type": "string"
     }
   },
   "$link": {

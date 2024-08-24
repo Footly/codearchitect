@@ -118,7 +118,8 @@
               "dropdown-select-tag",
               "sub-object",
               "text-area",
-              "pool-dropdown-select-tag"
+              "pool-dropdown-select-tag",
+              "vscode-fs"
           ]
         },
         "hidden": {

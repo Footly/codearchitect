@@ -33,6 +33,11 @@
       "modelType": "text-area",
       "type": "string"
     },
+    "srcPath": {
+      "type": "string",
+      "hidden": true,
+      "modelType": "vscode-fs"
+    },
     "Structure": {
       "modelType": "folder",
       "vscodeIcon": "folder",

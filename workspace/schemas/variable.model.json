@@ -22,7 +22,9 @@
       "hidden": true,
       "modelType": "dropdown-select-tag",
       "type": "string",
-      "const": ["types"]
+      "const": [
+        "types"
+      ]
     },
     "isArray": {
       "hidden": true,
@@ -43,9 +45,22 @@
       "hidden": true,
       "modelType": "checkbox",
       "type": "boolean"
+    },
+    "defaultValue": {
+      "hidden": true,
+      "modelType": "input-string",
+      "type": "string"
+    },
+    "documentation": {
+      "hidden": true,
+      "modelType": "text-area",
+      "type": "string"
     }
   },
   "$link": {
-    "tags": ["*", "variable"]
+    "tags": [
+      "*",
+      "variable"
+    ]
   }
 }

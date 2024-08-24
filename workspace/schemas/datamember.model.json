@@ -43,6 +43,11 @@
       "hidden": true,
       "modelType": "checkbox",
       "type": "boolean"
+    },
+    "documentation": {
+      "hidden": true,
+      "modelType": "text-area",
+      "type": "string"
     }
   },
   "$link": {

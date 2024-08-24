@@ -97,5 +97,114 @@
   "$link": {
     "tags": ["*", "lib"]
   },
-  "preview": true
+  "commands": [
+    {
+      "title": "PlantUml Preview SVG",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\json2plantuml.py",
+            "-f",
+            "${$path}",
+            "-i",
+            "${$id}",
+            "|",
+            "java",
+            "-D'file.encoding'=UTF8",
+            "-jar",
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\plantuml.jar",
+            "-pipe",
+            "-charset",
+            "UTF-8",
+            "-pipe",
+            "-tsvg",
+            ">",
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\${$label}-${$id}.svg"
+          ]
+        },
+        {
+          "tool": "vscode",
+          "args": [
+            "openFile",
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\${$label}-${$id}.svg"
+          ]
+        },
+        {
+          "tool": "vscode",
+          "args": [
+            "executeCommand",
+            "svgPreview.showPreviewToSide"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "PlantUml Preview PUML",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\json2plantuml.py",
+            "-f",
+            "${$path}",
+            "-i",
+            "${$id}",
+            "-o",
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\${$label}-${$id}.puml"
+          ]
+        },
+        {
+          "tool": "vscode",
+          "args": [
+            "openFile",
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\${$label}-${$id}.puml"
+          ]
+        },
+        {
+          "tool": "vscode",
+          "args": [
+            "executeCommand",
+            "plantuml.preview"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Generate C Code",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\code_generator.py",
+            "-f",
+            "${$path}",
+            "-i",
+            "${$id}",
+            "-t",
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts",
+            "-o",
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts"
+          ]
+        },
+        {
+          "tool": "vscode",
+          "args": [
+            "openFile",
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\${$label}-${$id}.c"
+          ]
+        },
+        {
+          "tool": "vscode",
+          "args": [
+            "openFile",
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\${$label}-${$id}.h"
+          ]
+        }
+      ]
+    }
+  ]
 }

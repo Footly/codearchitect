@@ -23,6 +23,11 @@
       "modelType": "dropdown-select-tag",
       "type": "string",
       "const": ["types"]
+    },
+    "documentation": {
+      "hidden": true,
+      "modelType": "text-area",
+      "type": "string"
     }
   },
   "$link": {

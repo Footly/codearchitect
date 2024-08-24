@@ -254,7 +254,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	
 		//Run the custom command
-		await runCustomCommand(current, selectedCommand);
+		await runCustomCommand(current, item.filePath, selectedCommand);
 	});
 
 	const editObjectCommand = vscode.commands.registerCommand('codearchitect.editObject', async (jsonPath: string[], filePath: string) => {
@@ -353,5 +353,7 @@ function handleMessage(message: any) {
 	} else if (message.command === 'removeItem') {
 		// Call the deleteObject method from the tree.ts file
 		itemTreeProvider.removeItem(message.item);
+	} else if(message.command === 'selectDirectory'){
+		itemTreeProvider.selectDirectory(message.item, message.id);
 	}
 }
