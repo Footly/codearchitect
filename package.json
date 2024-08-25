@@ -131,37 +131,27 @@
         {
           "command": "codearchitect.addItem",
           "when": "view == codearchitect-treeview && viewItem =~ /.add/",
-          "group": "inline"
+          "group": "inline@3"
         },
         {
           "command": "codearchitect.removeItem",
           "when": "view == codearchitect-treeview && viewItem =~ /.rm/",
-          "group": "inline"
+          "group": "inline@4"
         },
         {
           "command": "codearchitect.navigateBack",
           "when": "view == codearchitect-treeview && viewItem =~ /root/",
-          "group": "inline"
+          "group": "inline@1"
         },
         {
           "command": "codearchitect.navigateForward",
           "when": "view == codearchitect-treeview && viewItem =~ /root/",
-          "group": "inline"
-        },
-        {
-          "command": "codearchitect.lookUp",
-          "when": "view == codearchitect-treeview && viewItem =~ /root/",
-          "group": "inline"
-        },
-        {
-          "command": "codearchitect.previewPlantuml",
-          "when": "view == codearchitect-treeview && viewItem =~ /.preview/",
-          "group": "inline"
+          "group": "inline@2"
         },
         {
           "command": "codearchitect.customCommand",
           "when": "view == codearchitect-treeview && viewItem =~ /.command/",
-          "group": "inline"
+          "group": "inline@5"
         },
         {
           "command": "codearchitect.duplicate",

@@ -53,7 +53,7 @@
     },
     "documentation": {
       "hidden": true,
-      "modelType": "text-area",
+      "modelType": "input-string",
       "type": "string"
     }
   },

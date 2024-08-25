@@ -85,6 +85,14 @@
         "$ref": "./enumerator.model.json"
       }
     },
+    "macros": {
+      "type": "array",
+      "hidden": true,
+      "modelType": "folder",
+      "items": {
+        "$ref": "./macro.model.json"
+      }
+    },
     "hsm": {
       "hidden": true,
       "type": "array",

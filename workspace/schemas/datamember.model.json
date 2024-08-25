@@ -46,8 +46,9 @@
     },
     "documentation": {
       "hidden": true,
-      "modelType": "text-area",
-      "type": "string"
+      "modelType": "input-string",
+      "type": "string",
+      "const": ["variable"]
     }
   },
   "$link": {

@@ -179,6 +179,170 @@ function renderChild(child, div, vscode, depth = 0) {
     }
 }
 
+function renderPopupTree(child, parent_div, vscode) {
+    function renderTreeView(node, parentDiv, depth, maxDepth) {
+        Object.keys(node).forEach(key => {
+            if (key.startsWith("__")) return; // Skip internal properties
+            const currentNode = node[key];
+            const div = document.createElement('div');
+
+            // Adjust the background color based on the depth
+            const baseColorValue = 50 + (depth * 20); // Starting at 50, increase by 20 for each depth
+            div.style.backgroundColor = `rgb(${baseColorValue}, ${baseColorValue}, ${baseColorValue})`;
+
+            div.style.marginLeft = `${depth * 10}px`; // Further reduced horizontal distance
+            div.style.padding = '6px'; // Further reduced padding
+            div.style.borderRadius = '8px';
+            div.style.marginBottom = '5px';
+            div.style.color = '#eee'; // Lighter text color for better contrast
+            div.style.cursor = 'pointer';
+            div.style.fontSize = '14px';
+
+            const label = document.createElement('span');
+            label.textContent = currentNode.__label;
+
+            div.appendChild(label);
+            parentDiv.appendChild(div);
+
+            if (currentNode.__isLeaf) {
+                div.style.backgroundColor = '#555';
+                div.addEventListener('click', () => {
+                    // Handle leaf node selection
+                    child.value = currentNode.__id;
+                    // Instead of directly updating textContent, dispatch a custom event
+                    const event = new CustomEvent('nodeSelected', {
+                        detail: {
+                            $id: currentNode.__id,
+                            $label: currentNode.__label
+                        }
+                    });
+                    parent_div.dispatchEvent(event);
+                    popupContainer.style.display = 'none';
+                    vscode.postMessage({ command: 'saveObject', item: child, id: item_id });
+                });
+            } else {
+                // Toggle children visibility
+                const toggleBtn = document.createElement('button');
+                toggleBtn.textContent = '-'; // Show collapse symbol by default
+                toggleBtn.style.backgroundColor = 'transparent';
+                toggleBtn.style.border = 'none';
+                toggleBtn.style.color = '#eee'; // Lighter text color for better contrast
+                toggleBtn.style.cursor = 'pointer';
+                toggleBtn.style.marginRight = '5px';
+                toggleBtn.style.fontSize = '16px'; // Increased font size for better visibility
+                div.prepend(toggleBtn);
+
+                const childrenDiv = document.createElement('div');
+                childrenDiv.classList.add('children');
+                childrenDiv.style.marginLeft = '10px'; // Further reduced indentation for children
+                childrenDiv.style.display = 'block'; // Show children by default
+                div.appendChild(childrenDiv);
+
+                toggleBtn.addEventListener('click', () => {
+                    const isVisible = childrenDiv.style.display === 'block';
+                    childrenDiv.style.display = isVisible ? 'none' : 'block';
+                    toggleBtn.textContent = isVisible ? '+' : '-';
+                });
+
+                renderTreeView(currentNode.__children, childrenDiv, depth + 1, maxDepth);
+            }
+        });
+    }
+
+    // Convert the filtered links into a tree structure
+    function buildTree(data) {
+        const root = {};
+        let maxDepth = 0;
+
+        data.forEach(item => {
+            // Ensure $path exists and is an array
+            if (!item.$path || !Array.isArray(item.$path)) {
+                console.error("Invalid $path in item:", item);
+                return;
+            }
+
+            maxDepth = Math.max(maxDepth, item.$path.length);
+
+            let currentNode = root;
+            item.$path.forEach((pathPart, index) => {
+                if (!currentNode[pathPart]) {
+                    currentNode[pathPart] = {
+                        __children: {},
+                        __label: pathPart,
+                        __id: item.$id,
+                        __depth: index
+                    };
+                }
+                if (index === item.$path.length - 1) {
+                    currentNode[pathPart].__isLeaf = true;
+                    currentNode[pathPart].__label = item.$label; // Update label to the final label
+                }
+                currentNode = currentNode[pathPart].__children;
+            });
+        });
+
+        return { root, maxDepth };
+    }
+
+    // Tag to filter
+    const tags_filter = child.schema.const;
+
+    // Filter the links using the tags_filter
+    const links = child.$links.filter(link => link.$tags.some(t => tags_filter?.includes(t)));
+
+    //If links is udnefined or empty, return
+    if (!links || links.length === 0) {
+        return;
+    }
+
+    console.log(links);
+
+    // Create the popup container (hidden by default)
+    const popupContainer = document.createElement('div');
+    popupContainer.style.position = 'fixed';
+    popupContainer.style.left = '50%';
+    popupContainer.style.top = '50%';
+    popupContainer.style.transform = 'translate(-50%, -50%)';
+    popupContainer.style.backgroundColor = '#222';
+    popupContainer.style.border = '1px solid #444';
+    popupContainer.style.padding = '20px';
+    popupContainer.style.boxShadow = '0 4px 15px rgba(0,0,0,0.5)';
+    popupContainer.style.borderRadius = '10px';
+    popupContainer.style.display = 'none';
+    popupContainer.style.zIndex = 1000;
+
+    // Add close button to the popup
+    const closePopupBtn = document.createElement('button');
+    closePopupBtn.textContent = 'Close';
+    closePopupBtn.style.backgroundColor = '#444';
+    closePopupBtn.style.color = '#eee'; // Lighter text color for better contrast
+    closePopupBtn.style.border = 'none';
+    closePopupBtn.style.borderRadius = '5px';
+    closePopupBtn.style.padding = '5px 10px';
+    closePopupBtn.style.cursor = 'pointer';
+    closePopupBtn.style.marginBottom = '10px';
+    popupContainer.appendChild(closePopupBtn);
+
+    closePopupBtn.addEventListener('click', () => {
+        popupContainer.style.display = 'none';
+    });
+
+    // Create container for tree view inside the popup
+    const treeContainer = document.createElement('div');
+    treeContainer.style.maxHeight = '300px';
+    treeContainer.style.overflowY = 'auto';
+    treeContainer.style.padding = '10px';
+    popupContainer.appendChild(treeContainer);
+
+    // Convert the filtered links to tree structure
+    const { root, maxDepth } = buildTree(links);
+
+    // Render the tree view inside the popup container
+    renderTreeView(root, treeContainer, 0, maxDepth);
+
+    return popupContainer;
+}
+
 function renderInputString(child, div, vscode) {
     // Create and style the label
     const $label = document.createElement('label');
@@ -188,26 +352,336 @@ function renderInputString(child, div, vscode) {
     $label.style.color = '#eee'; // Lighter text color for dark mode
     div.appendChild($label);
 
-    // Create and style the input field
+    // Create and style the input field container
+    const inputContainer = document.createElement('div');
+    inputContainer.style.display = 'flex';
+    inputContainer.style.flexWrap = 'wrap';
+    inputContainer.style.alignItems = 'center';
+    inputContainer.style.border = '1px solid #444'; // Dark border to match dark mode
+    inputContainer.style.borderRadius = '4px'; // Rounded corners
+    inputContainer.style.padding = '8px'; // Padding inside the container
+    inputContainer.style.backgroundColor = '#333'; // Dark background
+    inputContainer.style.marginBottom = '10px'; // Spacing below the input field
+    inputContainer.style.position = 'relative'; // For absolute positioning of suggestion box
+
+    // Create and style the input field itself
     const input = document.createElement('input');
     input.type = 'text';
-    input.value = child.value;
-    input.style.width = 'calc(100% - 16px)'; // Full width minus padding/margin
-    input.style.padding = '8px'; // Padding inside the input field
-    input.style.border = '1px solid #444'; // Dark border to match dark mode
-    input.style.borderRadius = '4px'; // Rounded corners
-    input.style.backgroundColor = '#333'; // Dark background
+    input.style.flex = '1'; // Allows input to expand to full width
+    input.style.border = 'none'; // No border, as the container has it
+    input.style.outline = 'none'; // Remove outline to make it look better
+    input.style.backgroundColor = 'transparent'; // Transparent background
     input.style.color = '#eee'; // Lighter text color
-    input.style.marginBottom = '10px'; // Spacing below the input field
-    input.style.marginRight = 'auto'; // Center horizontally with auto margins
-    input.style.marginLeft = 'auto'; // Center horizontally with auto margins
-    div.appendChild(input);
+    input.style.fontSize = '14px'; // Font size for better readability
+    input.style.lineHeight = '24px'; // Line height for better vertical alignment
+
+    inputContainer.appendChild(input);
+    div.appendChild(inputContainer);
+
+    // Tag to filter
+    const tags_filter = child.schema.const;
+
+    // Filter the links using the tags_filter
+    const suggestions = child.$links.filter(link => link.$tags.some(t => tags_filter?.includes(t)));
+
+    // Decode child value to create blocks
+    if (child.value) {
+        // Find in child value any @followed by a guid format number
+        const regex = /@([a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12})/g;
+        const matches = child.value.match(regex);
+
+        if (matches) {
+            // Split child value into blocks based on matches
+            const blocks = [];
+            let lastIndex = 0;
+            matches.forEach((match) => {
+                const index = child.value.indexOf(match, lastIndex);
+                if (index !== -1) {
+                    const textBlock = child.value.substring(lastIndex, index);
+                    if (textBlock !== '') {
+                        blocks.push(textBlock);
+                    }
+                    blocks.push(match);
+                    lastIndex = index + match.length;
+                }
+            });
+
+            const lastTextBlock = child.value.substring(lastIndex);
+            if (lastTextBlock !== '') {
+                blocks.push(lastTextBlock);
+            }
+
+            console.log("Blocks:", blocks);
+
+            // Iterate over blocks and create corresponding blocks
+            blocks.forEach((block) => {
+                if (block.startsWith('@')) {
+                    // Create link block
+                    const link = suggestions.find(link => link.$id === block.substring(1));
+                    if (link) {
+                        createLinkBlock(child, link);
+                    }
+                } else {
+                    //Check if block is not full of spaces
+                    if (block.trim() !== '') {
+                                            // Create normal text block
+                        createTextBlock(child, block);
+                    }
+                }
+            });
+        } else {
+            // Create single normal text block
+            createTextBlock(child, child.value);
+        }
+    }
+
+    const popupTree = renderPopupTree(child, input, vscode);
+
+    if(popupTree) {
+        document.body.appendChild(popupTree);
+        input.addEventListener('nodeSelected', (event) => {
+            const { $id, $label } = event.detail;
+            createLinkBlock(child, event.detail);
+        });
+    }
 
     // Add event listener for input changes
     input.addEventListener('input', (event) => {
-        child.value = event.target.value;
-        vscode.postMessage({ command: 'saveObject', item: child, id: item_id });
+        // Get the current value of the input field
+        const value = event.target.value;
+
+        // Check if "@" is present in the input to trigger suggestions
+        const atIndex = value.lastIndexOf('@');
+
+        if (atIndex !== -1) {
+            // Clear the input field to remove the "@" character and everything after it
+            input.value = value.substring(0, atIndex);
+
+            popupTree.style.display = 'block';
+        }
     });
+
+    // Event listener for "Enter" key or when input loses focus to create a text block
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && input.value.trim() !== '' && input.value.trim() !== '@') {
+            if (input.previousSibling && input.previousSibling.tagName === 'SPAN' && input.previousSibling.dataset.type === 'text') {
+                const previousBlock = input.previousSibling;
+                const newValue = previousBlock.textContent.slice(0, -1) + ' ' + input.value.trim();
+
+                // Preserve the close button
+                const closeButton = previousBlock.querySelector('span');
+                previousBlock.textContent = newValue;
+                if (closeButton) {
+                    previousBlock.appendChild(closeButton);
+                }
+
+                input.value = ''; // Clear input after creating block
+                event.preventDefault(); // Prevent form submission if inside a form
+                updateChildValue();
+            } else {
+                createTextBlock(child, input.value.trim());
+                input.value = ''; // Clear input after creating block
+                event.preventDefault(); // Prevent form submission if inside a form
+            }
+        }
+    });
+
+    input.addEventListener('blur', () => {
+        if (input.value.trim() !== '' && input.value.trim() !== '@') {
+            //Check previous node, if it is a text node, then merge this one with it
+            if (input.previousSibling && input.previousSibling.tagName === 'SPAN' && input.previousSibling.dataset.type === 'text') {
+                const newValue = input.previousSibling.textContent.slice(0, -1) + ' ' + input.value.trim();
+                input.previousSibling.textContent = newValue;
+                input.value = ''; // Clear input after creating block
+                updateChildValue();
+            } else {
+                createTextBlock(child, input.value.trim());
+                input.value = ''; // Clear input after creating block
+            }
+        }
+    });
+
+    // Function to create a block for standard text input
+    function createTextBlock(child, text) {
+        const block = document.createElement('span');
+        block.textContent = text;
+        block.style.display = 'inline-flex'; // Use inline-flex for better alignment with other elements
+        block.style.alignItems = 'center'; // Align items vertically in the center
+        block.style.padding = '4px 8px';
+        block.style.paddingRight = '25px';
+        block.style.marginRight = '5px';
+        block.style.backgroundColor = '#444'; // Darker background color for better contrast
+        block.style.color = '#eee';
+        block.style.borderRadius = '4px';
+        block.style.cursor = 'default'; // Normal cursor
+        block.style.position = 'relative'; // Needed for positioning the "x" button
+        block.style.marginTop = '4px';
+
+        // Store the type of block for reference
+        block.dataset.type = 'text';
+
+        // Create the "x" button for removing the block
+        const closeButton = document.createElement('span');
+        closeButton.textContent = '×'; // Unicode character for "x"
+        closeButton.style.position = 'absolute';
+        closeButton.style.top = '50%';
+        closeButton.style.right = '4px'; // Position slightly inward for padding
+        closeButton.style.transform = 'translateY(-50%)'; // Center vertically
+        closeButton.style.width = '16px'; // Circle size
+        closeButton.style.height = '16px'; // Circle size
+        closeButton.style.lineHeight = '16px'; // Center text vertically
+        closeButton.style.borderRadius = '50%'; // Make it circular
+        closeButton.style.backgroundColor = '#999'; // Circle color
+        closeButton.style.color = '#fff';
+        closeButton.style.textAlign = 'center'; // Center the "x" inside the circle
+        closeButton.style.cursor = 'pointer';
+
+        // Event listener to remove the block
+        closeButton.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevent event bubbling to block click
+            block.remove(); // Remove block directly
+            updateChildValue(); // Update the value after removing the block
+        });
+
+        // Show "x" button on hover
+        block.addEventListener('mouseenter', () => {
+            closeButton.style.display = 'block';
+        });
+
+        // Hide "x" button when not hovering
+        block.addEventListener('mouseleave', () => {
+            closeButton.style.display = 'none';
+        });
+
+        // Append closeButton to the block
+        block.appendChild(closeButton);
+
+        // Create a double-click event to edit the text
+        block.addEventListener('dblclick', (event) => {
+            block.style.display = 'none';
+
+            // Create an input field with the text
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = block.textContent.slice(0, -1); // Exclude the "×" from the value
+            input.style.width = 'calc(100% - 25px)'; // Full width minus padding and "x" button
+            input.style.height = '24px'; // Height to match the block
+            input.style.backgroundColor = '#333'; // Dark background for input field
+            input.style.color = '#eee'; // Lighter text color for input field
+            input.style.border = '1px solid #444'; // Border to match the dark mode theme
+            input.style.borderRadius = '4px'; // Rounded corners for input field
+            input.style.padding = '4px 8px'; // Padding inside input field
+            input.style.margin = '0'; // Remove margins to align with block
+
+            block.parentNode.insertBefore(input, block); // Insert input before the block
+            input.focus();
+
+            // Add event listener to the input field
+            input.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); // Prevent inserting a line break
+                    block.textContent = input.value;
+                    block.style.display = 'inline-flex'; // Restore display style
+                    block.appendChild(closeButton); // Re-add the close button
+                    input.remove(); // Remove input field directly
+                    updateChildValue(); // Update the value after editing the text
+                }
+            });
+
+            // Handle blur event for when the input field loses focus
+            input.addEventListener('blur', () => {
+                block.textContent = input.value;
+                block.style.display = 'inline-flex'; // Restore display style
+                block.appendChild(closeButton); // Re-add the close button
+                input.remove(); // Remove input field directly
+                updateChildValue(); // Update the value after editing the text
+            });
+        });
+
+        inputContainer.insertBefore(block, input);
+        updateChildValue(); // Update the value after adding the block
+    }
+
+    // Function to create a block for a suggestion
+    function createLinkBlock(child, suggestion) {
+        const block = document.createElement('span');
+        block.textContent = suggestion.$label;
+        block.style.display = 'inline-flex'; // Use inline-flex for better alignment with other elements
+        block.style.alignItems = 'center'; // Align items vertically in the center
+        block.style.padding = '4px 8px';
+        block.style.paddingRight = '25px'; // Add extra padding on the right for the "x" button
+        block.style.marginRight = '5px';
+        block.style.backgroundColor = '#666'; // Slightly different shade for contrast
+        block.style.color = '#eee';
+        block.style.borderRadius = '4px';
+        block.style.position = 'relative'; // Needed for positioning the "x" button
+        block.style.cursor = 'default'; // Normal cursor
+        block.style.marginTop = '4px';
+
+        // Store the id of the suggestion for reference
+        block.dataset.id = suggestion.$id;
+        block.dataset.type = 'suggestion';
+
+        // Create the "x" button for removing the block
+        const closeButton = document.createElement('span');
+        closeButton.textContent = '×'; // Unicode character for "x"
+        closeButton.style.position = 'absolute';
+        closeButton.style.top = '50%';
+        closeButton.style.right = '4px'; // Position slightly inward for padding
+        closeButton.style.transform = 'translateY(-50%)'; // Center vertically
+        closeButton.style.width = '16px'; // Circle size
+        closeButton.style.height = '16px'; // Circle size
+        closeButton.style.lineHeight = '16px'; // Center text vertically
+        closeButton.style.borderRadius = '50%'; // Make it circular
+        closeButton.style.backgroundColor = '#999'; // Circle color
+        closeButton.style.color = '#fff';
+        closeButton.style.textAlign = 'center'; // Center the "x" inside the circle
+        closeButton.style.cursor = 'pointer';
+
+        // Event listener to remove the block
+        closeButton.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevent event bubbling to block click
+            inputContainer.removeChild(block);
+            updateChildValue();
+        });
+
+        const popupTree = renderPopupTree(child, block, vscode);
+
+        document.body.appendChild(popupTree);
+        block.addEventListener('nodeSelected', (event) => {
+            const { $id, $label } = event.detail;
+            block.textContent = $label;
+            block.dataset.id = $id;
+            popupTree.style.display = 'none';
+            updateChildValue();
+        });
+
+        // Event listener for double click to trigger a new suggestion
+        block.addEventListener('dblclick', (event) => {
+            popupTree.style.display = 'block';
+        });
+
+        block.appendChild(closeButton);
+        inputContainer.insertBefore(block, input);
+        updateChildValue();
+    }
+
+    // Function to update child value with text and blocks
+    function updateChildValue() {
+        let newValue = '';
+        inputContainer.childNodes.forEach(node => {
+            if (node.tagName === 'SPAN' && node.dataset.type === 'text') {
+                // Extract the text without the "x" button
+                const textContent = node.childNodes[0].nodeValue; // This assumes the text content is the first child node
+                newValue += textContent + ' '; // Add a space after each text block
+            } else if (node.tagName === 'SPAN' && node.dataset.type === 'suggestion') {
+                // Extract the text without the "x" button
+                newValue += '@' + node.dataset.id + ' '; // Convert suggestion block back to text format
+            }
+        });
+        child.value = newValue.trim(); // Remove any trailing space
+        vscode.postMessage({ command: 'saveObject', item: child, id: child.$id });
+    }
 }
 
 function renderTextArea(child, div, vscode) {
@@ -375,164 +849,25 @@ function renderDropdownSelectTag(child, div, vscode) {
     valueDisplay.style.cursor = 'pointer';
     div.appendChild(valueDisplay);
 
-    // Create the popup container (hidden by default)
-    const popupContainer = document.createElement('div');
-    popupContainer.style.position = 'fixed';
-    popupContainer.style.left = '50%';
-    popupContainer.style.top = '50%';
-    popupContainer.style.transform = 'translate(-50%, -50%)';
-    popupContainer.style.backgroundColor = '#222';
-    popupContainer.style.border = '1px solid #444';
-    popupContainer.style.padding = '20px';
-    popupContainer.style.boxShadow = '0 4px 15px rgba(0,0,0,0.5)';
-    popupContainer.style.borderRadius = '10px';
-    popupContainer.style.display = 'none';
-    popupContainer.style.zIndex = 1000;
-    document.body.appendChild(popupContainer);
+    const popupTree = renderPopupTree(child, div, vscode);
 
-    // Add close button to the popup
-    const closePopupBtn = document.createElement('button');
-    closePopupBtn.textContent = 'Close';
-    closePopupBtn.style.backgroundColor = '#444';
-    closePopupBtn.style.color = '#eee'; // Lighter text color for better contrast
-    closePopupBtn.style.border = 'none';
-    closePopupBtn.style.borderRadius = '5px';
-    closePopupBtn.style.padding = '5px 10px';
-    closePopupBtn.style.cursor = 'pointer';
-    closePopupBtn.style.marginBottom = '10px';
-    popupContainer.appendChild(closePopupBtn);
-
-    closePopupBtn.addEventListener('click', () => {
-        popupContainer.style.display = 'none';
+    document.body.appendChild(popupTree);
+    div.addEventListener('nodeSelected', (event) => {
+        const { $id, $label } = event.detail;
+        valueDisplay.textContent = `Selected: ${$label}`;
     });
-
-    // Create container for tree view inside the popup
-    const treeContainer = document.createElement('div');
-    treeContainer.style.maxHeight = '300px';
-    treeContainer.style.overflowY = 'auto';
-    treeContainer.style.padding = '10px';
-    popupContainer.appendChild(treeContainer);
 
     // Open the popup when the valueDisplay div is clicked
     valueDisplay.addEventListener('click', () => {
-        popupContainer.style.display = 'block';
+        popupTree.style.display = 'block';
     });
-
-    // Tag to filter
-    const tags_filter = child.schema.const;
-
-    // Filter the links using the tags_filter
-    const links = child.$links.filter(link => link.$tags.some(t => tags_filter.includes(t)));
-
-    // Convert the filtered links into a tree structure
-    function buildTree(data) {
-        const root = {};
-        let maxDepth = 0;
-
-        data.forEach(item => {
-            // Ensure $path exists and is an array
-            if (!item.$path || !Array.isArray(item.$path)) {
-                console.error("Invalid $path in item:", item);
-                return;
-            }
-
-            maxDepth = Math.max(maxDepth, item.$path.length);
-
-            let currentNode = root;
-            item.$path.forEach((pathPart, index) => {
-                if (!currentNode[pathPart]) {
-                    currentNode[pathPart] = {
-                        __children: {},
-                        __label: pathPart,
-                        __id: item.$id,
-                        __depth: index
-                    };
-                }
-                if (index === item.$path.length - 1) {
-                    currentNode[pathPart].__isLeaf = true;
-                    currentNode[pathPart].__label = item.$label; // Update label to the final label
-                }
-                currentNode = currentNode[pathPart].__children;
-            });
-        });
-
-        return { root, maxDepth };
-    }
-
-    function renderTreeView(node, parentDiv, depth, maxDepth) {
-        Object.keys(node).forEach(key => {
-            if (key.startsWith("__")) return; // Skip internal properties
-            const currentNode = node[key];
-            const div = document.createElement('div');
-
-            // Adjust the background color based on the depth
-            const baseColorValue = 50 + (depth * 20); // Starting at 50, increase by 20 for each depth
-            div.style.backgroundColor = `rgb(${baseColorValue}, ${baseColorValue}, ${baseColorValue})`;
-
-            div.style.marginLeft = `${depth * 10}px`; // Further reduced horizontal distance
-            div.style.padding = '6px'; // Further reduced padding
-            div.style.borderRadius = '8px';
-            div.style.marginBottom = '5px';
-            div.style.color = '#eee'; // Lighter text color for better contrast
-            div.style.cursor = 'pointer';
-            div.style.fontSize = '14px';
-
-            const label = document.createElement('span');
-            label.textContent = currentNode.__label;
-
-            div.appendChild(label);
-            parentDiv.appendChild(div);
-
-            if (currentNode.__isLeaf) {
-                div.style.backgroundColor = '#555';
-                div.addEventListener('click', () => {
-                    // Handle leaf node selection
-                    child.value = currentNode.__id;
-                    valueDisplay.textContent = `Selected: ${currentNode.__label}`;
-                    popupContainer.style.display = 'none';
-                    vscode.postMessage({ command: 'saveObject', item: child, id: item_id });
-                });
-            } else {
-                // Toggle children visibility
-                const toggleBtn = document.createElement('button');
-                toggleBtn.textContent = '-'; // Show collapse symbol by default
-                toggleBtn.style.backgroundColor = 'transparent';
-                toggleBtn.style.border = 'none';
-                toggleBtn.style.color = '#eee'; // Lighter text color for better contrast
-                toggleBtn.style.cursor = 'pointer';
-                toggleBtn.style.marginRight = '5px';
-                toggleBtn.style.fontSize = '16px'; // Increased font size for better visibility
-                div.prepend(toggleBtn);
-
-                const childrenDiv = document.createElement('div');
-                childrenDiv.classList.add('children');
-                childrenDiv.style.marginLeft = '10px'; // Further reduced indentation for children
-                childrenDiv.style.display = 'block'; // Show children by default
-                div.appendChild(childrenDiv);
-
-                toggleBtn.addEventListener('click', () => {
-                    const isVisible = childrenDiv.style.display === 'block';
-                    childrenDiv.style.display = isVisible ? 'none' : 'block';
-                    toggleBtn.textContent = isVisible ? '+' : '-';
-                });
-
-                renderTreeView(currentNode.__children, childrenDiv, depth + 1, maxDepth);
-            }
-        });
-    }
-
-
-    // Convert the filtered links to tree structure
-    const { root, maxDepth } = buildTree(links);
-
-    // Render the tree view inside the popup container
-    renderTreeView(root, treeContainer, 0, maxDepth);
 
     // Initialize display with selected value
     if (child.value) {
         // Find the link with matching $id
         const selectedLink = child.$links.find(link => link.$id === child.value);
         if (selectedLink) {
+            console.log(`Selected: ${selectedLink.$label}`);
             valueDisplay.textContent = `Selected: ${selectedLink.$label}`;
         }
     }
@@ -606,11 +941,11 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
     button.addEventListener('click', () => {
         // Show the popup
         popupContainer.style.display = 'block';
-    
+
         // Position the popup at the same vertical level as the button
         const rect = button.getBoundingClientRect();
         popupContainer.style.top = 0;
-    
+
         // Update the tree view
         updateSuggestions(popupContainer, child);
     });
@@ -929,7 +1264,7 @@ function renderVscodeFs(child, div, vscode) {
     // Function to request file system access from VS Code
     function requestFsAccess() {
         // Send a message to the VS Code extension to open the file picker
-        vscode.postMessage({ command: 'selectDirectory', item:child, id:item_id });
+        vscode.postMessage({ command: 'selectDirectory', item: child, id: item_id });
     }
 
     // Example button to trigger file picker
