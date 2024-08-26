@@ -204,36 +204,63 @@ function renderPopupTree(child, parent_div, vscode) {
         Object.keys(node).forEach(key => {
             if (key.startsWith("__")) return; // Skip internal properties
             const currentNode = node[key];
+            const containerDiv = document.createElement('div');
+            containerDiv.style.marginLeft = `15px`; // Increased margin for better indentation
+            containerDiv.style.marginBottom = '4px';
+    
             const div = document.createElement('div');
-
-            // Adjust the background color based on the depth
-            const baseColorValue = 50 + (depth * 20); // Starting at 50, increase by 20 for each depth
-            div.style.backgroundColor = `rgb(${baseColorValue}, ${baseColorValue}, ${baseColorValue})`;
-
-            div.style.marginLeft = `${depth * 10}px`;
-            div.style.padding = '6px';
-            div.style.borderRadius = '8px';
-            div.style.marginBottom = '5px';
-            div.style.color = '#eee'; // Lighter text color for better contrast
+            div.style.backgroundColor = '#333'; // Darker background for better contrast
+            div.style.padding = '4px'; // Increased padding for visual comfort
+            div.style.borderRadius = '6px';
+            div.style.color = '#fff'; // Brighter text color for better readability
             div.style.cursor = 'pointer';
             div.style.fontSize = '14px';
+            div.style.display = 'flex'; // Flex display for alignment
+            div.style.alignItems = 'center'; // Align items vertically in the center
+            div.style.borderRadius = '4px'; // Consistent rounded corners
+
+            // Declare the childrenDiv variable earlier
+            let childrenDiv = null;
+
+            // Add toggle button for non-leaf nodes
+            if (!currentNode.__isLeaf) {
+                const toggleBtn = document.createElement('button');
+                toggleBtn.textContent = '-';
+                toggleBtn.style.backgroundColor = 'transparent';
+                toggleBtn.style.color = 'inherit'; // Inherit color from parent
+                toggleBtn.style.border = 'none'; // Remove border
+                toggleBtn.style.padding = '0'; // Remove padding
+                toggleBtn.style.cursor = 'pointer';
+                toggleBtn.style.marginRight = '8px'; // Space between icon and label
+                div.appendChild(toggleBtn);
+
+                // Attach event listener after childrenDiv is initialized
+                toggleBtn.addEventListener('click', () => {
+                    const isVisible = childrenDiv.style.display === 'block';
+                    childrenDiv.style.display = isVisible ? 'none' : 'block';
+                    toggleBtn.textContent = isVisible ? '+' : '-';
+                });
+            }
 
             // Add icon span
             const icon = document.createElement('span');
             icon.className = 'icon'; // Custom class for styling
-            icon.className += ' codicon codicon-'+currentNode.__icon;
-
+            icon.className += ' codicon codicon-' + currentNode.__icon;
             icon.style.marginRight = '8px'; // Space between icon and label
-            
+    
             const label = document.createElement('span');
             label.textContent = currentNode.__label;
-
+    
             div.appendChild(icon);
             div.appendChild(label);
-            parentDiv.appendChild(div);
-
+            containerDiv.appendChild(div);
+            parentDiv.appendChild(containerDiv);
+    
             if (currentNode.__isLeaf) {
-                div.style.backgroundColor = '#555';
+                div.style.backgroundColor = '#222'; // Slightly darker background for leaf nodes
+                div.style.color = '#fff'; // White text for best contrast
+                div.style.cursor = 'pointer';
+                div.style.borderRadius = '6px';
                 div.addEventListener('click', () => {
                     // Handle leaf node selection
                     child.value = currentNode.__id;
@@ -250,34 +277,17 @@ function renderPopupTree(child, parent_div, vscode) {
                     vscode.postMessage({ command: 'saveObject', item: child, id: currentNode.__id });
                 });
             } else {
-                // Toggle children visibility
-                const toggleBtn = document.createElement('button');
-                toggleBtn.textContent = '-';
-                toggleBtn.style.backgroundColor = 'transparent';
-                toggleBtn.style.border = 'none';
-                toggleBtn.style.color = '#eee';
-                toggleBtn.style.cursor = 'pointer';
-                toggleBtn.style.marginRight = '5px';
-                toggleBtn.style.fontSize = '16px';
-                div.prepend(toggleBtn);
-
-                const childrenDiv = document.createElement('div');
+                childrenDiv = document.createElement('div'); // Initialize childrenDiv here
                 childrenDiv.classList.add('children');
-                childrenDiv.style.marginLeft = '10px';
                 childrenDiv.style.display = 'block';
-                div.appendChild(childrenDiv);
-
-                toggleBtn.addEventListener('click', () => {
-                    const isVisible = childrenDiv.style.display === 'block';
-                    childrenDiv.style.display = isVisible ? 'none' : 'block';
-                    toggleBtn.textContent = isVisible ? '+' : '-';
-                });
-
+                childrenDiv.style.marginTop = '4px'; // Slight margin for spacing between nodes
+                containerDiv.appendChild(childrenDiv);
+    
                 renderTreeView(currentNode.__children, childrenDiv, depth + 1, maxDepth);
             }
         });
     }
-
+    
     function buildTree(data) {
         const root = {};
         let maxDepth = 0;
@@ -323,9 +333,9 @@ function renderPopupTree(child, parent_div, vscode) {
     const popupContainer = document.createElement('div');
     popupContainer.style.position = 'absolute'; // Changed to absolute positioning
     popupContainer.style.backgroundColor = '#222';
-    popupContainer.style.border = '1px solid #444';
+    popupContainer.style.border = '1px solid #555'; // More distinct border color for popup
     popupContainer.style.padding = '20px';
-    popupContainer.style.boxShadow = '0 4px 15px rgba(0,0,0,0.5)';
+    popupContainer.style.boxShadow = '0 4px 15px rgba(0,0,0,0.7)'; // Darker shadow for more depth
     popupContainer.style.borderRadius = '10px';
     popupContainer.style.display = 'none';
     popupContainer.style.zIndex = 1000;
@@ -333,8 +343,8 @@ function renderPopupTree(child, parent_div, vscode) {
     // Add close button to the popup
     const closePopupBtn = document.createElement('button');
     closePopupBtn.textContent = 'Close';
-    closePopupBtn.style.backgroundColor = '#444';
-    closePopupBtn.style.color = '#eee';
+    closePopupBtn.style.backgroundColor = '#555'; // Darker button background for better contrast
+    closePopupBtn.style.color = '#fff';
     closePopupBtn.style.border = 'none';
     closePopupBtn.style.borderRadius = '5px';
     closePopupBtn.style.padding = '5px 10px';
@@ -351,6 +361,9 @@ function renderPopupTree(child, parent_div, vscode) {
     treeContainer.style.maxHeight = '300px';
     treeContainer.style.overflowY = 'auto';
     treeContainer.style.padding = '10px';
+    treeContainer.style.backgroundColor = '#333'; // Darker background for contrast
+    treeContainer.style.color = '#fff'; // Brighter text color for readability
+    treeContainer.style.borderRadius = '5px'; // Add rounded corners
     popupContainer.appendChild(treeContainer);
 
     const { root, maxDepth } = buildTree(links);
