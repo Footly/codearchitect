@@ -40,6 +40,26 @@ document.addEventListener('DOMContentLoaded', () => {
     vscode.postMessage({ command: 'webviewReady' });
 });
 
+function readJsonFileSync(filePath) {
+    try {
+        // Resolve the full path of the file
+        const fullPath = path.resolve(__dirname, filePath);
+
+        // Read the file synchronously
+        const data = fs.readFileSync(fullPath, 'utf8');
+        
+        // Parse the JSON data
+        const jsonData = JSON.parse(data);
+        
+        // Return the parsed data
+        return jsonData;
+    } catch (error) {
+        // Handle errors (e.g., file not found, JSON parse error)
+        console.error('Error:', error);
+        return null; // or throw error if you prefer
+    }
+}
+
 function resolveRef(schema, root_schema) {
     for (const key in schema) {
         if (key === "$ref") {
@@ -146,7 +166,7 @@ function handleTitleInputFocusOut(title, item, vscode) {
 }
 
 function renderChild(child, div, vscode, depth = 0) {
-    console.log(child);
+    //console.log(child);
     const modelType = child.schema.modelType;
     switch (modelType) {
         case 'sub-object':
@@ -198,9 +218,17 @@ function renderPopupTree(child, parent_div, vscode) {
             div.style.cursor = 'pointer';
             div.style.fontSize = '14px';
 
+            // Add icon span
+            const icon = document.createElement('span');
+            icon.className = 'icon'; // Custom class for styling
+            icon.className += ' codicon codicon-'+currentNode.__icon;
+
+            icon.style.marginRight = '8px'; // Space between icon and label
+            
             const label = document.createElement('span');
             label.textContent = currentNode.__label;
 
+            div.appendChild(icon);
             div.appendChild(label);
             parentDiv.appendChild(div);
 
@@ -213,7 +241,8 @@ function renderPopupTree(child, parent_div, vscode) {
                     const event = new CustomEvent('nodeSelected', {
                         detail: {
                             $id: currentNode.__id,
-                            $label: currentNode.__label
+                            $label: currentNode.__label,
+                            $icon: currentNode.__icon
                         }
                     });
                     parent_div.dispatchEvent(event);
@@ -263,19 +292,20 @@ function renderPopupTree(child, parent_div, vscode) {
 
             let currentNode = root;
             item.$path.forEach((pathPart, index) => {
-                if (!currentNode[pathPart]) {
-                    currentNode[pathPart] = {
+                if (!currentNode[pathPart.key]) {
+                    currentNode[pathPart.key] = {
                         __children: {},
-                        __label: pathPart,
+                        __label: pathPart.key,
                         __id: item.$id,
-                        __depth: index
+                        __depth: index,
+                        __icon: pathPart.icon
                     };
                 }
                 if (index === item.$path.length - 1) {
-                    currentNode[pathPart].__isLeaf = true;
-                    currentNode[pathPart].__label = item.$label;
+                    currentNode[pathPart.key].__isLeaf = true;
+                    currentNode[pathPart.key].__label = item.$label;
                 }
-                currentNode = currentNode[pathPart].__children;
+                currentNode = currentNode[pathPart.key].__children;
             });
         });
 
@@ -397,15 +427,19 @@ function renderInputString(child, div, vscode) {
                 blocks.push(lastTextBlock);
             }
 
-            console.log("Blocks:", blocks);
-
             // Iterate over blocks and create corresponding blocks
             blocks.forEach((block) => {
                 if (block.startsWith('@')) {
                     // Create link block
                     const link = suggestions.find(link => link.$id === block.substring(1));
+                    console.error(link);
+                    const suggestion = {
+                        $id: link.$id,
+                        $label: link.$label,
+                        $icon: link.$path.find(item => item.key === link.$label).icon
+                    }
                     if (link) {
-                        createLinkBlock(child, link);
+                        createLinkBlock(child, suggestion);
                     }
                 } else {
                     //Check if block is not full of spaces
@@ -595,7 +629,7 @@ function renderInputString(child, div, vscode) {
     // Function to create a block for a suggestion
     function createLinkBlock(child, suggestion) {
         const block = document.createElement('span');
-        block.textContent = suggestion.$label;
+        block.innerHTML =`<span class="codicon codicon-${suggestion.$icon}"></span> ${suggestion.$label}`;
         block.style.display = 'inline-flex'; // Use inline-flex for better alignment with other elements
         block.style.alignItems = 'center'; // Align items vertically in the center
         block.style.padding = '4px 8px';
@@ -640,8 +674,8 @@ function renderInputString(child, div, vscode) {
         if (popupTree) {
             document.body.appendChild(popupTree);
             block.addEventListener('nodeSelected', (event) => {
-                const { $id, $label } = event.detail;
-                block.textContent = $label;
+                const { $id, $label, $icon } = event.detail;
+                block.innerHTML = `<span class="codicon codicon-${$icon}"></span> ${$label}`;
                 block.dataset.id = $id;
                 popupTree.style.display = 'none';
                 updateChildValue();
@@ -846,8 +880,8 @@ function renderDropdownSelectTag(child, div, vscode) {
     if (popupTree) {
         document.body.appendChild(popupTree);
         valueDisplay.addEventListener('nodeSelected', (event) => {
-            const { $id, $label } = event.detail;
-            valueDisplay.textContent = `Selected: ${$label}`;
+            const { $id, $label, $icon } = event.detail;
+            valueDisplay.innerHTML = `<span class="codicon codicon-${$icon}"></span> ${$label}`;
             popupTree.style.display = 'none';
         });
 
@@ -875,8 +909,8 @@ function renderDropdownSelectTag(child, div, vscode) {
         // Find the link with matching $id
         const selectedLink = child.$links.find(link => link.$id === child.value);
         if (selectedLink) {
-            console.log(`Selected: ${selectedLink.$label}`);
-            valueDisplay.textContent = `Selected: ${selectedLink.$label}`;
+            const $icon = selectedLink.$path.find(item => item.key === selectedLink.$label).icon;
+            valueDisplay.innerHTML = `<span class="codicon codicon-${$icon}"></span> ${selectedLink.$label}`;
         }
     }
 }
@@ -914,10 +948,8 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
             const { $id, $label } = event.detail;
             // Handle leaf node selection
             const selectedId = $id;
-            console.log(selectedValues);
             if (!selectedValues.includes(selectedId)) {
                 selectedValues.push(selectedId);
-                console.log(selectedValues);
                 renderSelectedItems(containerDiv, selectedValues, child);
                 //Child value is a list of selected div.
                 child.value = [...selectedValues];
@@ -950,8 +982,6 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
     const selectedValues = child.value;
     // Convert it im
     renderSelectedItems(containerDiv, selectedValues, child);
-
-    console.log("Initial selectedValue:", selectedValues);
 
     function renderSelectedItems(containerDiv, selectedValues, child) {
         // Ensure selectedValues is an array
@@ -986,7 +1016,8 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
                 itemDiv.style.fontSize = '14px';
 
                 const label = document.createElement('span');
-                label.textContent = link.$label;
+                const $icon = link.$path.find(item => item.key === link.$label).icon;
+                label.innerHTML = `<span class="codicon codicon-${$icon}"></span> ${link.$label}`;
                 itemDiv.appendChild(label);
 
                 // Remove button
