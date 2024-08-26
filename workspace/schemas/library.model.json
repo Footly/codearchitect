@@ -23,27 +23,28 @@
       "hidden": true,
       "modelType": "pool-dropdown-select-tag",
       "items": {
-        "type": "string",
-        "const": ["reqs"]
-      }
+        "type": "string"
+      },
+      "const": ["reqs"]
     },
     "public dependencies": {
       "type": "array",
       "hidden": true,
       "modelType": "pool-dropdown-select-tag",
       "items": {
-        "type": "string",
-        "const": ["lib"]
-      }
+        "type": "string"
+      },
+      "const": ["lib"]
     },
     "private dependencies": {
       "type": "array",
       "hidden": true,
       "modelType": "pool-dropdown-select-tag",
       "items": {
-        "type": "string",
-        "const": ["lib"]
-      }
+        "type": "string"
+
+      },
+      "const": ["lib"]
     },
     "variables": {
       "type": "array",

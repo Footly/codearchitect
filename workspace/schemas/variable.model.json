@@ -26,6 +26,14 @@
         "types"
       ]
     },
+    "datatype2": {
+      "hidden": true,
+      "modelType": "dropdown-select-tag",
+      "type": "string",
+      "const": [
+        "types"
+      ]
+    },
     "isArray": {
       "hidden": true,
       "modelType": "input-string",
@@ -54,7 +62,8 @@
     "documentation": {
       "hidden": true,
       "modelType": "input-string",
-      "type": "string"
+      "type": "string",
+      "const": ["*"]
     }
   },
   "$link": {

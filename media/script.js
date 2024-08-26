@@ -190,8 +190,8 @@ function renderPopupTree(child, parent_div, vscode) {
             const baseColorValue = 50 + (depth * 20); // Starting at 50, increase by 20 for each depth
             div.style.backgroundColor = `rgb(${baseColorValue}, ${baseColorValue}, ${baseColorValue})`;
 
-            div.style.marginLeft = `${depth * 10}px`; // Further reduced horizontal distance
-            div.style.padding = '6px'; // Further reduced padding
+            div.style.marginLeft = `${depth * 10}px`;
+            div.style.padding = '6px';
             div.style.borderRadius = '8px';
             div.style.marginBottom = '5px';
             div.style.color = '#eee'; // Lighter text color for better contrast
@@ -209,7 +209,7 @@ function renderPopupTree(child, parent_div, vscode) {
                 div.addEventListener('click', () => {
                     // Handle leaf node selection
                     child.value = currentNode.__id;
-                    // Instead of directly updating textContent, dispatch a custom event
+                    // Dispatch a custom event
                     const event = new CustomEvent('nodeSelected', {
                         detail: {
                             $id: currentNode.__id,
@@ -218,24 +218,24 @@ function renderPopupTree(child, parent_div, vscode) {
                     });
                     parent_div.dispatchEvent(event);
                     popupContainer.style.display = 'none';
-                    vscode.postMessage({ command: 'saveObject', item: child, id: item_id });
+                    vscode.postMessage({ command: 'saveObject', item: child, id: currentNode.__id });
                 });
             } else {
                 // Toggle children visibility
                 const toggleBtn = document.createElement('button');
-                toggleBtn.textContent = '-'; // Show collapse symbol by default
+                toggleBtn.textContent = '-';
                 toggleBtn.style.backgroundColor = 'transparent';
                 toggleBtn.style.border = 'none';
-                toggleBtn.style.color = '#eee'; // Lighter text color for better contrast
+                toggleBtn.style.color = '#eee';
                 toggleBtn.style.cursor = 'pointer';
                 toggleBtn.style.marginRight = '5px';
-                toggleBtn.style.fontSize = '16px'; // Increased font size for better visibility
+                toggleBtn.style.fontSize = '16px';
                 div.prepend(toggleBtn);
 
                 const childrenDiv = document.createElement('div');
                 childrenDiv.classList.add('children');
-                childrenDiv.style.marginLeft = '10px'; // Further reduced indentation for children
-                childrenDiv.style.display = 'block'; // Show children by default
+                childrenDiv.style.marginLeft = '10px';
+                childrenDiv.style.display = 'block';
                 div.appendChild(childrenDiv);
 
                 toggleBtn.addEventListener('click', () => {
@@ -249,13 +249,11 @@ function renderPopupTree(child, parent_div, vscode) {
         });
     }
 
-    // Convert the filtered links into a tree structure
     function buildTree(data) {
         const root = {};
         let maxDepth = 0;
 
         data.forEach(item => {
-            // Ensure $path exists and is an array
             if (!item.$path || !Array.isArray(item.$path)) {
                 console.error("Invalid $path in item:", item);
                 return;
@@ -275,7 +273,7 @@ function renderPopupTree(child, parent_div, vscode) {
                 }
                 if (index === item.$path.length - 1) {
                     currentNode[pathPart].__isLeaf = true;
-                    currentNode[pathPart].__label = item.$label; // Update label to the final label
+                    currentNode[pathPart].__label = item.$label;
                 }
                 currentNode = currentNode[pathPart].__children;
             });
@@ -284,25 +282,16 @@ function renderPopupTree(child, parent_div, vscode) {
         return { root, maxDepth };
     }
 
-    // Tag to filter
-    const tags_filter = child.schema.const;
-
     // Filter the links using the tags_filter
+    const tags_filter = child.schema.const;
     const links = child.$links.filter(link => link.$tags.some(t => tags_filter?.includes(t)));
-
-    //If links is udnefined or empty, return
     if (!links || links.length === 0) {
         return;
     }
 
-    console.log(links);
-
     // Create the popup container (hidden by default)
     const popupContainer = document.createElement('div');
-    popupContainer.style.position = 'fixed';
-    popupContainer.style.left = '50%';
-    popupContainer.style.top = '50%';
-    popupContainer.style.transform = 'translate(-50%, -50%)';
+    popupContainer.style.position = 'absolute'; // Changed to absolute positioning
     popupContainer.style.backgroundColor = '#222';
     popupContainer.style.border = '1px solid #444';
     popupContainer.style.padding = '20px';
@@ -315,7 +304,7 @@ function renderPopupTree(child, parent_div, vscode) {
     const closePopupBtn = document.createElement('button');
     closePopupBtn.textContent = 'Close';
     closePopupBtn.style.backgroundColor = '#444';
-    closePopupBtn.style.color = '#eee'; // Lighter text color for better contrast
+    closePopupBtn.style.color = '#eee';
     closePopupBtn.style.border = 'none';
     closePopupBtn.style.borderRadius = '5px';
     closePopupBtn.style.padding = '5px 10px';
@@ -334,10 +323,7 @@ function renderPopupTree(child, parent_div, vscode) {
     treeContainer.style.padding = '10px';
     popupContainer.appendChild(treeContainer);
 
-    // Convert the filtered links to tree structure
     const { root, maxDepth } = buildTree(links);
-
-    // Render the tree view inside the popup container
     renderTreeView(root, treeContainer, 0, maxDepth);
 
     return popupContainer;
@@ -424,7 +410,7 @@ function renderInputString(child, div, vscode) {
                 } else {
                     //Check if block is not full of spaces
                     if (block.trim() !== '') {
-                                            // Create normal text block
+                        // Create normal text block
                         createTextBlock(child, block);
                     }
                 }
@@ -437,7 +423,7 @@ function renderInputString(child, div, vscode) {
 
     const popupTree = renderPopupTree(child, input, vscode);
 
-    if(popupTree) {
+    if (popupTree) {
         document.body.appendChild(popupTree);
         input.addEventListener('nodeSelected', (event) => {
             const { $id, $label } = event.detail;
@@ -458,6 +444,10 @@ function renderInputString(child, div, vscode) {
             input.value = value.substring(0, atIndex);
 
             popupTree.style.display = 'block';
+            // Position the popup relative to the button or container
+            const rect = input.getBoundingClientRect();
+            popupTree.style.left = `${rect.left}px`;
+            popupTree.style.top = `${rect.bottom}px`; // Position below the button
         }
     });
 
@@ -647,14 +637,16 @@ function renderInputString(child, div, vscode) {
 
         const popupTree = renderPopupTree(child, block, vscode);
 
-        document.body.appendChild(popupTree);
-        block.addEventListener('nodeSelected', (event) => {
-            const { $id, $label } = event.detail;
-            block.textContent = $label;
-            block.dataset.id = $id;
-            popupTree.style.display = 'none';
-            updateChildValue();
-        });
+        if (popupTree) {
+            document.body.appendChild(popupTree);
+            block.addEventListener('nodeSelected', (event) => {
+                const { $id, $label } = event.detail;
+                block.textContent = $label;
+                block.dataset.id = $id;
+                popupTree.style.display = 'none';
+                updateChildValue();
+            });
+        }
 
         // Event listener for double click to trigger a new suggestion
         block.addEventListener('dblclick', (event) => {
@@ -849,18 +841,34 @@ function renderDropdownSelectTag(child, div, vscode) {
     valueDisplay.style.cursor = 'pointer';
     div.appendChild(valueDisplay);
 
-    const popupTree = renderPopupTree(child, div, vscode);
+    const popupTree = renderPopupTree(child, valueDisplay, vscode);
 
-    document.body.appendChild(popupTree);
-    div.addEventListener('nodeSelected', (event) => {
-        const { $id, $label } = event.detail;
-        valueDisplay.textContent = `Selected: ${$label}`;
-    });
+    if (popupTree) {
+        document.body.appendChild(popupTree);
+        valueDisplay.addEventListener('nodeSelected', (event) => {
+            const { $id, $label } = event.detail;
+            valueDisplay.textContent = `Selected: ${$label}`;
+            popupTree.style.display = 'none';
+        });
 
-    // Open the popup when the valueDisplay div is clicked
-    valueDisplay.addEventListener('click', () => {
-        popupTree.style.display = 'block';
-    });
+        // Open the popup when the valueDisplay div is clicked
+        valueDisplay.addEventListener('click', () => {
+            popupTree.style.display = 'block';
+            // Position the popup relative to the button or container
+            const rect = valueDisplay.getBoundingClientRect();
+            popupTree.style.left = `${rect.left}px`;
+            popupTree.style.top = `${rect.bottom}px`; // Position below the button
+        });
+
+        // Hide the popup when clicking outside
+        function handleClickOutside(event) {
+            if (!valueDisplay.contains(event.target) && !popupTree.contains(event.target)) {
+                popupTree.style.display = 'none';
+            }
+        }
+
+        document.addEventListener('click', handleClickOutside);
+    }
 
     // Initialize display with selected value
     if (child.value) {
@@ -874,11 +882,6 @@ function renderDropdownSelectTag(child, div, vscode) {
 }
 
 function renderPoolDropdownSelectTag(child, div, vscode) {
-    // Create a unique container for this widget's popup
-    const widgetContainer = document.createElement('div');
-    widgetContainer.style.position = 'relative'; // Relative to handle absolute popup positioning
-    div.appendChild(widgetContainer);
-
     // Create and append the container for the selected items
     const containerDiv = document.createElement('div');
     containerDiv.style.marginBottom = '10px';
@@ -903,182 +906,52 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
     button.style.cursor = 'pointer';
     containerDiv.appendChild(button);
 
-    // Create the popup container (hidden by default)
-    const popupContainer = document.createElement('div');
-    popupContainer.style.position = 'absolute';
-    popupContainer.style.backgroundColor = '#222';
-    popupContainer.style.border = '1px solid #444';
-    popupContainer.style.padding = '10px';
-    popupContainer.style.boxShadow = '0 4px 15px rgba(0,0,0,0.5)';
-    popupContainer.style.borderRadius = '10px';
-    popupContainer.style.display = 'none';
-    popupContainer.style.top = '0'; // Position at the top
-    widgetContainer.appendChild(popupContainer); // Append to widget container
+    const popupTree = renderPopupTree(child, containerDiv, vscode);
+    if (popupTree) {
+        document.body.appendChild(popupTree);
 
-    // Add close button to the popup
-    const closePopupBtn = document.createElement('button');
-    closePopupBtn.textContent = 'Close';
-    closePopupBtn.style.backgroundColor = '#444';
-    closePopupBtn.style.color = '#eee'; // Lighter text color for better contrast
-    closePopupBtn.style.border = 'none';
-    closePopupBtn.style.borderRadius = '5px';
-    closePopupBtn.style.padding = '5px 10px';
-    closePopupBtn.style.cursor = 'pointer';
-    closePopupBtn.style.marginBottom = '10px';
-    popupContainer.appendChild(closePopupBtn);
+        containerDiv.addEventListener('nodeSelected', (event) => {
+            const { $id, $label } = event.detail;
+            // Handle leaf node selection
+            const selectedId = $id;
+            console.log(selectedValues);
+            if (!selectedValues.includes(selectedId)) {
+                selectedValues.push(selectedId);
+                console.log(selectedValues);
+                renderSelectedItems(containerDiv, selectedValues, child);
+                //Child value is a list of selected div.
+                child.value = [...selectedValues];
+                vscode.postMessage({ command: 'saveObject', item: child, id: selectedId });
+            }
+            popupTree.style.display = 'none';
+        });
 
-    closePopupBtn.addEventListener('click', () => {
-        popupContainer.style.display = 'none';
-    });
+        button.addEventListener('click', () => {
+            // Show the popup
+            popupTree.style.display = 'block';
 
-    // Create container for tree view inside the popup
-    const treeContainer = document.createElement('div');
-    treeContainer.style.maxHeight = '300px';
-    treeContainer.style.overflowY = 'auto';
-    treeContainer.style.padding = '10px';
-    popupContainer.appendChild(treeContainer);
+            // Position the popup relative to the button or container
+            const rect = containerDiv.getBoundingClientRect();
+            popupTree.style.left = `${rect.left}px`;
+            popupTree.style.top = `${rect.bottom}px`; // Position below the button
+        });
 
-    button.addEventListener('click', () => {
-        // Show the popup
-        popupContainer.style.display = 'block';
-
-        // Position the popup at the same vertical level as the button
-        const rect = button.getBoundingClientRect();
-        popupContainer.style.top = 0;
-
-        // Update the tree view
-        updateSuggestions(popupContainer, child);
-    });
-
-    // Hide the popup when clicking outside
-    function handleClickOutside(event) {
-        if (!containerDiv.contains(event.target) && !popupContainer.contains(event.target)) {
-            popupContainer.style.display = 'none';
+        // Hide the popup when clicking outside
+        function handleClickOutside(event) {
+            if (!containerDiv.contains(event.target) && !popupTree.contains(event.target)) {
+                popupTree.style.display = 'none';
+            }
         }
+
+        document.addEventListener('click', handleClickOutside);
     }
-
-    document.addEventListener('click', handleClickOutside);
-
-    // Remove the event listener when the popup is closed
-    closePopupBtn.addEventListener('click', () => {
-        document.removeEventListener('click', handleClickOutside);
-    });
 
     // Initialize with existing selected values
-    const selectedValues = child.value || [];
+    const selectedValues = child.value;
+    // Convert it im
     renderSelectedItems(containerDiv, selectedValues, child);
 
-    function renderTreeView(node, parentDiv, depth, maxDepth) {
-        Object.keys(node).forEach(key => {
-            if (key.startsWith("__")) return; // Skip internal properties
-            const currentNode = node[key];
-            const div = document.createElement('div');
-
-            // Adjust the background color based on the depth
-            const baseColorValue = 50 + (depth * 20); // Starting at 50, increase by 20 for each depth
-            div.style.backgroundColor = `rgb(${baseColorValue}, ${baseColorValue}, ${baseColorValue})`;
-
-            div.style.marginLeft = `${depth * 10}px`; // Further reduced horizontal distance
-            div.style.padding = '6px'; // Further reduced padding
-            div.style.borderRadius = '8px';
-            div.style.marginBottom = '5px';
-            div.style.color = '#eee'; // Lighter text color for better contrast
-            div.style.cursor = 'pointer';
-            div.style.fontSize = '14px';
-
-            const label = document.createElement('span');
-            label.textContent = currentNode.__label;
-
-            div.appendChild(label);
-            parentDiv.appendChild(div);
-
-            if (currentNode.__isLeaf) {
-                div.style.backgroundColor = '#555';
-                div.addEventListener('click', () => {
-                    // Handle leaf node selection
-                    const selectedId = currentNode.__id;
-                    if (!selectedValues.includes(selectedId)) {
-                        selectedValues.push(selectedId);
-                        renderSelectedItems(containerDiv, selectedValues, child);
-                        vscode.postMessage({ command: 'saveObject', item: child, id: selectedId });
-                    }
-                    popupContainer.style.display = 'none';
-                });
-            } else {
-                // Toggle children visibility
-                const toggleBtn = document.createElement('button');
-                toggleBtn.textContent = '-'; // Show collapse symbol by default
-                toggleBtn.style.backgroundColor = 'transparent';
-                toggleBtn.style.border = 'none';
-                toggleBtn.style.color = '#eee'; // Lighter text color for better contrast
-                toggleBtn.style.cursor = 'pointer';
-                toggleBtn.style.marginRight = '5px';
-                toggleBtn.style.fontSize = '16px'; // Increased font size for better visibility
-                div.prepend(toggleBtn);
-
-                const childrenDiv = document.createElement('div');
-                childrenDiv.classList.add('children');
-                childrenDiv.style.marginLeft = '10px'; // Further reduced indentation for children
-                childrenDiv.style.display = 'block'; // Show children by default
-                div.appendChild(childrenDiv);
-
-                toggleBtn.addEventListener('click', () => {
-                    const isVisible = childrenDiv.style.display === 'block';
-                    childrenDiv.style.display = isVisible ? 'none' : 'block';
-                    toggleBtn.textContent = isVisible ? '+' : '-';
-                });
-
-                renderTreeView(currentNode.__children, childrenDiv, depth + 1, maxDepth);
-            }
-        });
-    }
-
-    function updateSuggestions(popupContainer, child) {
-        const tagsFilter = child.schema.items.const;
-
-        // First, filter links by tags and then filter the resulting links based on child.value
-        const links = child.$links
-            .filter(link => link.$tags.some(t => tagsFilter.includes(t))) // Filter by tags
-            .filter(link => !child.value.some(value => link.$id.includes(value))); // Filter by value
-
-        // Build and render the tree view
-        const { root, maxDepth } = buildTree(links);
-        treeContainer.innerHTML = ''; // Clear previous tree view
-        renderTreeView(root, treeContainer, 0, maxDepth, child);
-    }
-
-    function buildTree(data) {
-        const root = {};
-        let maxDepth = 0;
-
-        data.forEach(item => {
-            if (!item.$path || !Array.isArray(item.$path)) {
-                console.error("Invalid $path in item:", item);
-                return;
-            }
-
-            maxDepth = Math.max(maxDepth, item.$path.length);
-
-            let currentNode = root;
-            item.$path.forEach((pathPart, index) => {
-                if (!currentNode[pathPart]) {
-                    currentNode[pathPart] = {
-                        __children: {},
-                        __label: pathPart,
-                        __id: item.$id,
-                        __depth: index
-                    };
-                }
-                if (index === item.$path.length - 1) {
-                    currentNode[pathPart].__isLeaf = true;
-                    currentNode[pathPart].__label = item.$label; // Update label to the final label
-                }
-                currentNode = currentNode[pathPart].__children;
-            });
-        });
-
-        return { root, maxDepth };
-    }
+    console.log("Initial selectedValue:", selectedValues);
 
     function renderSelectedItems(containerDiv, selectedValues, child) {
         // Ensure selectedValues is an array
@@ -1136,6 +1009,8 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
                     event.stopPropagation();
                     selectedValues.splice(index, 1); // Remove item from selectedValues
                     renderSelectedItems(containerDiv, selectedValues, child); // Re-render selected items
+                    //Child value is a list of selected div.
+                    child.value = [...selectedValues];
                     vscode.postMessage({ command: 'saveObject', item: child, id: id });
                 });
 
