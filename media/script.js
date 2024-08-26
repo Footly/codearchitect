@@ -200,54 +200,41 @@ function renderChild(child, div, vscode, depth = 0) {
 }
 
 function renderPopupTree(child, parent_div, vscode) {
-    function renderTreeView(node, parentDiv, depth, maxDepth) {
+    function renderTreeView(node, parentDiv, depth, maxDepth, selectableNodes) {
+        // Iterate through each key in the node
         Object.keys(node).forEach(key => {
             if (key.startsWith("__")) return; // Skip internal properties
             const currentNode = node[key];
+    
+            // Create container for the current node
             const containerDiv = document.createElement('div');
-            containerDiv.style.marginLeft = `15px`; // Increased margin for better indentation
+            containerDiv.style.marginLeft = '15px'; // Indentation for nested nodes
             containerDiv.style.marginBottom = '4px';
     
+            // Create div to display the node information
             const div = document.createElement('div');
-            div.style.backgroundColor = '#333'; // Darker background for better contrast
-            div.style.padding = '4px'; // Increased padding for visual comfort
-            div.style.borderRadius = '6px';
-            div.style.color = '#fff'; // Brighter text color for better readability
-            div.style.cursor = 'pointer';
-            div.style.fontSize = '14px';
-            div.style.display = 'flex'; // Flex display for alignment
-            div.style.alignItems = 'center'; // Align items vertically in the center
-            div.style.borderRadius = '4px'; // Consistent rounded corners
-
-            // Declare the childrenDiv variable earlier
-            let childrenDiv = null;
-
-            // Add toggle button for non-leaf nodes
-            if (!currentNode.__isLeaf) {
-                const toggleBtn = document.createElement('button');
-                toggleBtn.textContent = '-';
-                toggleBtn.style.backgroundColor = 'transparent';
-                toggleBtn.style.color = 'inherit'; // Inherit color from parent
-                toggleBtn.style.border = 'none'; // Remove border
-                toggleBtn.style.padding = '0'; // Remove padding
-                toggleBtn.style.cursor = 'pointer';
-                toggleBtn.style.marginRight = '8px'; // Space between icon and label
+            styleNodeDiv(div); // Apply consistent styles using a helper function
+    
+            let childrenDiv = null; // Placeholder for the children container
+    
+            // Check if the node has children
+            const hasChildren = currentNode.__children && Object.keys(currentNode.__children).length > 0;
+    
+            // Add toggle button if the node has children
+            if (hasChildren) {
+                const toggleBtn = createToggleButton(); // Create toggle button using helper function
                 div.appendChild(toggleBtn);
-
-                // Attach event listener after childrenDiv is initialized
+    
+                // Add event listener to toggle children visibility
                 toggleBtn.addEventListener('click', () => {
                     const isVisible = childrenDiv.style.display === 'block';
                     childrenDiv.style.display = isVisible ? 'none' : 'block';
                     toggleBtn.textContent = isVisible ? '+' : '-';
                 });
             }
-
-            // Add icon span
-            const icon = document.createElement('span');
-            icon.className = 'icon'; // Custom class for styling
-            icon.className += ' codicon codicon-' + currentNode.__icon;
-            icon.style.marginRight = '8px'; // Space between icon and label
     
+            // Create icon and label for the node
+            const icon = createNodeIcon(currentNode.__icon);
             const label = document.createElement('span');
             label.textContent = currentNode.__label;
     
@@ -256,35 +243,80 @@ function renderPopupTree(child, parent_div, vscode) {
             containerDiv.appendChild(div);
             parentDiv.appendChild(containerDiv);
     
-            if (currentNode.__isLeaf) {
-                div.style.backgroundColor = '#222'; // Slightly darker background for leaf nodes
-                div.style.color = '#fff'; // White text for best contrast
-                div.style.cursor = 'pointer';
-                div.style.borderRadius = '6px';
-                div.addEventListener('click', () => {
-                    // Handle leaf node selection
-                    child.value = currentNode.__id;
-                    // Dispatch a custom event
-                    const event = new CustomEvent('nodeSelected', {
-                        detail: {
-                            $id: currentNode.__id,
-                            $label: currentNode.__label,
-                            $icon: currentNode.__icon
-                        }
-                    });
-                    parent_div.dispatchEvent(event);
-                    popupContainer.style.display = 'none';
-                    vscode.postMessage({ command: 'saveObject', item: child, id: currentNode.__id });
-                });
-            } else {
-                childrenDiv = document.createElement('div'); // Initialize childrenDiv here
+            //// Determine if this node is selectable
+            //const isSelectable = selectableNodes.includes(currentNode.__id);
+    //
+            //if (isSelectable) {
+            //    makeNodeSelectable(div, currentNode, parent_div); // Make the node selectable
+            //}
+    
+            // Render children if the node has children
+            if (hasChildren) {
+                childrenDiv = document.createElement('div');
                 childrenDiv.classList.add('children');
                 childrenDiv.style.display = 'block';
-                childrenDiv.style.marginTop = '4px'; // Slight margin for spacing between nodes
+                childrenDiv.style.marginTop = '4px';
                 containerDiv.appendChild(childrenDiv);
     
-                renderTreeView(currentNode.__children, childrenDiv, depth + 1, maxDepth);
+                // Recursively render child nodes
+                renderTreeView(currentNode.__children, childrenDiv, depth + 1, maxDepth, selectableNodes);
             }
+        });
+    }
+    
+    // Helper function to apply consistent styles to node divs
+    function styleNodeDiv(div) {
+        div.style.backgroundColor = '#333';
+        div.style.padding = '4px';
+        div.style.borderRadius = '6px';
+        div.style.color = '#fff';
+        div.style.cursor = 'pointer';
+        div.style.fontSize = '14px';
+        div.style.display = 'flex';
+        div.style.alignItems = 'center';
+    }
+    
+    // Helper function to create a toggle button
+    function createToggleButton() {
+        const toggleBtn = document.createElement('button');
+        toggleBtn.textContent = '-';
+        toggleBtn.style.backgroundColor = 'transparent';
+        toggleBtn.style.color = 'inherit';
+        toggleBtn.style.border = 'none';
+        toggleBtn.style.padding = '0';
+        toggleBtn.style.cursor = 'pointer';
+        toggleBtn.style.marginRight = '8px';
+        return toggleBtn;
+    }
+    
+    // Helper function to create a node icon
+    function createNodeIcon(iconClass) {
+        const icon = document.createElement('span');
+        icon.className = 'icon codicon codicon-' + iconClass;
+        icon.style.marginRight = '8px';
+        return icon;
+    }
+    
+    // Helper function to make a node selectable
+    function makeNodeSelectable(div, currentNode, parentDiv) {
+        div.style.backgroundColor = '#222';
+        div.style.color = '#fff';
+        div.style.cursor = 'pointer';
+        div.style.borderRadius = '6px';
+        div.addEventListener('click', () => {
+            // Handle node selection
+            child.value = currentNode.__id;
+            // Dispatch a custom event
+            const event = new CustomEvent('nodeSelected', {
+                detail: {
+                    $id: currentNode.__id,
+                    $label: currentNode.__label,
+                    $icon: currentNode.__icon
+                }
+            });
+            parentDiv.dispatchEvent(event);
+            popupContainer.style.display = 'none';
+            vscode.postMessage({ command: 'saveObject', item: child, id: currentNode.__id });
         });
     }
     
@@ -306,14 +338,13 @@ function renderPopupTree(child, parent_div, vscode) {
                     currentNode[pathPart.key] = {
                         __children: {},
                         __label: pathPart.key,
-                        __id: item.$id,
                         __depth: index,
                         __icon: pathPart.icon
                     };
                 }
                 if (index === item.$path.length - 1) {
-                    currentNode[pathPart.key].__isLeaf = true;
                     currentNode[pathPart.key].__label = item.$label;
+                    currentNode[pathPart.key].__id = item.$id;
                 }
                 currentNode = currentNode[pathPart.key].__children;
             });
@@ -321,7 +352,7 @@ function renderPopupTree(child, parent_div, vscode) {
 
         return { root, maxDepth };
     }
-
+    
     // Filter the links using the tags_filter
     const tags_filter = child.schema.const;
     const links = child.$links.filter(link => link.$tags.some(t => tags_filter?.includes(t)));
@@ -367,7 +398,8 @@ function renderPopupTree(child, parent_div, vscode) {
     popupContainer.appendChild(treeContainer);
 
     const { root, maxDepth } = buildTree(links);
-    renderTreeView(root, treeContainer, 0, maxDepth);
+    const selectableNodes = links.map(link => link.$id);
+    renderTreeView(root, treeContainer, 0, maxDepth, selectableNodes);
 
     return popupContainer;
 }
@@ -445,7 +477,6 @@ function renderInputString(child, div, vscode) {
                 if (block.startsWith('@')) {
                     // Create link block
                     const link = suggestions.find(link => link.$id === block.substring(1));
-                    console.error(link);
                     const suggestion = {
                         $id: link.$id,
                         $label: link.$label,
