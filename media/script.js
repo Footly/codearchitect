@@ -934,24 +934,25 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
     containerDiv.style.marginBottom = '10px';
     div.appendChild(containerDiv);
 
+    // Create a wrapper to hold the label and the codicon item together
+    const labelContainer = document.createElement('div');
+    labelContainer.style.display = 'flex'; // Use flexbox to align items
+    labelContainer.style.alignItems = 'center'; // Center align vertically
+    containerDiv.appendChild(labelContainer);
+
     // Create and append the label
     const $label = document.createElement('label');
     $label.textContent = child.$label;
-    $label.style.display = 'block';
-    $label.style.marginBottom = '10px';
     $label.style.color = '#eee'; // Lighter text color for better contrast
-    containerDiv.appendChild($label);
+    $label.style.marginRight = '10px'; // Space between label and codicon
+    labelContainer.appendChild($label);
 
-    // Create and append the button to open the dropdown
-    const button = document.createElement('button');
-    button.textContent = 'Select Items';
-    button.style.padding = '10px';
-    button.style.border = '1px solid #444';
-    button.style.borderRadius = '8px';
-    button.style.backgroundColor = '#333';
-    button.style.color = '#eee'; // Lighter text color for better contrast
-    button.style.cursor = 'pointer';
-    containerDiv.appendChild(button);
+    // Create and append the + codicon item
+    const codiconItem = document.createElement('span');
+    codiconItem.className = 'codicon codicon-add'; // Assuming the codicon class is used here
+    codiconItem.style.cursor = 'pointer';
+    codiconItem.style.color = '#eee'; // Lighter text color for better contrast
+    labelContainer.appendChild(codiconItem);
 
     const popupTree = renderPopupTree(child, containerDiv, vscode);
     if (popupTree) {
@@ -964,21 +965,21 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
             if (!selectedValues.includes(selectedId)) {
                 selectedValues.push(selectedId);
                 renderSelectedItems(containerDiv, selectedValues, child);
-                //Child value is a list of selected div.
+                // Update the child value with the list of selected divs.
                 child.value = [...selectedValues];
                 vscode.postMessage({ command: 'saveObject', item: child, id: selectedId });
             }
             popupTree.style.display = 'none';
         });
 
-        button.addEventListener('click', () => {
+        codiconItem.addEventListener('click', () => {
             // Show the popup
             popupTree.style.display = 'block';
 
-            // Position the popup relative to the button or container
+            // Position the popup relative to the label or container
             const rect = containerDiv.getBoundingClientRect();
             popupTree.style.left = `${rect.left}px`;
-            popupTree.style.top = `${rect.bottom}px`; // Position below the button
+            popupTree.style.top = `${rect.bottom}px`; // Position below the codicon
         });
 
         // Hide the popup when clicking outside
@@ -993,7 +994,6 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
 
     // Initialize with existing selected values
     const selectedValues = child.value;
-    // Convert it im
     renderSelectedItems(containerDiv, selectedValues, child);
 
     function renderSelectedItems(containerDiv, selectedValues, child) {
@@ -1005,11 +1005,10 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
 
         const selectedItemsDiv = containerDiv.querySelector('.selected-items') || document.createElement('div'); // Scoped to the containerDiv
         selectedItemsDiv.className = 'selected-items';
-        selectedItemsDiv.style.marginTop = '10px'; // Space between the button and the list
+        selectedItemsDiv.style.marginTop = '10px'; // Space between the label and the list
         selectedItemsDiv.style.marginBottom = '10px';
-        selectedItemsDiv.style.border = '1px solid #444';
         selectedItemsDiv.style.borderRadius = '8px';
-        selectedItemsDiv.style.backgroundColor = '#333';
+        selectedItemsDiv.style.backgroundColor = 'transparent'; // Transparent background
         containerDiv.appendChild(selectedItemsDiv);
         selectedItemsDiv.innerHTML = ''; // Clear previous items
 
@@ -1024,6 +1023,7 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
                 itemDiv.style.backgroundColor = '#444';
                 itemDiv.style.color = '#eee'; // Lighter text color for better contrast
                 itemDiv.style.display = 'flex';
+                itemDiv.style.border = 'none';
                 itemDiv.style.alignItems = 'center';
                 itemDiv.style.justifyContent = 'space-between';
                 itemDiv.style.fontSize = '14px';
@@ -1053,7 +1053,7 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
                     event.stopPropagation();
                     selectedValues.splice(index, 1); // Remove item from selectedValues
                     renderSelectedItems(containerDiv, selectedValues, child); // Re-render selected items
-                    //Child value is a list of selected div.
+                    // Update the child value with the list of selected divs.
                     child.value = [...selectedValues];
                     vscode.postMessage({ command: 'saveObject', item: child, id: id });
                 });
