@@ -213,7 +213,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         keyProperties,
         parent.filePath,
         jsonPath,
-        vscode.TreeItemCollapsibleState.Collapsed,
+        vscode.TreeItemCollapsibleState.Expanded,
         parent.root_schema,
         parent.jsonPath
       );
@@ -312,7 +312,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
 
     // Check if parent has any children
     if (parent.children.length === 0) {
-      parent.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+      parent.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
     }
   }
 
@@ -359,7 +359,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
           schema,
           path.join(this.rootPath, file), // Pass the parent JSON file path
           [],  // Root path
-          vscode.TreeItemCollapsibleState.Collapsed,
+          vscode.TreeItemCollapsibleState.Expanded,
           schema,
           []
         );
@@ -686,8 +686,8 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
 
   private findObjectByID($id: string, rootJSON: any): any {
     for (const key in rootJSON) {
-      if (rootJSON[key].$id === $id) {
-        return rootJSON[key];
+      if (rootJSON[key] === $id && key === '$id') {
+        return rootJSON;
       } else if (typeof rootJSON[key] === 'object') {
         const result = this.findObjectByID($id, rootJSON[key]);
         if (result) {
@@ -955,7 +955,7 @@ export class Item extends vscode.TreeItem {
     public readonly schema: any,
     public filePath: string,
     public jsonPath: string[] = [], // New property to track JSON path
-    public collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed,
+    public collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Expanded,
     public root_schema: any,
     public parentJsonPath: string[],
   ) {

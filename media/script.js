@@ -486,19 +486,19 @@ function renderInputString(child, div, vscode) {
                         $icon: link.$tree.find(item => item.key === link.$label).icon
                     }
                     if (link) {
-                        createLinkBlock(child, suggestion);
+                        createLinkBlock(child, suggestion, true);
                     }
                 } else {
                     //Check if block is not full of spaces
                     if (block.trim() !== '') {
                         // Create normal text block
-                        createTextBlock(child, block);
+                        createTextBlock(child, block, true);
                     }
                 }
             });
         } else {
             // Create single normal text block
-            createTextBlock(child, child.value);
+            createTextBlock(child, child.value, true);
         }
     }
 
@@ -549,7 +549,7 @@ function renderInputString(child, div, vscode) {
 
                 input.value = ''; // Clear input after creating block
                 event.preventDefault(); // Prevent form submission if inside a form
-                updateChildValue();
+                updateChildValue(true);
             } else {
                 createTextBlock(child, input.value.trim());
                 input.value = ''; // Clear input after creating block
@@ -565,7 +565,7 @@ function renderInputString(child, div, vscode) {
                 const newValue = input.previousSibling.textContent.slice(0, -1) + ' ' + input.value.trim();
                 input.previousSibling.textContent = newValue;
                 input.value = ''; // Clear input after creating block
-                updateChildValue();
+                updateChildValue(true);
             } else {
                 createTextBlock(child, input.value.trim());
                 input.value = ''; // Clear input after creating block
@@ -574,7 +574,7 @@ function renderInputString(child, div, vscode) {
     });
 
     // Function to create a block for standard text input
-    function createTextBlock(child, text) {
+    function createTextBlock(child, text, newItem) {
         const block = document.createElement('span');
         block.textContent = text;
         block.style.display = 'inline-flex'; // Use inline-flex for better alignment with other elements
@@ -612,7 +612,7 @@ function renderInputString(child, div, vscode) {
         closeButton.addEventListener('click', (event) => {
             event.stopPropagation(); // Prevent event bubbling to block click
             block.remove(); // Remove block directly
-            updateChildValue(); // Update the value after removing the block
+            updateChildValue(true); // Update the value after removing the block
         });
 
         // Show "x" button on hover
@@ -656,7 +656,7 @@ function renderInputString(child, div, vscode) {
                     block.style.display = 'inline-flex'; // Restore display style
                     block.appendChild(closeButton); // Re-add the close button
                     input.remove(); // Remove input field directly
-                    updateChildValue(); // Update the value after editing the text
+                    updateChildValue(true); // Update the value after editing the text
                 }
             });
 
@@ -666,16 +666,16 @@ function renderInputString(child, div, vscode) {
                 block.style.display = 'inline-flex'; // Restore display style
                 block.appendChild(closeButton); // Re-add the close button
                 input.remove(); // Remove input field directly
-                updateChildValue(); // Update the value after editing the text
+                updateChildValue(true); // Update the value after editing the text
             });
         });
 
         inputContainer.insertBefore(block, input);
-        updateChildValue(); // Update the value after adding the block
+        updateChildValue(false); // Update the value after adding the block
     }
 
     // Function to create a block for a suggestion
-    function createLinkBlock(child, suggestion) {
+    function createLinkBlock(child, suggestion, newItem) {
         const block = document.createElement('span');
         block.innerHTML = `<span class="codicon codicon-${suggestion.$icon}"></span> ${suggestion.$label}`;
         block.style.display = 'inline-flex'; // Use inline-flex for better alignment with other elements
@@ -714,7 +714,7 @@ function renderInputString(child, div, vscode) {
         closeButton.addEventListener('click', (event) => {
             event.stopPropagation(); // Prevent event bubbling to block click
             inputContainer.removeChild(block);
-            updateChildValue();
+            updateChildValue(true);
         });
 
         const popupTree = renderPopupTree(child, block, vscode);
@@ -727,7 +727,7 @@ function renderInputString(child, div, vscode) {
                 block.innerHTML = `<span class="codicon codicon-${$icon}"></span> ${$label}`;
                 block.dataset.id = $id;
                 popupTree.style.display = 'none';
-                updateChildValue();
+                updateChildValue(true);
             });
         }
 
@@ -738,11 +738,12 @@ function renderInputString(child, div, vscode) {
 
         block.appendChild(closeButton);
         inputContainer.insertBefore(block, input);
-        updateChildValue();
+        if(!newItem)
+            updateChildValue(true); // Update the value after adding the block
     }
 
     // Function to update child value with text and blocks
-    function updateChildValue() {
+    function updateChildValue(flag) {
         let newValue = '';
         inputContainer.childNodes.forEach(node => {
             if (node.tagName === 'SPAN' && node.dataset.type === 'text') {
@@ -755,7 +756,8 @@ function renderInputString(child, div, vscode) {
             }
         });
         child.value = newValue.trim(); // Remove any trailing space
-        vscode.postMessage({ command: 'saveObject', item: child, id: child.$id });
+        if(flag)
+            vscode.postMessage({ command: 'saveObject', item: child, id: item_id });
     }
 }
 
