@@ -80,19 +80,15 @@ export function activate(context: vscode.ExtensionContext) {
 			// Create a new tree provider and tree view
 			itemTreeProvider = new ItemTreeProvider(pathProjects, schemas);
 			itemTreeView = vscode.window.createTreeView('codearchitect-treeview', { treeDataProvider: itemTreeProvider });
+			itemTreeView.onDidChangeSelection((event) => {
+				const selectedItem = event.selection[0];
+				// Perform actions based on the selected item
+				// ...
+			});
 		} catch (error) {
 			vscode.window.showErrorMessage('Error initializing the schema tree.');
 		}
 	};
-
-	const duplicateCommand = vscode.commands.registerCommand('codearchitect.duplicate', async (item) => {
-		await itemTreeProvider.duplicateItem(item);
-		const newItem = itemTreeProvider.getLastItemCreated();
-		if (newItem) {
-			//Edit the created item
-			vscode.commands.executeCommand('codearchitect.editObject', newItem.jsonPath, newItem.filePath);
-		}
-	});
 
 	const helloWorldCommand = vscode.commands.registerCommand('codearchitect.helloWorld', () => {
 		vscode.window.showInformationMessage('Hello World from codearchitect!');
@@ -170,42 +166,6 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	const previewPlantUmlCommand = vscode.commands.registerCommand('codearchitect.previewPlantuml', async (item: Item) => {
-		//Get the python script
-		const pyScript = config.get<string>('pathPyPreviewScript', '');
-
-		//Get the rootJSON
-		const rootJSON = JSON.parse(fs.readFileSync(item.filePath, 'utf8'));
-
-		let current = rootJSON;
-		for (const key of item.jsonPath) {
-			current = current[key];
-		}
-		await JSON2plantuml(pyScript, item.filePath, current.$id);
-
-		try {
-			// Get the directory where the Python script is located
-			const scriptDir = path.dirname(pyScript);
-
-			// Specify the path where you want to save the PlantUML content (same directory as the Python script)
-			const filePath = path.resolve(scriptDir, 'output.puml');
-
-			// Open the file
-			const document = await vscode.workspace.openTextDocument(filePath);
-			await vscode.window.showTextDocument(document);
-
-			//Wait 2150ms for the item to be created
-			await new Promise(resolve => setTimeout(resolve, 2150));
-
-			// Execute the plantuml.preview command
-			await vscode.commands.executeCommand('plantuml.preview');
-		} catch (error) {
-			console.error('Error opening file:', error);
-			vscode.window.showErrorMessage('Failed to open PlantUML file.');
-		}
-
-	});
-
 	const customCommand = vscode.commands.registerCommand('codearchitect.customCommand', async (item: Item) => {
 
 		//Get the commands
@@ -264,64 +224,12 @@ export function activate(context: vscode.ExtensionContext) {
 			return;
 		//First reveal the item
 		await itemTreeView?.reveal(item, { select: true, focus: true });
-		const itemCopy = JSON.parse(JSON.stringify(item));
-
-		// Create a Set to track unique labels
-		const seenLabels = new Set();
-
-		// Filter combinedChildren to only include items with unique $label values
-		itemCopy.hidden_children = itemCopy.hidden_children.filter((child: Item) => {
-			const label = child.$label;
-			if (!seenLabels.has(label)) {
-				seenLabels.add(label);
-				return true;
-			}
-			return false;
-		});
-		//Get the rootJSON
-		const rootJSON = JSON.parse(fs.readFileSync(item.filePath, 'utf8'));
-		//Open and parse the JSON file
-		const $links = rootJSON.$links;
-
-		interface Tree {
-			key: string | undefined;
-			icon: string | undefined;
-			id: string | undefined;
-		}
-
-		for(const link of $links){
-			const linkItem = itemTreeProvider.getItemById(link.$id, item.filePath);
-			const tree: Tree[] = [];
-			let current = rootJSON;
-			const rootItem = itemTreeProvider.getItem([], item.filePath);
-			tree.push({ key: rootItem?.$label, icon: rootItem?.schema.vscodeIcon, id: current.$id });
-			let index = 0;
-			if(linkItem && linkItem.jsonPath && linkItem.jsonPath.length > 0){
-				for (const key of (linkItem as unknown as Item)?.jsonPath || []) {
-					current = current[key];
-					const currentItem = itemTreeProvider.getItem(linkItem.jsonPath.slice(0, index + 1), item.filePath);
-					tree.push({ key: currentItem?.$label, icon: currentItem?.schema.vscodeIcon, id: current.$id });
-					index++;
-				}
-			}
-			link.$tree = tree;
-		}
-
-		itemCopy.$links = $links;
 
 		if (webviewPanel) {
-			webviewPanel.webview.postMessage({ command: 'editObject', item: itemCopy });
+			webviewPanel.webview.postMessage({ command: 'editObject', schema: item.schema, jsonPath: jsonPath, filePath: filePath});
 		} else {
 			vscode.window.showErrorMessage('Properties panel is not open.');
 		}
-	});
-
-	const lookUpCommand = vscode.commands.registerCommand('codearchitect.lookUp', async (item: Item) => {
-		// Given this filepath
-		const filePath = item.filePath;
-		const uri = vscode.Uri.file(filePath);
-		const document = await vscode.workspace.openTextDocument(uri);
-		await vscode.window.showTextDocument(document, { preview: true });
 	});
 
 	// Command to navigate back
@@ -337,15 +245,12 @@ export function activate(context: vscode.ExtensionContext) {
 	readSchemaFiles(pathModels, pathProjects);
 
 	context.subscriptions.push(helloWorldCommand);
-	context.subscriptions.push(duplicateCommand);
 	context.subscriptions.push(newProjectCommand);
 	context.subscriptions.push(refreshProjectsCommand);
 	context.subscriptions.push(addItemCommand);
 	context.subscriptions.push(editObjectCommand);
 	context.subscriptions.push(propertiesProvider);
 	context.subscriptions.push(removeItemCommand);
-	context.subscriptions.push(lookUpCommand);
-	context.subscriptions.push(previewPlantUmlCommand);
 	context.subscriptions.push(customCommand);
 }
 
