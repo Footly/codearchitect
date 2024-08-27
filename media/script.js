@@ -47,10 +47,10 @@ function readJsonFileSync(filePath) {
 
         // Read the file synchronously
         const data = fs.readFileSync(fullPath, 'utf8');
-
+        
         // Parse the JSON data
         const jsonData = JSON.parse(data);
-
+        
         // Return the parsed data
         return jsonData;
     } catch (error) {
@@ -205,54 +205,51 @@ function renderPopupTree(child, parent_div, vscode) {
         Object.keys(node).forEach(key => {
             if (key.startsWith("__")) return; // Skip internal properties
             const currentNode = node[key];
-
+    
             // Create container for the current node
             const containerDiv = document.createElement('div');
             containerDiv.style.marginLeft = '15px'; // Indentation for nested nodes
             containerDiv.style.marginBottom = '4px';
-
+    
             // Create div to display the node information
             const div = document.createElement('div');
             styleNodeDiv(div); // Apply consistent styles using a helper function
-
+    
             let childrenDiv = null; // Placeholder for the children container
-
+    
             // Check if the node has children
             const hasChildren = currentNode.__children && Object.keys(currentNode.__children).length > 0;
-
+    
             // Add toggle button if the node has children
             if (hasChildren) {
                 const toggleBtn = createToggleButton(); // Create toggle button using helper function
                 div.appendChild(toggleBtn);
-
+    
                 // Add event listener to toggle children visibility
-                toggleBtn.addEventListener('click', (event) => {
-                    // Don't allow event propagation
-                    event.stopPropagation();
+                toggleBtn.addEventListener('click', () => {
                     const isVisible = childrenDiv.style.display === 'block';
                     childrenDiv.style.display = isVisible ? 'none' : 'block';
                     toggleBtn.textContent = isVisible ? '+' : '-';
                 });
-
             }
-
+    
             // Create icon and label for the node
             const icon = createNodeIcon(currentNode.__icon);
             const label = document.createElement('span');
             label.textContent = currentNode.__label;
-
+    
             div.appendChild(icon);
             div.appendChild(label);
             containerDiv.appendChild(div);
             parentDiv.appendChild(containerDiv);
-
-            // Determine if this node is selectable
-            const isSelectable = selectableNodes.includes(currentNode.__id);
-
-            if (isSelectable) {
-                makeNodeSelectable(div, currentNode, parent_div); // Make the node selectable
-            }
-
+    
+            //// Determine if this node is selectable
+            //const isSelectable = selectableNodes.includes(currentNode.__id);
+    //
+            //if (isSelectable) {
+            //    makeNodeSelectable(div, currentNode, parent_div); // Make the node selectable
+            //}
+    
             // Render children if the node has children
             if (hasChildren) {
                 childrenDiv = document.createElement('div');
@@ -260,13 +257,13 @@ function renderPopupTree(child, parent_div, vscode) {
                 childrenDiv.style.display = 'block';
                 childrenDiv.style.marginTop = '4px';
                 containerDiv.appendChild(childrenDiv);
-
+    
                 // Recursively render child nodes
                 renderTreeView(currentNode.__children, childrenDiv, depth + 1, maxDepth, selectableNodes);
             }
         });
     }
-
+    
     // Helper function to apply consistent styles to node divs
     function styleNodeDiv(div) {
         div.style.backgroundColor = '#333';
@@ -278,7 +275,7 @@ function renderPopupTree(child, parent_div, vscode) {
         div.style.display = 'flex';
         div.style.alignItems = 'center';
     }
-
+    
     // Helper function to create a toggle button
     function createToggleButton() {
         const toggleBtn = document.createElement('button');
@@ -291,7 +288,7 @@ function renderPopupTree(child, parent_div, vscode) {
         toggleBtn.style.marginRight = '8px';
         return toggleBtn;
     }
-
+    
     // Helper function to create a node icon
     function createNodeIcon(iconClass) {
         const icon = document.createElement('span');
@@ -299,7 +296,7 @@ function renderPopupTree(child, parent_div, vscode) {
         icon.style.marginRight = '8px';
         return icon;
     }
-
+    
     // Helper function to make a node selectable
     function makeNodeSelectable(div, currentNode, parentDiv) {
         div.style.backgroundColor = '#222';
@@ -319,33 +316,33 @@ function renderPopupTree(child, parent_div, vscode) {
             });
             parentDiv.dispatchEvent(event);
             popupContainer.style.display = 'none';
+            vscode.postMessage({ command: 'saveObject', item: child, id: currentNode.__id });
         });
     }
-
+    
     function buildTree(data) {
         const root = {};
         let maxDepth = 0;
 
         data.forEach(item => {
-            if (!item.$tree || !Array.isArray(item.$tree)) {
-                console.error("Invalid $tree in item:", item);
+            if (!item.$path || !Array.isArray(item.$path)) {
+                console.error("Invalid $path in item:", item);
                 return;
             }
 
-            maxDepth = Math.max(maxDepth, item.$tree.length);
+            maxDepth = Math.max(maxDepth, item.$path.length);
 
             let currentNode = root;
-            item.$tree.forEach((pathPart, index) => {
+            item.$path.forEach((pathPart, index) => {
                 if (!currentNode[pathPart.key]) {
                     currentNode[pathPart.key] = {
                         __children: {},
                         __label: pathPart.key,
                         __depth: index,
-                        __icon: pathPart.icon,
-                        __id: pathPart.id
+                        __icon: pathPart.icon
                     };
                 }
-                if (index === item.$tree.length - 1) {
+                if (index === item.$path.length - 1) {
                     currentNode[pathPart.key].__label = item.$label;
                     currentNode[pathPart.key].__id = item.$id;
                 }
@@ -355,7 +352,7 @@ function renderPopupTree(child, parent_div, vscode) {
 
         return { root, maxDepth };
     }
-
+    
     // Filter the links using the tags_filter
     const tags_filter = child.schema.const;
     const links = child.$links.filter(link => link.$tags.some(t => tags_filter?.includes(t)));
@@ -483,7 +480,7 @@ function renderInputString(child, div, vscode) {
                     const suggestion = {
                         $id: link.$id,
                         $label: link.$label,
-                        $icon: link.$tree.find(item => item.key === link.$label).icon
+                        $icon: link.$path.find(item => item.key === link.$label).icon
                     }
                     if (link) {
                         createLinkBlock(child, suggestion, true);
@@ -507,7 +504,6 @@ function renderInputString(child, div, vscode) {
     if (popupTree) {
         document.body.appendChild(popupTree);
         input.addEventListener('nodeSelected', (event) => {
-            event.stopPropagation();
             const { $id, $label } = event.detail;
             createLinkBlock(child, event.detail);
         });
@@ -677,7 +673,7 @@ function renderInputString(child, div, vscode) {
     // Function to create a block for a suggestion
     function createLinkBlock(child, suggestion, newItem) {
         const block = document.createElement('span');
-        block.innerHTML = `<span class="codicon codicon-${suggestion.$icon}"></span> ${suggestion.$label}`;
+        block.innerHTML =`<span class="codicon codicon-${suggestion.$icon}"></span> ${suggestion.$label}`;
         block.style.display = 'inline-flex'; // Use inline-flex for better alignment with other elements
         block.style.alignItems = 'center'; // Align items vertically in the center
         block.style.padding = '4px 8px';
@@ -722,7 +718,6 @@ function renderInputString(child, div, vscode) {
         if (popupTree) {
             document.body.appendChild(popupTree);
             block.addEventListener('nodeSelected', (event) => {
-                event.stopPropagation();
                 const { $id, $label, $icon } = event.detail;
                 block.innerHTML = `<span class="codicon codicon-${$icon}"></span> ${$label}`;
                 block.dataset.id = $id;
@@ -931,12 +926,9 @@ function renderDropdownSelectTag(child, div, vscode) {
     if (popupTree) {
         document.body.appendChild(popupTree);
         valueDisplay.addEventListener('nodeSelected', (event) => {
-            event.stopPropagation();
             const { $id, $label, $icon } = event.detail;
             valueDisplay.innerHTML = `<span class="codicon codicon-${$icon}"></span> ${$label}`;
             popupTree.style.display = 'none';
-            child.value = $id;
-            vscode.postMessage({ command: 'saveObject', item: child, id: item_id});
         });
 
         // Open the popup when the valueDisplay div is clicked
@@ -963,7 +955,7 @@ function renderDropdownSelectTag(child, div, vscode) {
         // Find the link with matching $id
         const selectedLink = child.$links.find(link => link.$id === child.value);
         if (selectedLink) {
-            const $icon = selectedLink.$tree.find(item => item.key === selectedLink.$label).icon;
+            const $icon = selectedLink.$path.find(item => item.key === selectedLink.$label).icon;
             valueDisplay.innerHTML = `<span class="codicon codicon-${$icon}"></span> ${selectedLink.$label}`;
         }
     }
@@ -1000,7 +992,6 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
         document.body.appendChild(popupTree);
 
         containerDiv.addEventListener('nodeSelected', (event) => {
-            event.stopPropagation();
             const { $id, $label } = event.detail;
             // Handle leaf node selection
             const selectedId = $id;
@@ -1071,7 +1062,7 @@ function renderPoolDropdownSelectTag(child, div, vscode) {
                 itemDiv.style.fontSize = '14px';
 
                 const label = document.createElement('span');
-                const $icon = link.$tree.find(item => item.key === link.$label).icon;
+                const $icon = link.$path.find(item => item.key === link.$label).icon;
                 label.innerHTML = `<span class="codicon codicon-${$icon}"></span> ${link.$label}`;
                 itemDiv.appendChild(label);
 

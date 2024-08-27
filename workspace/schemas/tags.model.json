@@ -10,6 +10,13 @@
       "type": "string",
       "hidden": true
     },
+    "$path": {
+      "type": "array",
+      "hidden": true,
+      "items": {
+        "type": "string"
+      }
+    },
     "$tags": {
       "type": "array",
       "hidden": true,

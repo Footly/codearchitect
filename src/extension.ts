@@ -283,33 +283,7 @@ export function activate(context: vscode.ExtensionContext) {
 		const rootJSON = JSON.parse(fs.readFileSync(item.filePath, 'utf8'));
 		//Open and parse the JSON file
 		const $links = rootJSON.$links;
-
-		interface Tree {
-			key: string | undefined;
-			icon: string | undefined;
-			id: string | undefined;
-		}
-
-		for(const link of $links){
-			const linkItem = itemTreeProvider.getItemById(link.$id, item.filePath);
-			const tree: Tree[] = [];
-			let current = rootJSON;
-			const rootItem = itemTreeProvider.getItem([], item.filePath);
-			if(rootItem?.schema.vscodeIcon)
-				tree.push({ key: rootItem?.$label, icon: rootItem?.schema.vscodeIcon, id: current.$id });
-			let index = 0;
-			if(linkItem && linkItem.jsonPath && linkItem.jsonPath.length > 0){
-				for (const key of (linkItem as unknown as Item)?.jsonPath || []) {
-					current = current[key];
-					const currentItem = itemTreeProvider.getItem(linkItem.jsonPath.slice(0, index + 1), item.filePath);
-					if(currentItem?.schema.vscodeIcon)
-						tree.push({ key: currentItem?.$label, icon: currentItem?.schema.vscodeIcon, id: current.$id });
-					index++;
-				}
-			}
-			link.$tree = tree;
-		}
-
+		//Add the $links to the item
 		itemCopy.$links = $links;
 
 		if (webviewPanel) {
