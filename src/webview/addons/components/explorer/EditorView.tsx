@@ -26,10 +26,18 @@ const schema = {
         },
       },
     },
-    array: {
-      type: "array",
-      items: {
-        type: "string"
+    object: {
+      type: "object",
+      properties: {
+        name: {
+          type: "array",
+          items: {
+            type: "string"
+          }
+        },
+        age: {
+          type: "string"
+        }
       }
     }
   },
@@ -47,80 +55,11 @@ const initialData = {
       notifications: false,
     },
   },
-  array: ["hola", "adios"]
+  object: {
+    name: ['John', 'Doe'],
+    age: 30
+  }
 };
-
-
-//const schema = {
-//  properties: {
-//    name: { type: 'string' },
-//    description: { type: 'string', multiline: true },
-//    isActive: { type: 'boolean' },
-//    settings: {
-//      type: 'object',
-//      properties: {
-//        theme: { type: 'string' },
-//        notifications: { type: 'boolean' },
-//        settings: {
-//          type: 'object',
-//          properties: {
-//            theme: { type: 'string' },
-//            notifications: { type: 'boolean' },
-//          },
-//        },
-//      },
-//    },
-//    array: {
-//      type: "array",
-//      items: {
-//        type: "object",
-//        properties: {
-//          theme: { type: 'string' },
-//          notifications: { type: 'boolean' },
-//          settings: {
-//            type: 'object',
-//            properties: {
-//              theme: { type: 'string' },
-//              notifications: { type: 'boolean', hidden: true },
-//            },
-//          },
-//        },
-//      }
-//    }
-//  },
-//};
-//
-//const initialData = {
-//  name: 'John Doe',
-//  description: 'A description here',
-//  isActive: true,
-//  settings: {
-//    theme: 'dark',
-//    notifications: false,
-//    settings: {
-//      theme: 'dark',
-//      notifications: false,
-//    },
-//  },
-//  array: [{
-//    theme: 'dark',
-//    notifications: false,
-//    settings: {
-//      theme: 'dark',
-//      notifications: false,
-//    }
-//  },
-//  {
-//    theme: 'light',
-//    notifications: true,
-//    settings: {
-//      theme: 'io',
-//      notifications: false,
-//    }
-//  }]
-//};
-
-
 
 export default function EditorView() {
   return (

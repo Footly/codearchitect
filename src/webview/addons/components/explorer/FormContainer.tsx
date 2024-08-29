@@ -15,14 +15,7 @@ type PropertySchema = {
   hidden?: boolean;
   properties?: Record<string, PropertySchema>; // Nested properties
   items?: PropertySchema; // Single schema for items
-};
-
-type RenderSchemaProps = {
-  schema: {
-    properties?: Record<string, PropertySchema>;
-  };
-  path: string[];
-  initialData: Record<string, any>;
+  tag?: any;
 };
 
 const TextFieldWidget: React.FC<{
@@ -107,14 +100,13 @@ const CheckboxWidget: React.FC<{
 
 const TagsFieldWidget: React.FC<{
   label: string;
-  value: string;
   initialValue: string[];
   readOnly: boolean;
   onDelete: (index: number) => void;
   onAddition: (tag: Tag) => void;
   onDrag: (tag: Tag, currPos: number, newPos: number) => void;
   onUpdate: (index: number, newTag: Tag) => void;
-}> = ({ label, value, initialValue, readOnly, onDelete, onAddition, onDrag, onUpdate }) => {
+}> = ({ label, initialValue, readOnly, onDelete, onAddition, onDrag, onUpdate }) => {
   const [tags, setTags] = React.useState<Array<Tag>>(initialValue.map((value: string) => ({ id: value, text: value, className: "" })));
 
   const handleDelete = (index: number) => {
@@ -160,8 +152,8 @@ const TagsFieldWidget: React.FC<{
         allowDragDrop={true}
         readOnly={readOnly}
         inputFieldPosition="inline"
-        inline={true}
-        editable={true}
+        inline
+        editable
         handleDelete={handleDelete}
         handleAddition={handleAddition}
         handleDrag={handleDrag}
@@ -264,17 +256,13 @@ const RenderSchema: React.FC<{
 
   const renderArrayStringProperty = (
     label: string,
-    itemSchema: PropertySchema,
     path: string[],
-    initialData: string[],
-    isExpanded: boolean,
-    handleArrayExpand: () => void
+    initialData: string[]
   ) => (
     <Column alignStart={true} key={label}>
       <Row>
         <TagsFieldWidget
           label={label}
-          value={""} // or use a relevant value if neededW
           initialValue={initialData}
           readOnly={false} // Set to true if the field should be read-only
           onDelete={(index: number) => {
@@ -291,61 +279,6 @@ const RenderSchema: React.FC<{
           }}
         />
       </Row>
-    </Column>
-  );
-
-
-  const renderArrayProperty = (label: string, itemSchema: PropertySchema, path: string[], initialData: any[], isExpanded: boolean, handleArrayExpand: () => void) => (
-    <Column alignStart={true} key={label}>
-      <Row>
-        {label}
-        <Button icon onClick={() => handleArrayExpand()}>
-          <Icon icon={isExpanded ? 'chevron-down' : 'chevron-right'} />
-        </Button>
-      </Row>
-      {isExpanded && (
-        <Column alignStart={true} key={label}>
-          {initialData.map((item: any, index: number) => {
-            const itemPath = [...path, index.toString()];
-            switch (itemSchema.type) {
-              case 'boolean':
-                return (
-                  <CheckboxWidget
-                    key={index}
-                    label={`Item ${index}`}
-                    checked={initialData[index]}
-                    initialChecked={initialData[index]}
-                    readOnly={false}
-                    onChange={(checked) => {
-                      updateFormData(itemPath, checked);
-                    }}
-                  />
-                );
-              case 'string':
-                return renderStringProperty(
-                  `Item ${index}`,
-                  initialData[index] || '',
-                  false,
-                  itemSchema.multiline || false,
-                  (value) => {
-                    updateFormData(itemPath, value);
-                  }
-                );
-              case 'object':
-                const isExpanded = expandedSections.has(`Item ${index}`);
-                return renderObjectProperty(
-                  `Item ${index}`,
-                  itemSchema,
-                  isExpanded,
-                  handleToggleExpand(`Item ${index}`),
-                  itemPath
-                );
-              default:
-                return null;
-            }
-          })}
-        </Column>
-      )}
     </Column>
   );
 
@@ -393,21 +326,10 @@ const RenderSchema: React.FC<{
           if (property.items.type === 'string') {
             return renderArrayStringProperty(
               label,
-              property.items,
               childPath,
-              initialValue as string[],
-              isExpanded,
-              handleToggleExpand(label)
+              initialValue as string[]
             );
           }
-          return renderArrayProperty(
-            label,
-            property.items,
-            childPath,
-            initialValue as any[],
-            isExpanded,
-            handleToggleExpand(label)
-          );
         }
         return null;
       default:
