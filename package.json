@@ -208,6 +208,8 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "@apidevtools/json-schema-ref-parser": "^11.7.0"
+    "@apidevtools/json-schema-ref-parser": "^11.7.0",
+    "@webcomponents/webcomponentsjs": "^2.8.0",
+    "lit": "^3.2.0"
   }
 }

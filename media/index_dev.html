@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Component testing</title>
+    <script src="webcomponents-loader.js"></script>
+    <script src="polyfill-support.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/vscode-codicons@0.0.17/dist/codicon.min.css"
+      rel="stylesheet"
+    />
+    <link id="vscode-theme" rel="stylesheet" href="light.css" />
+    <script>
+      window.updateStyle = function (theme) {
+        console.log(`Updating theme to: ${theme}`);
+    
+        // Define the mapping between theme names and CSS files
+        const themeMap = {
+          light: 'light.css',
+          dark: 'dark.css',
+          high_contrast_light: 'high_contrast_light.css',
+          high_contrast_dark: 'high_contrast_dark.css'
+        };
+    
+        // Find the <link> element for the theme
+        const style = document.querySelector('link[id="vscode-theme"]');
+        if (style) {
+          const cssFile = themeMap[theme];
+          if (cssFile) {
+            style.href = cssFile; // Update the href to the new theme stylesheet
+          } else {
+            console.error(`Error: CSS file for theme '${theme}' not found!`);
+            return; // Exit the function if the CSS file is not defined
+          }
+        } else {
+          console.error('Error: Theme link element not found!');
+          return; // Exit the function if the link element is not found
+        }
+    
+        // Reset font weight for all buttons
+        const buttons = document.querySelectorAll('nav button');
+        buttons.forEach((button) => {
+          button.style.fontWeight = 'normal';
+        });
+    
+        // Highlight the selected button
+        const selectedButton = document.querySelector(`#${theme}`);
+        if (selectedButton) {
+          selectedButton.style.fontWeight = 'bold';
+        } else {
+          console.error(`Error: Button for theme '${theme}' not found!`);
+        }
+      };
+    </script>
+    <style>
+      body {
+        font-family: var(--vscode-font-family);
+        font-size: var(--vscode-font-size);
+        color: var(--vscode-editor-foreground);
+        background-color: var(--vscode-editor-background);
+        margin: 0;
+        padding: 16px;
+      }
+
+      nav button {
+        all: unset;
+        color: var(--vscode-textLink-foreground);
+
+        &:hover {
+          color: var(--vscode-textLink-activeForeground);
+          cursor: pointer;
+        }
+      }
+
+      .vscode_window {
+        display: flex;
+        border: 1px solid var(--vscode-panel-border);
+        background-color: var(--vscode-panel-background);
+      }
+
+      .vscode_window__sidebar {
+        flex: 1;
+        padding: 16px;
+        border-right: 1px solid var(--vscode-sideBar-border);
+        background-color: var(--vscode-sideBar-background);
+      }
+
+      .vscode_window__editor {
+        flex: 3;
+        padding: 16px;
+        background-color: var(--vscode-editor-background);
+        color: var(--vscode-editor-foreground);
+      }
+
+      .buttons {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+
+      vscode-button {
+        margin-bottom: 0.5em;
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <button
+        id="light"
+        style="font-weight: bold"
+        onclick="updateStyle('light')"
+      >
+        Light
+      </button>
+      - <button id="dark" onclick="updateStyle('dark')">Dark</button> -
+      <button
+        id="high-contrast-dark"
+        onclick="updateStyle('high_contrast_dark')"
+      >
+        High contrast (dark)
+      </button>
+      -
+      <button
+        id="high-contrast-light"
+        onclick="updateStyle('high_contrast_light')"
+      >
+        High contrast (light)
+      </button>
+    </nav>
+
+    <h1>Components</h1>
+
+    <div class="vscode_window">
+      <div class="vscode_window__sidebar">
+        <h2>Panel</h2>
+
+        <h3>vscode-badge</h3>
+
+        <div style="display: flex; gap: 0.5em">
+          <vscode-badge>9</vscode-badge>
+          <vscode-badge>99</vscode-badge>
+          <vscode-badge>999</vscode-badge>
+        </div>
+
+        <h3>vscode-tag</h3>
+
+        <div style="display: flex; gap: 0.5em">
+          <vscode-tag>Feature Request</vscode-tag>
+          <vscode-tag>1 Unsaved</vscode-tag>
+        </div>
+
+        <h3>vscode-button</h3>
+
+        <div class="buttons">
+          <vscode-button appearance="primary">Button Text</vscode-button>
+          <vscode-button appearance="primary" disabled>
+            Disabled button
+          </vscode-button>
+          <vscode-button appearance="secondary">Button Text</vscode-button>
+          <vscode-button appearance="secondary" disabled>
+            Disabled secondary button
+          </vscode-button>
+          <vscode-button appearance="primary">
+            <vscode-icon slot="start" name="plus"></vscode-icon>
+            <span>Add</span>
+          </vscode-button>
+          <vscode-button appearance="primary">
+            <span>Delete</span>
+            <vscode-icon slot="end" name="trash"></vscode-icon>
+          </vscode-button>
+          <vscode-button appearance="primary">
+            <vscode-icon slot="start" name="warning"></vscode-icon>
+            <span>Warning</span>
+            <vscode-icon slot="end" name="warning"></vscode-icon>
+          </vscode-button>
+          <vscode-button appearance="icon">
+            <vscode-icon name="check"></vscode-icon>
+          </vscode-button>
+        </div>
+
+        <h3>vscode-divider</h3>
+
+        <p>Basic divider</p>
+        <vscode-divider></vscode-divider>
+
+        <p>Divider with role</p>
+        <vscode-divider role="separator"></vscode-divider>
+        <vscode-divider role="presentation"></vscode-divider>
+
+        <h3>vscode-label</h3>
+
+        <div style="display: flex; flex-direction: column; gap: 0.5em">
+          <vscode-label>Test label</vscode-label>
+          <vscode-label>Test label with a longer title</vscode-label>
+          <div style="width: 50px">
+            <vscode-label>Test ellipsis</vscode-label>
+          </div>
+        </div>
+
+        <h3>vscode-link</h3>
+
+        <div style="display: flex; flex-direction: column; gap: 0.5em">
+          <vscode-link
+            href="https://github.com/estruyf/vscode-community-ui-toolkit"
+            >GitHub Repo</vscode-link
+          >
+          <vscode-link href="#" hreftitle="Title of the link"
+            >Link with title</vscode-link
+          >
+          <vscode-link href="#" hreflang="nl">Link with hreflang</vscode-link>
+        </div>
+
+        <h3>vscode-icon</h3>
+
+        <div
+          style="
+            display: flex;
+            flex-direction: row;
+            gap: 0.5em;
+            align-items: center;
+          "
+        >
+          <vscode-icon name="check"></vscode-icon>
+          <vscode-icon name="loading" spin></vscode-icon>
+          <vscode-icon name="sync" spin></vscode-icon>
+          <vscode-icon name="gear" spin></vscode-icon>
+          <vscode-icon name="gear" size="32px"></vscode-icon>
+        </div>
+      </div>
+
+      <div class="vscode_window__editor">
+        <h2>Editor</h2>
+
+        <h3>vscode-badge</h3>
+
+        <div style="display: flex; gap: 0.5em">
+          <vscode-badge>9</vscode-badge>
+          <vscode-badge>99</vscode-badge>
+          <vscode-badge>999</vscode-badge>
+        </div>
+
+        <h3>vscode-tag</h3>
+
+        <div style="display: flex; gap: 0.5em">
+          <vscode-tag>Feature Request</vscode-tag>
+          <vscode-tag>1 Unsaved</vscode-tag>
+        </div>
+
+        <h3>vscode-button</h3>
+
+        <div class="buttons">
+          <vscode-button appearance="primary">Button Text</vscode-button>
+          <vscode-button appearance="primary" disabled>
+            Disabled button
+          </vscode-button>
+          <vscode-button appearance="secondary">Button Text</vscode-button>
+          <vscode-button appearance="secondary" disabled>
+            Disabled secondary button
+          </vscode-button>
+          <vscode-button appearance="primary">
+            <vscode-icon slot="start" name="plus"></vscode-icon>
+            <span>Add</span>
+          </vscode-button>
+          <vscode-button appearance="primary">
+            <span>Delete</span>
+            <vscode-icon slot="end" name="trash"></vscode-icon>
+          </vscode-button>
+          <vscode-button appearance="primary">
+            <vscode-icon slot="start" name="warning"></vscode-icon>
+            <span>Warning</span>
+            <vscode-icon slot="end" name="warning"></vscode-icon>
+          </vscode-button>
+          <vscode-button appearance="icon">
+            <vscode-icon name="check"></vscode-icon>
+          </vscode-button>
+        </div>
+
+        <h3>vscode-divider</h3>
+
+        <p>Basic divider</p>
+        <vscode-divider></vscode-divider>
+
+        <p>Divider with role</p>
+        <vscode-divider role="separator"></vscode-divider>
+        <vscode-divider role="presentation"></vscode-divider>
+
+        <h3>vscode-label</h3>
+
+        <div style="display: flex; flex-direction: column; gap: 0.5em">
+          <vscode-label>Test label</vscode-label>
+          <vscode-label>Test label with a longer title</vscode-label>
+          <div style="width: 50px">
+            <vscode-label>Test ellipsis</vscode-label>
+          </div>
+        </div>
+
+        <h3>vscode-link</h3>
+
+        <div style="display: flex; flex-direction: column; gap: 0.5em">
+          <vscode-link
+            href="https://github.com/estruyf/vscode-community-ui-toolkit"
+            >GitHub Repo</vscode-link
+          >
+          <vscode-link href="#" hreftitle="Title of the link"
+            >Link with title</vscode-link
+          >
+          <vscode-link href="#" hreflang="nl">Link with hreflang</vscode-link>
+        </div>
+
+        <h3>vscode-icon</h3>
+
+        <div
+          style="
+            display: flex;
+            flex-direction: row;
+            gap: 0.5em;
+            align-items: center;
+          "
+        >
+          <vscode-icon name="check"></vscode-icon>
+          <vscode-icon name="loading" spin></vscode-icon>
+          <vscode-icon name="sync" spin></vscode-icon>
+          <vscode-icon name="gear" spin></vscode-icon>
+          <vscode-icon name="gear" size="32px"></vscode-icon>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="../dist/index.js"></script>
+  </body>
+</html>
