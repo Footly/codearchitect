@@ -7,6 +7,50 @@
 import type { StyleXVar } from '@stylexjs/stylex/lib/StyleXTypes';
 import { FormContainer } from './FormContainer';
 
+const schema = {
+  properties: {
+    name: { type: 'string' },
+    description: { type: 'string', multiline: true },
+    isActive: { type: 'boolean' },
+    settings: {
+      type: 'object',
+      properties: {
+        theme: { type: 'string' },
+        notifications: { type: 'boolean' },
+        settings: {
+          type: 'object',
+          properties: {
+            theme: { type: 'string' },
+            notifications: { type: 'boolean' },
+          },
+        },
+      },
+    },
+    array: {
+      type: "array",
+      items: {
+        type: "string"
+      }
+    }
+  },
+};
+
+const initialData = {
+  name: 'John Doe',
+  description: 'A description here',
+  isActive: true,
+  settings: {
+    theme: 'dark',
+    notifications: false,
+    settings: {
+      theme: 'dark',
+      notifications: false,
+    },
+  },
+  array: ["hola", "adios"]
+};
+
+
 //const schema = {
 //  properties: {
 //    name: { type: 'string' },
@@ -32,7 +76,15 @@ import { FormContainer } from './FormContainer';
 //        type: "object",
 //        properties: {
 //          theme: { type: 'string' },
-//        }
+//          notifications: { type: 'boolean' },
+//          settings: {
+//            type: 'object',
+//            properties: {
+//              theme: { type: 'string' },
+//              notifications: { type: 'boolean', hidden: true },
+//            },
+//          },
+//        },
 //      }
 //    }
 //  },
@@ -51,81 +103,22 @@ import { FormContainer } from './FormContainer';
 //    },
 //  },
 //  array: [{
-//    theme: "hola"
+//    theme: 'dark',
+//    notifications: false,
+//    settings: {
+//      theme: 'dark',
+//      notifications: false,
+//    }
 //  },
 //  {
-//    theme: "aaaa"
-//  },]
+//    theme: 'light',
+//    notifications: true,
+//    settings: {
+//      theme: 'io',
+//      notifications: false,
+//    }
+//  }]
 //};
-
-const schema = {
-  properties: {
-    name: { type: 'string' },
-    description: { type: 'string', multiline: true },
-    isActive: { type: 'boolean' },
-    settings: {
-      type: 'object',
-      properties: {
-        theme: { type: 'string' },
-        notifications: { type: 'boolean' },
-        settings: {
-          type: 'object',
-          properties: {
-            theme: { type: 'string' },
-            notifications: { type: 'boolean' },
-          },
-        },
-      },
-    },
-    array: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          theme: { type: 'string' },
-          notifications: { type: 'boolean' },
-          settings: {
-            type: 'object',
-            properties: {
-              theme: { type: 'string' },
-              notifications: { type: 'boolean', hidden: true },
-            },
-          },
-        },
-      }
-    }
-  },
-};
-
-const initialData = {
-  name: 'John Doe',
-  description: 'A description here',
-  isActive: true,
-  settings: {
-    theme: 'dark',
-    notifications: false,
-    settings: {
-      theme: 'dark',
-      notifications: false,
-    },
-  },
-  array: [{
-    theme: 'dark',
-    notifications: false,
-    settings: {
-      theme: 'dark',
-      notifications: false,
-    }
-  },
-  {
-    theme: 'light',
-    notifications: true,
-    settings: {
-      theme: 'io',
-      notifications: false,
-    }
-  }]
-};
 
 
 

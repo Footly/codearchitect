@@ -5,6 +5,8 @@ import { TextField } from '../TextField';
 import { Row, Column } from '../Flex';
 import { Button } from '../Button';
 import { Icon } from '../Icon';
+import { Tag } from "react-tag-input/types/components/SingleTag";
+import { WithContext as ReactTags, SEPARATORS } from "react-tag-input";
 
 type PropertySchema = {
   type: string;
@@ -103,6 +105,73 @@ const CheckboxWidget: React.FC<{
   );
 };
 
+const TagsFieldWidget: React.FC<{
+  label: string;
+  value: string;
+  initialValue: string[];
+  readOnly: boolean;
+  onDelete: (index: number) => void;
+  onAddition: (tag: Tag) => void;
+  onDrag: (tag: Tag, currPos: number, newPos: number) => void;
+  onUpdate: (index: number, newTag: Tag) => void;
+}> = ({ label, value, initialValue, readOnly, onDelete, onAddition, onDrag, onUpdate }) => {
+  const [tags, setTags] = React.useState<Array<Tag>>(initialValue.map((value: string) => ({ id: value, text: value, className: "" })));
+
+  const handleDelete = (index: number) => {
+    setTags(tags.filter((_, i) => i !== index));
+    onDelete(index);
+  };
+
+  const handleUpdate = (index: number, newTag: Tag) => {
+    const newTags = tags.slice();
+    newTags[index] = newTag;
+    setTags(newTags);
+    onUpdate(index, newTag);
+  };
+
+  const handleAddition = (tag: Tag) => {
+    setTags((prevTags) => {
+      return [...prevTags, tag];
+    });
+    onAddition(tag);
+  };
+
+  const handleDrag = (tag: Tag, currPos: number, newPos: number) => {
+    const newTags = tags.slice();
+
+    newTags.splice(currPos, 1);
+    newTags.splice(newPos, 0, tag);
+
+    // re-render
+    setTags(newTags);
+    onDrag(tag, currPos, newPos);
+  };
+
+  const handleTagClick = (index: number) => {
+    console.log("The tag at index " + index + " was clicked");
+  };
+
+  return (
+    <Column alignStart={true}>
+      {label}
+      <ReactTags
+        tags={tags}
+        placeholder={""}
+        allowDragDrop={true}
+        readOnly={readOnly}
+        inputFieldPosition="inline"
+        inline={true}
+        editable={true}
+        handleDelete={handleDelete}
+        handleAddition={handleAddition}
+        handleDrag={handleDrag}
+        handleTagClick={handleTagClick}
+        onTagUpdate={handleUpdate}
+      />
+    </Column>
+  );
+};
+
 // Helper function to get nested value from an object based on path
 const getNestedValue = (obj: Record<string, any>, path: string[]): any => {
   return path.reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj);
@@ -193,6 +262,39 @@ const RenderSchema: React.FC<{
     </Column>
   );
 
+  const renderArrayStringProperty = (
+    label: string,
+    itemSchema: PropertySchema,
+    path: string[],
+    initialData: string[],
+    isExpanded: boolean,
+    handleArrayExpand: () => void
+  ) => (
+    <Column alignStart={true} key={label}>
+      <Row>
+        <TagsFieldWidget
+          label={label}
+          value={""} // or use a relevant value if neededW
+          initialValue={initialData}
+          readOnly={false} // Set to true if the field should be read-only
+          onDelete={(index: number) => {
+            updateFormData(path, initialData.filter((_, i) => i !== index));
+          }}
+          onAddition={(tag: Tag) => {
+            updateFormData(path, [...initialData, tag.text]);
+          }}
+          onDrag={(tag: Tag, currPos: number, newPos: number) => {
+            updateFormData(path, initialData.map((item, index) => index === currPos ? initialData[newPos] : (index === newPos ? initialData[currPos] : item)));
+          }}
+          onUpdate={(index: number, newTag: Tag) => {
+            updateFormData(path, initialData.map((item, i) => i === index ? newTag.text : item));
+          }}
+        />
+      </Row>
+    </Column>
+  );
+
+
   const renderArrayProperty = (label: string, itemSchema: PropertySchema, path: string[], initialData: any[], isExpanded: boolean, handleArrayExpand: () => void) => (
     <Column alignStart={true} key={label}>
       <Row>
@@ -270,6 +372,8 @@ const RenderSchema: React.FC<{
           readOnly,
           property.multiline || false,
           (value) => {
+            console.log("Setting value", value);
+            console.log("Path", childPath);
             updateFormData(childPath, value);
           }
         );
@@ -286,6 +390,16 @@ const RenderSchema: React.FC<{
         return null;
       case 'array':
         if (property.items) {
+          if (property.items.type === 'string') {
+            return renderArrayStringProperty(
+              label,
+              property.items,
+              childPath,
+              initialValue as string[],
+              isExpanded,
+              handleToggleExpand(label)
+            );
+          }
           return renderArrayProperty(
             label,
             property.items,
