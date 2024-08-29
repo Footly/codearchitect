@@ -1,113 +1,15 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { randomUUID } from 'crypto';
-import { json } from 'stream/consumers';
 import { JsonTreeDecoder } from './JsonTreeDecoder';
 import { resolveRef } from './SchemaUtils'; // Import resolveRef from SchemaUtils
-
-//Class to keep track of changes done in the file
-export class JsonEditor {
-  private undoStack: string[] = [];
-  private redoStack: string[] = [];
-  private currentContent: string = '';
-  private currentUndoIndex: number = -1; // Keeps track of the current position in the undo stack
-  private isInUndoRedoOperation: boolean = false; // Flag to indicate if an undo/redo operation is in progress
-
-  constructor(private jsonFilePath: string) {
-    // Initialize current content with the file's content
-    this.currentContent = fs.readFileSync(this.jsonFilePath, 'utf-8');
-    this.undoStack.push(this.currentContent);
-    this.currentUndoIndex = 0;
-
-    // Subscribe to document changes
-    vscode.workspace.onDidChangeTextDocument(this.onDidChangeTextDocument, this);
-  }
-
-  private onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent) {
-    if (event.document.fileName.toLowerCase() === this.jsonFilePath.toLowerCase()) {
-      if (this.isInUndoRedoOperation) {
-        this.isInUndoRedoOperation = false;
-        return; // Skip processing if an undo/redo operation is in progress
-      }
-
-      // Remove any redo entries as new change happened
-      this.redoStack = [];
-
-      // Update undo stack and current content
-      this.currentContent = event.document.getText();
-      if (this.currentUndoIndex === this.undoStack.length - 1) {
-        // Append new change to the end of the undo stack
-        this.undoStack.push(this.currentContent);
-      } else {
-        // Replace the current position with new change
-        this.undoStack[this.currentUndoIndex + 1] = this.currentContent;
-        // Remove entries after the current position
-        this.undoStack = this.undoStack.slice(0, this.currentUndoIndex + 2);
-      }
-      this.currentUndoIndex = this.undoStack.length - 1;
-    }
-  }
-
-  public undo(): boolean {
-    if (this.currentUndoIndex > 0) {
-      this.isInUndoRedoOperation = true; // Start undo/redo operation
-
-      // Move current content to redo stack
-      this.redoStack.push(this.currentContent);
-
-      // Move one step back in the undo stack
-      this.currentUndoIndex--;
-      this.currentContent = this.undoStack[this.currentUndoIndex];
-      this.writeContentToFile(this.currentContent);
-      return true;
-    } else {
-      vscode.window.showInformationMessage('Nothing to undo');
-      return false;
-    }
-  }
-
-  public redo(): boolean {
-    if (this.redoStack.length > 0) {
-      this.isInUndoRedoOperation = true; // Start undo/redo operation
-
-      // Move current content to undo stack
-      this.undoStack.push(this.currentContent);
-      this.currentUndoIndex++;
-
-      // Move one step forward in the redo stack
-      this.currentContent = this.redoStack.pop()!;
-      this.writeContentToFile(this.currentContent);
-      return true;
-    } else {
-      vscode.window.showInformationMessage('Nothing to redo');
-      return false;
-    }
-  }
-
-  private writeContentToFile(content: string) {
-    fs.writeFileSync(this.jsonFilePath, content, 'utf-8');
-    this.refreshFile();
-  }
-
-  private refreshFile() {
-    const document = vscode.workspace.textDocuments.find(doc => doc.uri.fsPath === this.jsonFilePath);
-    if (document) {
-      const edit = new vscode.WorkspaceEdit();
-      const fullRange = new vscode.Range(
-        document.positionAt(0),
-        document.positionAt(document.getText().length)
-      );
-      edit.replace(document.uri, fullRange, this.currentContent);
-      vscode.workspace.applyEdit(edit);
-    }
-  }
-}
+import { JsonHistory } from './JsonHistory';
+import { JsonGenerator } from './JsonGenerator';
 
 export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
   private _onDidChangeTreeData: vscode.EventEmitter<Item | undefined | void> = new vscode.EventEmitter<Item | undefined | void>();
   readonly onDidChangeTreeData: vscode.Event<Item | undefined | void> = this._onDidChangeTreeData.event;
-  private editors: Map<string, JsonEditor> = new Map();
+  private editors: Map<string, JsonHistory> = new Map();
   private itemMap: Map<string, Item> = new Map();
   private lastIDCreated: string = '';
   private lastItemCreated: Item | undefined;
@@ -170,7 +72,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       jsonFiles.forEach(file => {
         const filePath = path.join(this.rootPath, file);
         if (!this.editors.has(filePath)) {
-          const editor = new JsonEditor(filePath);
+          const editor = new JsonHistory(filePath);
           this.editors.set(filePath, editor);
         }
       });
@@ -228,129 +130,6 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     return element;
   }
 
-  private createChildrenFromSchema(schema: any, rootSchema: any, rootJSON: any,
-    jsonPath: string[] = [], name: string, value: { [key: string]: any } | undefined): [any, { [key: string]: any }] {
-    const children: { [key: string]: any } = {};
-
-    schema = resolveRef(schema, rootSchema);
-
-    let schema_current = rootJSON;
-
-    // Drill down to the parent object (one level before the last key)
-    for (let i = 0; i < jsonPath.length - 1; i++) {
-      const key = jsonPath[i];
-      schema_current = schema_current[key];
-    }
-
-    // Get the last key
-    const newKey = jsonPath[jsonPath.length - 1];
-
-    if (schema.type === 'object') {
-      // Set the new value at the last key
-      schema_current[newKey] = {};
-    } else if (schema.type === 'array') {
-      schema_current[newKey] = [];
-    }
-
-    for (const key in schema?.properties) {
-      const jsonPathKey = [...jsonPath];
-      jsonPathKey.push(key);
-      const property = resolveRef(schema?.properties[key], rootSchema);
-      const type = property.type;
-
-      if (key === '$label') {
-        children.$label = name || '';
-      } else if (key === '$id') {
-        children.$id = generateUUID();
-        this.lastIDCreated = children.$id;
-      } else if (key === '$model') {
-        children.$model = rootSchema.$id;
-      } else if (type === 'string') {
-        if (value && key in value) {
-          children[key] = value[key];
-        } else {
-          if (property.const) children[key] = property.const;
-          else if (property.default) children[key] = property.default;
-          else children[key] = '';
-        }
-      } else if (type === 'number') {
-        if (value && key in value) {
-          children[key] = value[key];
-        } else {
-          if (property.const) children[key] = property.const;
-          else if (property.default) children[key] = property.default;
-          else children[key] = 0
-        }
-      } else if (type === 'boolean') {
-        if (value && key in value) {
-          children[key] = value[key];
-        } else {
-          if (property.const) children[key] = property.const;
-          else if (property.default) children[key] = property.default;
-          else children[key] = false
-        }
-      } else if (type === 'array') {
-        if (value && key in value) {
-          if (property?.modelType === 'folder') {
-            let temp = schema_current[newKey];
-            temp[key] = [];
-            for (const [index, val] of value[key].entries()) {
-              const childName = val.$label;
-              const copyJsonPath = [...jsonPathKey, index.toString()]; // Concatenates the index as a string to the array
-              [rootJSON,] = this.createChildrenFromSchema(property.items, rootSchema, rootJSON, copyJsonPath, childName, val);
-            }
-          } else {
-            children[key] = value[key];
-          }
-        }
-        else {
-          children[key] = [];
-        }
-      } else if (type === 'object') {
-        [, children[key]] = this.createChildrenFromSchema(property, rootSchema, rootJSON, jsonPathKey, "", value?.[key]);
-      } else {
-        vscode.window.showWarningMessage(`Type ${type} in property ${key} is not supported`);
-      }
-    }
-
-    if (!name) {
-      return [rootJSON, children];
-    }
-
-    // Drill down to the desired part of the JSON
-    let current = rootJSON;
-    let parent = null;
-    let lastKey = "";
-    let lastIndex = 0;
-
-    for (const key of jsonPath) {
-      parent = current;
-      lastKey = key;
-
-      // If current is an array, ensure key is treated as an index (number)
-      const index = Array.isArray(current) ? Number(key) : key;
-      if (Array.isArray(current))
-        lastIndex = Number(key);
-      lastKey = key;
-      current = current[index];
-    }
-
-    // Check if jsonPath is empty
-    if (jsonPath.length === 0) {
-      // Add the children to the rootJSON
-      rootJSON = children;
-    } else {
-      // Determine the type of parent and lastKey
-      if (Array.isArray(parent)) {
-        parent[lastIndex] = { ...parent[lastIndex], ...children };
-      } else {
-        // Add the children to the current object
-        parent[lastKey] = children;
-      }
-    }
-    return [rootJSON, children];
-  }
-
   async createParent(): Promise<void> {
     if (!this.rootPath) {
       vscode.window.showInformationMessage('No folder selected to save the projects');
@@ -401,20 +180,14 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     //Create the json file
     const rootJSONfile = path.join(this.rootPath, `${name}.json`);
 
-    //Create an empty object
-    let rootJSON = {};
+    //Create JSON generator instance
+    const generator = new JsonGenerator(rootSchema, rootSchema);
 
-    //Write the object to the file
-    fs.writeFileSync(rootJSONfile, JSON.stringify(rootJSON, null, 2), 'utf-8');
-
-    //Convert the path to a JSON file and create a variable for the parentJSON
-    rootJSON = JSON.parse(fs.readFileSync(rootJSONfile, 'utf-8'));
-
-    //Now open the file and write the parent object
-    [rootJSON,] = this.createChildrenFromSchema(rootSchema, rootSchema, rootJSON, [], name, undefined);
+    //Generate the JSON
+    const newJson = generator.generate(name);
 
     try {
-      fs.writeFileSync(rootJSONfile, JSON.stringify(rootJSON, null, 2), 'utf-8');
+      fs.writeFileSync(rootJSONfile, JSON.stringify(newJson, null, 2), 'utf-8');
       vscode.window.showInformationMessage(`Parent object ${name} created successfully!`);
       this.refresh();
     } catch (error) {
@@ -436,6 +209,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       vscode.window.showInformationMessage('No folder or workspace opened');
       return;
     }
+
     const getOptions = (properties: Record<string, PropertyItem>, rootSchema: any) =>
       Object.entries(properties)
         .map(([key, value]) => {
@@ -516,18 +290,27 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       return;
     }
 
-    //Create an empty object
-    let rootJSON = {};
+    // Create JSON generator instance
+    const generator = new JsonGenerator(items, parent.root_schema);
 
-    //Convert the path to a JSON file and create a variable for the parentJSON
-    rootJSON = JSON.parse(fs.readFileSync(rootJSONfile, 'utf-8'));
+    // Generate the JSON
+    const newJson = generator.generate(childName);
 
-    // Create child object based on schema
-    [rootJSON,] = this.createChildrenFromSchema(items, parent.root_schema, rootJSON, jsonPath, childName, undefined);
+    // Open rootJSONfile
+    const rootJSON = JSON.parse(fs.readFileSync(rootJSONfile, 'utf-8'));
+
+    // On jsonPath write newJson using reduce for a more modern approach
+    jsonPath.slice(0, -1).reduce((acc, key) => {
+      // If the key does not exist, create an empty object at that key
+      if (!(key in acc)) {
+        acc[key] = {};
+      }
+      return acc[key]; // Return the nested object for the next iteration
+    }, rootJSON)[jsonPath[jsonPath.length - 1]] = newJson;
 
     try {
       fs.writeFileSync(rootJSONfile, JSON.stringify(rootJSON, null, 2), 'utf-8');
-      vscode.window.showInformationMessage(`Child object ${childName} created successfully!`);
+      vscode.window.showInformationMessage(`Child object '${childName}' created successfully!`);
       this.refresh();
     } catch (error) {
       const errorMessage = (error instanceof Error) ? error.message : String(error);
@@ -761,8 +544,4 @@ export class Item extends vscode.TreeItem {
 
     this.children = []; // Initialize children[] as an empty array
   }
-}
-
-function generateUUID(): string {
-  return randomUUID();
 }
