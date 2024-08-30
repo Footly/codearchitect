@@ -5,8 +5,7 @@ import { TextField } from '../TextField';
 import { Row, Column } from '../Flex';
 import { Button } from '../Button';
 import { Icon } from '../Icon';
-import { Tag } from "react-tag-input/types/components/SingleTag";
-import { WithContext as ReactTags, SEPARATORS } from "react-tag-input";
+import { ReactTags, Tag, TagSuggestion } from 'react-tag-autocomplete'
 
 type PropertySchema = {
   type: string;
@@ -41,6 +40,39 @@ const TextFieldWidget: React.FC<{
         value={localValue}
         onChange={handleChange}
       />
+    </Column>
+  );
+};
+
+const DropdownWidget: React.FC<{
+  label: string;
+  initialValue: string;
+  readOnly: boolean;
+  onChange: (value: string) => void;
+  options: string[]; // Array of enum options for the dropdown
+}> = ({ label, initialValue, readOnly, onChange, options }) => {
+  const [localValue, setLocalValue] = useState(initialValue);
+
+  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newValue = event.target.value;
+    setLocalValue(newValue);
+    onChange(newValue);
+  };
+
+  return (
+    <Column alignStart={true}>
+      {label}
+      <select
+        disabled={readOnly}
+        value={localValue}
+        onChange={handleChange}
+      >
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
     </Column>
   );
 };
@@ -101,76 +133,40 @@ const TagsFieldWidget: React.FC<{
   label: string;
   initialValue: string[];
   readOnly: boolean;
-  suggestions?: Tag[];
-  editable: boolean;
-  maxitems?: number;
+  suggestions: TagSuggestion[];
+  add: boolean;
   onDelete: (index: number) => void;
-  onAddition: (tag: Tag) => void;
-  onDrag: (tag: Tag, currPos: number, newPos: number) => void;
-  onUpdate: (index: number, newTag: Tag) => void;
-}> = ({ label, initialValue, maxitems, editable, readOnly, suggestions, onDelete, onAddition, onDrag, onUpdate }) => {
-  const [tags, setTags] = React.useState<Array<Tag>>(initialValue.map((value: string) => ({ id: value, text: value, className: "" })));
+  OnAdd : (tag: Tag) => void;
+}> = ({ label, initialValue, add, readOnly, suggestions, onDelete, OnAdd}) => {
+  const [tags, setTags] = React.useState<Array<Tag>>(initialValue.map((value: string) => ({ label: value, value: value})));
 
   const handleDelete = (index: number) => {
     setTags(tags.filter((_, i) => i !== index));
     onDelete(index);
   };
 
-  const handleUpdate = (index: number, newTag: Tag) => {
-    const newTags = tags.slice();
-    newTags[index] = newTag;
-    setTags(newTags);
-    onUpdate(index, newTag);
-  };
-
   const handleAddition = (tag: Tag) => {
-    if (maxitems && tags.length >= maxitems)
-    {
-      return;
-    }
-    // Check if suggestions are provided and if the tag text matches any suggestion
-    setTags((prevTags) => [...prevTags, tag]);
-    onAddition(tag);
+    setTags((prevTags) => {
+      return [...prevTags, tag];
+    });
+    OnAdd(tag);
   };
 
-  const handleDrag = (tag: Tag, currPos: number, newPos: number) => {
-    const newTags = tags.slice();
-
-    newTags.splice(currPos, 1);
-    newTags.splice(newPos, 0, tag);
-
-    // re-render
-    setTags(newTags);
-    onDrag(tag, currPos, newPos);
-  };
-
-  const handleTagClick = (index: number) => {
-    console.log("The tag at index " + index + " was clicked");
-  };
-
-  const handleInputFocus = (value: string, e: React.FocusEvent<HTMLInputElement>) => {
-    //Make suggestions to popup
-    this.showAllSuggestions
-  };
+  const handleEnter= (value: string) => {
+    console.log("haha", value);
+  }
 
   return (
     <Column alignStart={true}>
       {label}
       <ReactTags
-        tags={tags}
-        placeholder={""}
-        allowDragDrop={true}
-        readOnly={readOnly}
-        minQueryLength={1}
-        inputFieldPosition="inline"
-        editable={editable}
+        allowNew={add}
+        onInput={handleEnter}
+        selected={tags}
+        allowBackspace={true}
         suggestions={suggestions}
-        handleDelete={handleDelete}
-        handleAddition={handleAddition}
-        handleDrag={handleDrag}
-        handleTagClick={handleTagClick}
-        onTagUpdate={handleUpdate}
-        handleInputFocus={handleInputFocus}
+        onDelete={handleDelete}
+        onAdd={handleAddition}
       />
     </Column>
   );
@@ -245,37 +241,15 @@ const RenderSchema: React.FC<{
         />
       );
     } else if (enumValues && enumValues.length > 0) { // Check if enumValues are provided
-      console.error(enumValues);
-      const suggestions = enumValues.map((val) => {
-        return {
-          id: val,
-          text: val,
-          className: '',
-        };
-      });
-      console.error(suggestions);
-      console.error([initialValue]);
       return (
-        <TagsFieldWidget
-              label={label}
-              initialValue={[initialValue]}
-              suggestions={suggestions}
-              editable={false}
-              maxitems={1}
-              readOnly={false} // Set to true if the field should be read-only
-              onDelete={(index: number) => {
-                onChange("");
-              }}
-              onAddition={(tag: Tag) => {
-                onChange(tag.text);
-              }}
-              onDrag={(tag: Tag, currPos: number, newPos: number) => {
-                
-              }}
-              onUpdate={(index: number, newTag: Tag) => {
-                onChange(newTag.text);
-              }}
-            />);
+        <DropdownWidget
+          label={label}
+          initialValue={initialValue}
+          options={enumValues} // Pass enum options to dropdown
+          readOnly={readOnly}
+          onChange={onChange}
+        />
+      );
     } else {
       return (
         <TextFieldWidget
@@ -314,12 +288,12 @@ const RenderSchema: React.FC<{
     initialData: string[],
     options?: string[]
   ) => {
+    console.error(options);
     if (options && options.length > 0) {
       const enums = options.map((option) => {
         return {
-          id: option,
-          text: option,
-          className: '',
+          label: option,
+          value: option
         };
       });
       return (
@@ -329,19 +303,13 @@ const RenderSchema: React.FC<{
               label={label}
               initialValue={initialData}
               suggestions={enums}
-              editable={false}
+              add={false}
               readOnly={false} // Set to true if the field should be read-only
               onDelete={(index: number) => {
                 updateFormData(path, initialData.filter((_, i) => i !== index));
               }}
-              onAddition={(tag: Tag) => {
-                updateFormData(path, [...initialData, tag.text]);
-              }}
-              onDrag={(tag: Tag, currPos: number, newPos: number) => {
-                updateFormData(path, initialData.map((item, index) => index === currPos ? initialData[newPos] : (index === newPos ? initialData[currPos] : item)));
-              }}
-              onUpdate={(index: number, newTag: Tag) => {
-                updateFormData(path, initialData.map((item, i) => i === index ? newTag.text : item));
+              OnAdd={(tag: Tag) => {
+                updateFormData(path, [...initialData, tag.value]);
               }}
             />
           </Row>
@@ -353,20 +321,15 @@ const RenderSchema: React.FC<{
           <Row>
             <TagsFieldWidget
               label={label}
-              editable={true}
+              add={true}
+              suggestions={[]}
               initialValue={initialData}
               readOnly={false} // Set to true if the field should be read-only
               onDelete={(index: number) => {
                 updateFormData(path, initialData.filter((_, i) => i !== index));
               }}
-              onAddition={(tag: Tag) => {
-                updateFormData(path, [...initialData, tag.text]);
-              }}
-              onDrag={(tag: Tag, currPos: number, newPos: number) => {
-                updateFormData(path, initialData.map((item, index) => index === currPos ? initialData[newPos] : (index === newPos ? initialData[currPos] : item)));
-              }}
-              onUpdate={(index: number, newTag: Tag) => {
-                updateFormData(path, initialData.map((item, i) => i === index ? newTag.text : item));
+              OnAdd={(tag: Tag) => {
+                updateFormData(path, [...initialData, tag.value]);
               }}
             />
           </Row>
@@ -399,6 +362,8 @@ const RenderSchema: React.FC<{
           readOnly,
           property.multiline || false,
           (value) => {
+            console.log("Setting value", value);
+            console.log("Path", childPath);
             updateFormData(childPath, value);
           },
           enums

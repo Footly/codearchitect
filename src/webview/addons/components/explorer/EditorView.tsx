@@ -9,7 +9,13 @@ import { FormContainer } from './FormContainer';
 
 const schema = {
   properties: {
-    name: { type: 'string' },
+    name: {
+      type: 'string',
+      enum: [
+        "hola",
+        "adeu"
+      ]
+    },
     description: { type: 'string', multiline: true },
     isActive: { type: 'boolean' },
     settings: {
@@ -39,12 +45,18 @@ const schema = {
           type: "string"
         }
       }
+    },
+    options: {
+      type: "array",
+      items: {
+        type: "string"
+      }
     }
   },
 };
 
 const initialData = {
-  name: 'John Doe',
+  name: 'hola',
   description: 'A description here',
   isActive: true,
   settings: {
@@ -58,7 +70,8 @@ const initialData = {
   object: {
     name: ['John', 'Doe'],
     age: 30
-  }
+  },
+  options: []
 };
 
 export default function EditorView() {
