@@ -5,8 +5,10 @@ import { TextField } from '../TextField';
 import { Row, Column } from '../Flex';
 import { Button } from '../Button';
 import { Icon } from '../Icon';
+import Select, { ActionMeta, OnChangeValue, SingleValue, MultiValue } from 'react-select';
 import { Tag } from "react-tag-input/types/components/SingleTag";
 import { WithContext as ReactTags, SEPARATORS } from "react-tag-input";
+import MarkdownEditor from '@uiw/react-markdown-editor';
 
 type PropertySchema = {
   type: string;
@@ -17,6 +19,7 @@ type PropertySchema = {
   items?: PropertySchema; // Single schema for items
   tag?: any;
   enum?: any[];
+  uniqueItems: boolean;
 };
 
 const TextFieldWidget: React.FC<{
@@ -97,6 +100,66 @@ const CheckboxWidget: React.FC<{
   );
 };
 
+interface Suggestion {
+  readonly value: string;
+  readonly label: string;
+}
+
+const SelectFieldWidget: React.FC<{
+  label: string;
+  initialValue: string | string[]; // can be a single string or an array of strings
+  readOnly: boolean;
+  suggestions?: readonly Suggestion[];
+  editable: boolean;
+  isMulti: boolean;
+  onChange: (value: string | string[]) => void; // single string for non-multi, array of strings for multi
+}> = ({ label, initialValue, editable, isMulti, readOnly, suggestions, onChange }) => {
+  // Initialize state based on whether `isMulti` is true or false
+  const initialMulti = Array.isArray(initialValue)
+    ? initialValue.map((val) => ({ value: val, label: val }))
+    : [{ value: initialValue as string, label: initialValue as string }];
+
+  const [multiValues, setMultiValues] = React.useState<readonly Suggestion[]>(initialMulti);
+  const [singleValue, setSingleValue] = React.useState<Suggestion | null>(
+    Array.isArray(initialValue) ? initialMulti[0] : initialMulti[0]
+  );
+
+  const handleMultiChange = (selectedOptions: OnChangeValue<Suggestion, true>) => {
+    setMultiValues(selectedOptions as Suggestion[]);
+    const selectedStrings = (selectedOptions as Suggestion[]).map((option) => option.value);
+    onChange(selectedStrings); // Send back as an array of strings
+  };
+
+  const handleSingleChange = (selectedOption: OnChangeValue<Suggestion, false>) => {
+    setSingleValue(selectedOption as Suggestion);
+    onChange((selectedOption as Suggestion).value); // Send back as a single string
+  };
+
+  // Choose the appropriate handleChange function
+  const handleChange = (newValue: MultiValue<Suggestion> | SingleValue<Suggestion>, actionMeta: ActionMeta<Suggestion>) => {
+    if (isMulti) {
+      handleMultiChange(newValue as MultiValue<Suggestion>);
+    } else {
+      handleSingleChange(newValue as SingleValue<Suggestion>);
+    }
+  };
+
+  return (
+    <Column alignStart={true}>
+      {label}
+      <Select
+        name={label}
+        options={suggestions}
+        defaultValue={isMulti ? multiValues : singleValue}
+        onChange={handleChange}
+        isDisabled={readOnly}
+        isSearchable={editable}
+        isMulti={isMulti}
+      />
+    </Column>
+  );
+};
+
 const TagsFieldWidget: React.FC<{
   label: string;
   initialValue: string[];
@@ -124,8 +187,7 @@ const TagsFieldWidget: React.FC<{
   };
 
   const handleAddition = (tag: Tag) => {
-    if (maxitems && tags.length >= maxitems)
-    {
+    if (maxitems && tags.length >= maxitems) {
       return;
     }
     // Check if suggestions are provided and if the tag text matches any suggestion
@@ -148,11 +210,6 @@ const TagsFieldWidget: React.FC<{
     console.log("The tag at index " + index + " was clicked");
   };
 
-  const handleInputFocus = (value: string, e: React.FocusEvent<HTMLInputElement>) => {
-    //Make suggestions to popup
-    this.showAllSuggestions
-  };
-
   return (
     <Column alignStart={true}>
       {label}
@@ -170,7 +227,6 @@ const TagsFieldWidget: React.FC<{
         handleDrag={handleDrag}
         handleTagClick={handleTagClick}
         onTagUpdate={handleUpdate}
-        handleInputFocus={handleInputFocus}
       />
     </Column>
   );
@@ -245,37 +301,25 @@ const RenderSchema: React.FC<{
         />
       );
     } else if (enumValues && enumValues.length > 0) { // Check if enumValues are provided
-      console.error(enumValues);
-      const suggestions = enumValues.map((val) => {
+      const suggestions: Suggestion[] = enumValues.map((val) => {
         return {
-          id: val,
-          text: val,
-          className: '',
+          value: val,
+          label: val
         };
       });
-      console.error(suggestions);
-      console.error([initialValue]);
       return (
-        <TagsFieldWidget
-              label={label}
-              initialValue={[initialValue]}
-              suggestions={suggestions}
-              editable={false}
-              maxitems={1}
-              readOnly={false} // Set to true if the field should be read-only
-              onDelete={(index: number) => {
-                onChange("");
-              }}
-              onAddition={(tag: Tag) => {
-                onChange(tag.text);
-              }}
-              onDrag={(tag: Tag, currPos: number, newPos: number) => {
-                
-              }}
-              onUpdate={(index: number, newTag: Tag) => {
-                onChange(newTag.text);
-              }}
-            />);
+        <SelectFieldWidget
+          label={label}
+          initialValue={[initialValue]}
+          suggestions={suggestions}
+          editable={false}
+          isMulti={false}
+          readOnly={false} // Set to true if the field should be read-only
+          onChange={(value: string[] | string) => {
+            if (!Array.isArray(value))
+              onChange(value)
+          }}
+        />);
     } else {
       return (
         <TextFieldWidget
@@ -312,41 +356,69 @@ const RenderSchema: React.FC<{
     label: string,
     path: string[],
     initialData: string[],
-    options?: string[]
+    uniqueItems: boolean,
+    options: string[]
+
   ) => {
     if (options && options.length > 0) {
-      const enums = options.map((option) => {
-        return {
-          id: option,
-          text: option,
-          className: '',
-        };
-      });
-      return (
-        <Column alignStart={true} key={label}>
-          <Row>
-            <TagsFieldWidget
-              label={label}
-              initialValue={initialData}
-              suggestions={enums}
-              editable={false}
-              readOnly={false} // Set to true if the field should be read-only
-              onDelete={(index: number) => {
-                updateFormData(path, initialData.filter((_, i) => i !== index));
-              }}
-              onAddition={(tag: Tag) => {
-                updateFormData(path, [...initialData, tag.text]);
-              }}
-              onDrag={(tag: Tag, currPos: number, newPos: number) => {
-                updateFormData(path, initialData.map((item, index) => index === currPos ? initialData[newPos] : (index === newPos ? initialData[currPos] : item)));
-              }}
-              onUpdate={(index: number, newTag: Tag) => {
-                updateFormData(path, initialData.map((item, i) => i === index ? newTag.text : item));
-              }}
-            />
-          </Row>
-        </Column>
-      );
+      if (uniqueItems) {
+        const enums: Suggestion[] = options.map((option) => {
+          return {
+            value: option,
+            label: option
+          };
+        });
+        return (
+          <Column alignStart={true} key={label}>
+            <Row>
+              <SelectFieldWidget
+                label={label}
+                initialValue={initialData}
+                suggestions={enums}
+                editable={false}
+                isMulti={true}
+                readOnly={false} // Set to true if the field should be read-only
+                onChange={(value: string[] | string) => {
+                  updateFormData(path, value);
+                }}
+              />
+            </Row>
+          </Column>
+        );
+      } else {
+        const enums = options.map((option) => {
+          return {
+            id: option,
+            text: option,
+            className: '',
+          };
+        });
+        return (
+          <Column alignStart={true} key={label}>
+            <Row>
+              <TagsFieldWidget
+                label={label}
+                initialValue={initialData}
+                suggestions={enums}
+                editable={false}
+                readOnly={false} // Set to true if the field should be read-only
+                onDelete={(index: number) => {
+                  updateFormData(path, initialData.filter((_, i) => i !== index));
+                }}
+                onAddition={(tag: Tag) => {
+                  updateFormData(path, [...initialData, tag.text]);
+                }}
+                onDrag={(tag: Tag, currPos: number, newPos: number) => {
+                  updateFormData(path, initialData.map((item, index) => index === currPos ? initialData[newPos] : (index === newPos ? initialData[currPos] : item)));
+                }}
+                onUpdate={(index: number, newTag: Tag) => {
+                  updateFormData(path, initialData.map((item, i) => i === index ? newTag.text : item));
+                }}
+              />
+            </Row>
+          </Column>
+        );
+      }
     } else {
       return (
         <Column alignStart={true} key={label}>
@@ -418,10 +490,12 @@ const RenderSchema: React.FC<{
         if (property.items) {
           if (property.items.type === 'string') {
             const enums = property.items.enum;
+            const uniqueItems = property.items.uniqueItems ? true : false;
             return renderArrayStringProperty(
               label,
               childPath,
               initialValue as string[],
+              uniqueItems,
               enums
             );
           }

@@ -19,14 +19,19 @@
     "vite-tsconfig-paths": "^5.0.1"
   },
   "dependencies": {
+    "@mdxeditor/editor": "^3.11.3",
     "@stylexjs/stylex": "^0.4.1",
+    "@uiw/react-markdown-editor": "^6.1.2",
+    "@uiw/react-md-editor": "^4.0.4",
     "@vscode/codicons": "^0.0.33",
+    "easymde": "^2.18.0",
     "react": "^18.3.1",
     "react-arborist": "^3.4.0",
     "react-beautiful-dnd": "^13.1.1",
     "react-complex-tree": "^2.4.5",
     "react-mentions": "^4.4.10",
     "react-select": "^5.8.0",
+    "react-simplemde-editor": "^5.2.0",
     "react-tag-autocomplete": "^7.3.0",
     "react-tag-input": "^6.10.3",
     "react-tiny-popover": "^8.0.4"
