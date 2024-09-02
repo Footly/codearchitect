@@ -2,74 +2,112 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Variable",
-  "vscodeIcon": "symbol-variable",
-  "modelType": "parent-object",
   "properties": {
-    "$id": {
+    "id": {
       "type": "string",
       "hidden": true
     },
-    "$label": {
+    "label": {
       "type": "string",
       "hidden": true
     },
     "visibility": {
+      "$ref": "./visibility.model.json",
+      "const": "public",
+      "hidden": true
+    },
+    "tags": {
       "hidden": true,
-      "modelType": "dropdown-select",
-      "$ref": "./visibility.model.json"
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "variable"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "symbol-variable"
     },
     "datatype": {
       "hidden": true,
-      "modelType": "dropdown-select-tag",
+      "editable": true,
       "type": "string",
-      "const": [
-        "types"
-      ]
-    },
-    "datatype2": {
-      "hidden": true,
-      "modelType": "dropdown-select-tag",
-      "type": "string",
-      "const": [
-        "types"
-      ]
+      "search": {
+        "query": [
+          [
+            {
+              "field": "tags",
+              "regex": "types"
+            }
+          ]
+        ]
+      }
     },
     "isArray": {
       "hidden": true,
-      "modelType": "input-string",
-      "type": "string"
+      "type": "array",
+      "editable": true,
+      "items": {
+        "type": "string",
+        "search": {
+          "query": [
+            [
+              {
+                "field": "tags",
+                "regex": "enummember"
+              }
+            ]
+          ]
+        }
+      }
     },
     "isPointer": {
       "hidden": true,
-      "modelType": "checkbox",
+      "editable": true,
       "type": "boolean"
     },
     "isVolatile": {
       "hidden": true,
-      "modelType": "checkbox",
+      "editable": true,
       "type": "boolean"
     },
     "isConst": {
       "hidden": true,
-      "modelType": "checkbox",
+      "editable": true,
       "type": "boolean"
     },
     "defaultValue": {
       "hidden": true,
-      "modelType": "input-string",
-      "type": "string"
+      "editable": true,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "search": {
+        "query": [
+          [
+            {
+              "field": "tags",
+              "regex": "enummember"
+            },
+            {
+                "field": "tags",
+                "regex": "defines"
+            }
+          ]
+        ]
+      }
+      }
+
     },
     "documentation": {
       "hidden": true,
-      "modelType": "input-string",
-      "type": "string",
-      "const": ["*"]
+      "editable": true,
+      "multiline": true,
+      "markdown": true,
+      "type": "string"
     }
-  },
-  "$link": {
-    "tags": [
-      "*",
-      "variable"
-    ]
   }
 }

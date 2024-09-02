@@ -22,7 +22,7 @@ def read_file_content(file_path):
 
 # Helper function to search for an ID in a list
 def search_id(links, id):
-    return next((link for link in links if link['$id'] == id), None)
+    return next((link for link in links if link['id'] == id), None)
 
 # Replace placeholders in template
 def replace_placeholders(template, replacements):
@@ -36,7 +36,7 @@ def get_requirements_description(requirements, links):
     for req_id in requirements:
         req_info = search_id(links, req_id)
         if req_info:
-            descriptions.append(req_info.get('$label', 'Unknown Requirement'))
+            descriptions.append(req_info.get('label', 'Unknown Requirement'))
     return ', '.join(descriptions)
 
 def generate_variable_declarations(variables, links):
@@ -50,8 +50,8 @@ def generate_variable_declarations(variables, links):
         if datatype_info is None:
             continue  # If datatype is not found, skip this variable
 
-        datatype = datatype_info.get('$label')
-        var_name = var['$label']  # Get the variable name
+        datatype = datatype_info.get('label')
+        var_name = var['label']  # Get the variable name
         visibility = var['visibility']  # Get the visibility
         is_pointer = var['isPointer']
         is_const = var['isConst']
@@ -59,7 +59,7 @@ def generate_variable_declarations(variables, links):
         is_volatile = var.get('isVolatile', False)  # Retrieve if the variable is volatile, default to False
         default_value = var.get('defaultValue', '')  # Retrieve default value, default to empty string
         doc = var.get('documentation', '')  # Retrieve comment, default to empty string
-        var_id = var.get('$id', 'unknown')  # Retrieve the ID, default to 'unknown' if not present
+        var_id = var.get('id', 'unknown')  # Retrieve the ID, default to 'unknown' if not present
 
         # Construct the type string with appropriate modifiers
         type_str = ('volatile ' if is_volatile else '') + ('const ' if is_const else '') + datatype + ('*' if is_pointer else '')
@@ -102,8 +102,8 @@ def generate_function_declaration(functions, links):
         if return_type_info is None:
             continue  # If return type is not found, skip this function
 
-        return_type = return_type_info.get('$label')
-        func_name = func.get('$label', 'unknown')  # Get the function name
+        return_type = return_type_info.get('label')
+        func_name = func.get('label', 'unknown')  # Get the function name
         visibility = func.get('visibility', 'public')  # Get visibility
         parameters = func.get('parameters', [])  # Get parameters
         documentation = func.get('documentation', 'No documentation available')  # Get documentation
@@ -115,8 +115,8 @@ def generate_function_declaration(functions, links):
             if param_type_info is None:
                 continue  # Skip if datatype is not found
 
-            param_type = param_type_info.get('$label')
-            param_name = param.get('$label', 'unknown')
+            param_type = param_type_info.get('label')
+            param_name = param.get('label', 'unknown')
             is_pointer = param.get('isPointer', False)
             is_const = param.get('isConst', False)
             is_pointer_const = param.get('isPointerConst', False) if is_pointer else False
@@ -147,7 +147,7 @@ def generate_function_declaration(functions, links):
         doc_comment = (
             f'/**\n'
             f' * @brief {documentation}\n'
-            f' * @id {func.get("$id", "unknown")}\n'
+            f' * @id {func.get("id", "unknown")}\n'
             f' */\n'
         )
         declaration = f'{return_type} {func_name}({params_str});\n'
@@ -170,7 +170,7 @@ def generate_data_structures_and_typedefs(data_structures, links):
         ds_visibility = ds.get('visibility', 'public')
         
         # Search for the structure's label in links
-        ds_label = ds.get('$label', 'unknown')
+        ds_label = ds.get('label', 'unknown')
         ds_type = ds.get('type', 'struct')
         ds_documentation = ds.get('documentation', 'No documentation available')
         members = ds.get('members', [])
@@ -179,7 +179,7 @@ def generate_data_structures_and_typedefs(data_structures, links):
         doc_comment = (
             f'/**\n'
             f' * @brief {ds_documentation}\n'
-            f' * @id {ds.get("$id", "unknown")}\n'
+            f' * @id {ds.get("id", "unknown")}\n'
             f' */\n'
         )
         
@@ -193,8 +193,8 @@ def generate_data_structures_and_typedefs(data_structures, links):
             if member_type_info is None:
                 continue  # Skip if datatype is not found
 
-            member_type = member_type_info.get('$label')
-            member_name = member.get('$label', 'unknown')
+            member_type = member_type_info.get('label')
+            member_name = member.get('label', 'unknown')
             is_pointer = member.get('isPointer', False)
             is_const = member.get('isConst', False)
             is_array = member.get('isArray', '')
@@ -218,7 +218,7 @@ def generate_data_structures_and_typedefs(data_structures, links):
             member_doc_comment = (
                 f'    /**\n'
                 f'     * @brief {member.get("documentation", "No documentation available")}\n'
-                f'     * @id {member.get("$id", "unknown")}\n'
+                f'     * @id {member.get("id", "unknown")}\n'
                 f'     */\n'
             )
             member_declaration = f'    {member_doc_comment}    {type_str} {member_name};\n'
@@ -245,7 +245,7 @@ def generate_typedefs(typedefs, links):
         typedef_visibility = typedef.get('visibility', 'public')
         
         # Get typedef properties
-        typedef_label = typedef.get('$label', 'unknown')
+        typedef_label = typedef.get('label', 'unknown')
         typedef_documentation = typedef.get('documentation', 'No documentation available')
         typedef_datatype_id = typedef.get('datatype', 'unknown')
         
@@ -254,13 +254,13 @@ def generate_typedefs(typedefs, links):
         if typedef_type_info is None:
             continue  # Skip if datatype is not found
         
-        typedef_type = typedef_type_info.get('$label', 'unknown')
+        typedef_type = typedef_type_info.get('label', 'unknown')
         
         # Create the typedef declaration
         doc_comment = (
             f'/**\n'
             f' * @brief {typedef_documentation}\n'
-            f' * @id {typedef.get("$id", "unknown")}\n'
+            f' * @id {typedef.get("id", "unknown")}\n'
             f' */\n'
         )
         
@@ -285,7 +285,7 @@ def generate_enums(enumerators, links):
         enum_visibility = enum.get('visibility', 'public')
         
         # Get enum properties
-        enum_label = enum.get('$label', 'unknown')
+        enum_label = enum.get('label', 'unknown')
         enum_documentation = enum.get('documentation', 'No documentation available')
         members = enum.get('members', [])
         
@@ -293,7 +293,7 @@ def generate_enums(enumerators, links):
         doc_comment = (
             f'/**\n'
             f' * @brief {enum_documentation}\n'
-            f' * @id {enum.get("$id", "unknown")}\n'
+            f' * @id {enum.get("id", "unknown")}\n'
             f' */\n'
         )
 
@@ -302,12 +302,12 @@ def generate_enums(enumerators, links):
         
         member_declarations = ''
         for member in members:
-            member_name = member.get('$label', 'unknown')
+            member_name = member.get('label', 'unknown')
             member_value = member.get('value', '0')
             member_doc_comment = (
                 f'    /**\n'
                 f'     * @brief {member.get("documentation", "No documentation available")}\n'
-                f'     * @id {member.get("$id", "unknown")}\n'
+                f'     * @id {member.get("id", "unknown")}\n'
                 f'     */\n'
             )
             member_declaration = f'    {member_doc_comment}    {member_name} = {member_value},\n'
@@ -334,7 +334,7 @@ def generate_includes(class_name, public_includes, private_includes, links):
         if include_info is None:
             continue  # Skip if include is not found
     
-        include_label = include_info.get('$label', 'unknown')
+        include_label = include_info.get('label', 'unknown')
         public_includes_str += f'#include "{include_label}.h"\n'
 
     for include in private_includes:
@@ -342,16 +342,16 @@ def generate_includes(class_name, public_includes, private_includes, links):
         if include_info is None:
             continue
 
-        include_label = include_info.get('$label', 'unknown')
+        include_label = include_info.get('label', 'unknown')
         private_includes_str += f'#include "{include_label}.h"\n'
 
     return public_includes_str, private_includes_str
 
 # Modify template based on JSON data
 def modify_templates(c_template, h_template, entry, output_path, links, clang_format_command):
-    # Using the `$id` from the JSON data
-    entry_id = entry['$id']
-    class_name = entry['$label']
+    # Using the `id` from the JSON data
+    entry_id = entry['id']
+    class_name = entry['label']
     patterns = {
         '_className': class_name,
         '__CLASS_NAME_UC_H__': '__' + class_name.upper() + '_H__',
@@ -403,7 +403,7 @@ def modify_templates(c_template, h_template, entry, output_path, links, clang_fo
     h_template_modified = h_template_modified.replace('/***************** HEADERS ****************/', 
                                                       '/***************** HEADERS ****************/\n' + public_includes)
     
-    # Use the `$id` for the filename
+    # Use the `id` for the filename
     c_filename = f'{output_path}/{class_name}-{entry_id}.c'
     h_filename = f'{output_path}/{class_name}-{entry_id}.h'
 
@@ -449,7 +449,7 @@ if __name__ == "__main__":
                     libraries = structure['libraries']
                     for library in libraries:
                         # Check id matches the one requested
-                        if '$id' in library and library['$id'] == args.id:
+                        if 'id' in library and library['id'] == args.id:
                             # Run the function with the actual template contents and output path
                             modify_templates(c_template, h_template, library, args.output, json_data['$links'], args.clang_format)
                             print(f"Templates generated successfully at {args.output} for ID {args.id}.")

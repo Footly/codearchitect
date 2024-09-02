@@ -1,34 +1,54 @@
 {
-    "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
-    "type": "object",
-    "title": "Macro",
-    "vscodeIcon": "symbol-number",
-    "modelType": "parent-object",
-    "properties": {
-      "$id": {
-        "type": "string",
-        "hidden": true
+  "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
+  "type": "object",
+  "title": "Macro",
+  "properties": {
+    "id": {
+      "type": "string",
+      "hidden": true
+    },
+    "label": {
+      "type": "string",
+      "hidden": true
+    },
+    "visibility": {
+      "$ref": "./visibility.model.json",
+      "const": "public",
+      "hidden": true
+    },
+    "tags": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
       },
-      "$label": {
-        "type": "string",
-        "hidden": true
-      },
-      "visibility": {
-        "hidden": true,
-        "$ref": "./visibility.model.json",
-        "const": "public"
-      },
-      "value": {
-        "type": "string",
-        "hidden": true,
-        "modelType": "input-string",
-        "const": [
-            "macro",
-            "enummember"
+      "const": [
+        "defines"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "symbol-number"
+    },
+    "value": {
+      "type": "string",
+      "hidden": true,
+      "editable": true,
+      "search": {
+        "query": [
+          [
+            {
+              "field": "tags",
+              "regex": "defines"
+            },
+            {
+              "field": "tags",
+              "regex": "enummember"
+            }
+          ]
         ]
       }
-    },
-    "$link": {
-      "tags": ["*", "macro"]
     }
   }
+}

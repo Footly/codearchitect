@@ -2,29 +2,53 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "EnumMember",
-  "modelType": "parent-object",
-  "vscodeIcon": "symbol-field",
   "properties": {
-    "$id": {
+    "id": {
       "type": "string",
       "hidden": true
     },
-    "$label": {
+    "label": {
       "type": "string",
       "hidden": true
     },
     "visibility": {
-      "hidden": true,
       "$ref": "./visibility.model.json",
-      "const": "public"
+      "const": "public",
+      "hidden": true
+    },
+    "tags": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "enummember"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "symbol-enum-member"
     },
     "value": {
       "hidden": true,
-      "modelType": "input-string",
-      "type":"string"
+      "editable": true,
+      "type":"string",
+      "search": {
+        "query": [
+          [
+            {
+              "field": "tags",
+              "regex": "defines"
+            },
+            {
+              "field": "tags",
+              "regex": "enummember"
+            }
+          ]
+        ]
+      }
     }
-  },
-  "$link": {
-    "tags": ["*", "enummember"]
   }
 }

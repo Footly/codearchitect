@@ -12,44 +12,73 @@ export class PropertiesWebviewViewProvider implements vscode.WebviewViewProvider
 		webviewView.webview.options = this.getWebviewOptions();
 
 		// Set the initial HTML content
-		this.updateWebview();
+		this.initWebview();
+	}
+
+	updateWebview(schema: any, jsonFile: string, jsonPath: string[]) {
+		if (this?._view?.webview) {
+			// Step 1: Create the JSON object
+			const json = this.openJson(jsonFile);
+
+			// Step 2: Send the JSON object to the webview
+			this._view.webview.postMessage({
+				command: 'editObject',
+				schema: schema,
+				json: json,
+				jsonPath: jsonPath,
+				jsonFile: jsonFile
+			});
+		}
+	}
+
+	private openJson(jsonFile: string): any {
+		// Step 1: Read the file contents
+		const filePath = path.resolve(jsonFile);
+		let jsonData: any;
+
+		try {
+			const fileContents = fs.readFileSync(filePath, 'utf8');
+
+			// Step 2: Parse the file contents as JSON
+			jsonData = JSON.parse(fileContents);
+		} catch (error) {
+			console.error('Error reading or parsing JSON file:', error);
+			return null;
+		}
+
+		// Step 3: Navigate to the desired path within the JSON object
+		return jsonData;
 	}
 
 	private getWebviewOptions(): vscode.WebviewOptions {
 		return {
 			enableScripts: true,
 			localResourceRoots: [
-				vscode.Uri.joinPath(this.extensionUri, 'media'),
-				vscode.Uri.joinPath(this.extensionUri, 'node_modules'),
+				vscode.Uri.joinPath(this.extensionUri, 'src', 'webview', 'media'),
+				vscode.Uri.joinPath(this.extensionUri, 'node_modules', '@vscode-elements', 'elements', 'dist'),
+				vscode.Uri.joinPath(this.extensionUri, 'node_modules', '@vscode', 'codicons', 'dist'),
 			]
 		};
 	}
 
-	private updateWebview() {
+	private initWebview() {
 		if (!this._view) {
 			return;
 		}
 
 		const webview = this._view.webview;
-		const filePath = vscode.Uri.file(path.join(this.extensionUri.path, 'media', 'index_dev.html'));
+		const filePath = vscode.Uri.file(path.join(this.extensionUri.path, 'src', 'webview', 'media', 'index.html'));
 		let html = fs.readFileSync(filePath.fsPath, 'utf8');
-		// Convert local paths to webview URIs
-		const lightCss = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'light.css'));
-		const darkCss = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'dark.css'));
-		const highContrastLightCss = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'high_contrast_light.css'));
-		const highContrastDarkCss = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'high_contrast_dark.css'));
 
-		const webcomponentsLoaderJs = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'node_modules', '@webcomponents', 'webcomponentsjs', 'webcomponents-loader.js'));
-		const polyfillSupportJs = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'node_modules', 'lit', 'polyfill-support.js'));
-		const bundleJs = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'bundle.js'));
+		const codiconCss = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'node_modules', '@vscode', 'codicons', 'dist', 'codicon.css'));
+		const styleCss = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'src', 'webview', 'media', 'style.css'));
+		const indexJs = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'src', 'webview', 'media', 'index.js'));
+		const bundledJs = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'node_modules', '@vscode-elements', 'elements', 'dist', 'bundled.js'));
 
-		html = html.replace('webcomponents-loader.js', webcomponentsLoaderJs.toString());
-		html = html.replace('polyfill-support.js', polyfillSupportJs.toString());
-		html = html.replace('bundle.js', bundleJs.toString());
-		html = html.replace('light.css', lightCss.toString());
-		html = html.replace('dark.css', darkCss.toString());
-		html = html.replace('high_contrast_light.css', highContrastLightCss.toString());
-		html = html.replace('high_contrast_dark.css', highContrastDarkCss.toString());
+		html = html.replace('codicon.css', codiconCss.toString());
+		html = html.replace('style.css', styleCss.toString());
+		html = html.replace('index.js', indexJs.toString());
+		html = html.replace('bundled.js', bundledJs.toString());
 
 		this._view.webview.html = html;
 	}

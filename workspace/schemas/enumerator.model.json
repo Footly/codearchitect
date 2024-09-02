@@ -2,32 +2,41 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Enumerator",
-  "modelType": "parent-object",
-  "vscodeIcon": "symbol-enum-member",
   "properties": {
-    "$id": {
+    "id": {
       "type": "string",
       "hidden": true
     },
-    "$label": {
+    "label": {
       "type": "string",
       "hidden": true
     },
     "visibility": {
+      "$ref": "./visibility.model.json",
+      "const": "public",
+      "hidden": true
+    },
+    "tags": {
       "hidden": true,
-      "modelType": "dropdown-select",
-      "$ref": "./visibility.model.json"
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "types"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "symbol-enum-member"
     },
     "members": {
       "hidden": true,
-      "modelType": "folder",
       "type": "array",
       "items": {
         "$ref": "./enummember.model.json"
       }
     }
-  },
-  "$link": {
-    "tags": ["*", "types"]
   }
 }

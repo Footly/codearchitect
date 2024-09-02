@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import { ItemTreeProvider, Item } from './tree';
 import $RefParser from "@apidevtools/json-schema-ref-parser";
 import { runCustomCommand, Command } from './customCommand';
-import { PropertiesWebviewViewProvider } from './WebViewProvider';
+import { PropertiesWebviewViewProvider } from './WebviewProvider';
 
 const viewType = "communityUiToolkit";
 
@@ -34,7 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
                     const data = await fs.promises.readFile(pathFileProfile, 'utf8');
                     const jsonData = JSON.parse(data);
 
-                    if (jsonData?.modelType === 'root') {
+                    if (jsonData?.root === true) {
                         // Dereference the schema
                         const dereferencedSchema = await $RefParser.bundle(pathFileProfile);
                         schemas.push(dereferencedSchema);
@@ -175,6 +175,8 @@ export function activate(context: vscode.ExtensionContext) {
         if (!item)
             return;
         await itemTreeView?.reveal(item, { select: true, focus: true });
+        //Edit the object
+        propertiesWebviewProvider.updateWebview(item.schema, item.filePath, item.jsonPath);
     });
 
     context.subscriptions.push(vscode.commands.registerCommand('codearchitect.navigateBack', async (item: Item) => {

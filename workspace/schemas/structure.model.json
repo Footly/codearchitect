@@ -2,26 +2,38 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Structure",
-  "modelType": "parent-object",
-  "vscodeIcon": "folder",
   "properties": {
-    "$id": {
+    "id": {
       "type": "string",
       "hidden": true
     },
-    "$label": {
+    "label": {
       "type": "string",
       "hidden": true
     },
     "visibility": {
-      "hidden": true,
       "$ref": "./visibility.model.json",
-      "const": "public"
+      "const": "public",
+      "hidden": true
+    },
+    "tags": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "structure"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "folder"
     },
     "structures": {
       "type": "array",
       "hidden": true,
-      "modelType": "folder",
       "items": {
         "$ref": "./structure.model.json"
       }
@@ -29,13 +41,9 @@
     "libraries": {
       "type": "array",
       "hidden": true,
-      "modelType": "folder",
       "items": {
         "$ref": "./library.model.json"
       }
     }
-  },
-  "$link": {
-    "tags": ["*", "structure"]
   }
 }

@@ -1,0 +1,6 @@
+@startuml
+class class1 {
+    +var1 : 
+
+}
+@enduml

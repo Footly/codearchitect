@@ -3,7 +3,6 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { exec as execCallback } from 'child_process';
 import { promisify } from 'util';
-import { Item, ItemTreeProvider } from './tree';
 
 // Interfaces
 export interface Step {
@@ -24,11 +23,11 @@ function substitutePlaceholders(args: string[], json: { [key: string]: any }, fi
     return args.map(arg => {
         // Use a regular expression to find ${} placeholders
         return arg.replace(/\${(.*?)}/g, (_, key) => {
-            if (key === '$id' || key === '$label') {
+            if (key === 'id' || key === 'label') {
                 return json[key];
-            } else if (key === '$path') {
+            } else if (key === 'path') {
                 return filepath;
-            } else if (key === '$stdout') {
+            } else if (key === 'stdout') {
                 return JSON.stringify(stdout);
             } else {
                 // Return the placeholder itself if the key doesn't exist

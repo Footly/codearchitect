@@ -2,50 +2,82 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Parameter",
-  "vscodeIcon": "symbol-parameter",
-  "modelType": "parent-object",
   "properties": {
-    "$id": {
+    "id": {
       "type": "string",
       "hidden": true
     },
-    "$label": {
+    "label": {
       "type": "string",
       "hidden": true
     },
     "visibility": {
-      "hidden": true,
       "$ref": "./visibility.model.json",
-      "const": "public"
+      "const": "public",
+      "hidden": true
+    },
+    "tags": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "parameter"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "symbol-parameter"
     },
     "datatype": {
+      "editable": true,
       "hidden": true,
-      "modelType": "dropdown-select-tag",
       "type": "string",
-      "const": ["types"]
+      "search": {
+        "query": [
+          [
+            {
+              "field": "tags",
+              "regex": "types"
+            }
+          ]
+        ]
+      }
     },
     "isArray": {
       "hidden": true,
-      "modelType": "input-string",
-      "type": "string"
+      "type": "array",
+      "editable": true,
+      "items": {
+        "type": "string",
+        "search": {
+          "query": [
+            [
+              {
+                "field": "tags",
+                "regex": "enummember"
+              }
+            ]
+          ]
+        }
+      }
     },
     "isPointer": {
+      "editable": true,
       "hidden": true,
-      "modelType": "checkbox",
       "type": "boolean"
     },
     "isConst" : {
+      "editable": true,
       "hidden": true,
-      "modelType": "checkbox",
       "type": "boolean"
     },
     "isPointerConst": {
+      "editable": true,
       "hidden": true,
-      "modelType": "checkbox",
       "type": "boolean"
     }
-  },
-  "$link": {
-    "tags": ["*", "parameters"]
   }
 }

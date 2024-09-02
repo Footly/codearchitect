@@ -2,25 +2,37 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "State",
-  "vscodeIcon": "window",
-  "modelType": "parent-object",
   "properties": {
-    "$id": {
+    "id": {
       "type": "string",
       "hidden": true
     },
-    "$label": {
+    "label": {
       "type": "string",
       "hidden": true
     },
     "visibility": {
-      "hidden": true,
       "$ref": "./visibility.model.json",
-      "const": "public"
+      "const": "public",
+      "hidden": true
+    },
+    "tags": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "state"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "window"
     },
     "states": {
       "type": "array",
-      "modelType": "folder",
       "hidden": true,
       "items": {
         "$ref": "./state.model.json"
@@ -28,7 +40,6 @@
     },
     "transitions": {
       "type": "array",
-      "modelType": "folder",
       "hidden": true,
       "items": {
         "$ref": "./transition.model.json"
@@ -36,19 +47,15 @@
     },
     "guards": {
       "type": "array",
-      "modelType": "folder",
       "hidden": true,
       "items": {
         "$ref": "./guard.model.json"
       }
     },
     "isInit": {
+      "editbale": true,
       "hidden": true,
-      "type":"boolean",
-      "modelType": "checkbox"
+      "type":"boolean"
     }
-  },
-  "$link": {
-    "tags": ["*", "state"]
   }
 }

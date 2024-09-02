@@ -2,49 +2,55 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "HSM",
-  "modelType": "parent-object",
-  "vscodeIcon": "circuit-board",
   "properties": {
-    "$id": {
+    "id": {
       "type": "string",
       "hidden": true
     },
-    "$label": {
+    "label": {
       "type": "string",
       "hidden": true
     },
     "visibility": {
-      "hidden": true,
       "$ref": "./visibility.model.json",
-      "const": "public"
+      "const": "public",
+      "hidden": true
+    },
+    "tags": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "hsm"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "circuit-board"
     },
     "states": {
       "hidden": true,
       "type": "array",
-      "modelType": "folder",
       "items": {
         "$ref": "./state.model.json"
       }
     },
     "Events": {
       "type": "array",
-      "modelType": "folder",
-      "vscodeIcon": "folder",
+      "icon": "folder",
       "items": {
         "$ref": "./event.model.json"
       }
     },
     "Activities": {
       "type": "array",
-      "modelType": "folder",
-      "vscodeIcon": "folder",
+      "icon": "folder",
       "items": {
         "$ref": "./activity.model.json"
       }
     }
-  },
-  "$link": {
-    "tags": ["*", "hsm"]
-  },
-  "preview": true
+  }
 }

@@ -15,7 +15,7 @@ colors = [
 def search_id(links, id):
     """Retrieve the item from links by its ID."""
     for item in links:
-        if item.get('$id') == id:
+        if item.get('id') == id:
             return item
     return None
 
@@ -24,7 +24,7 @@ def get_datatype(datatype_id, links, default=None):
     if not datatype_id:
         return default or 'UnknownType'
     found_id = search_id(links, datatype_id)
-    return found_id.get('$label', default) if found_id else default or 'UnknownType'
+    return found_id.get('label', default) if found_id else default or 'UnknownType'
 
 def apply_modifiers(datatype, item):
     """Apply modifiers (pointer, const, volatile, etc.) to the datatype."""
@@ -49,7 +49,7 @@ def get_visibility_symbol(visibility):
 
 def json_to_plantuml_class(json_class, links=[]):
     try:
-        class_name = json_class.get('$label', 'UnknownClass')
+        class_name = json_class.get('label', 'UnknownClass')
         variables = json_class.get('variables', [])
         functions = json_class.get('funcions', [])
         datastructures = json_class.get('datastructures', [])
@@ -67,7 +67,7 @@ def json_to_plantuml_class(json_class, links=[]):
             for requirement_id in requirements:
                 requirement = search_id(links, requirement_id)
                 if requirement:
-                    requirement_name = requirement.get('$label', 'UnknownRequirement')
+                    requirement_name = requirement.get('label', 'UnknownRequirement')
                     # Use a custom symbol or notation for requirements and mark as abstract
                     plantuml_output += f'    abstract {requirement_name} <<requirement>> {{}}\n'
             plantuml_output += '}\n'
@@ -86,7 +86,7 @@ def json_to_plantuml_class(json_class, links=[]):
 
                 if package_name == 'DataStructures':
                     for ds in items:
-                        ds_name = ds.get('$label', 'UnknownDS')
+                        ds_name = ds.get('label', 'UnknownDS')
                         ds_type = ds.get('type', 'struct')
                         visibility = ds.get('visibility', 'public')
                         visibility_symbol = get_visibility_symbol(visibility)
@@ -94,7 +94,7 @@ def json_to_plantuml_class(json_class, links=[]):
                         plantuml_output += f'class {ds_name} <<{ds_type}>> {{\n'
 
                         for member in ds.get('members', []):
-                            member_name = member.get('$label', 'UnknownMember')
+                            member_name = member.get('label', 'UnknownMember')
                             datatype = get_datatype(member.get('datatype'), links)
                             datatype = apply_modifiers(datatype, member)
                             plantuml_output += f"    {visibility_symbol}{member_name} : {datatype}\n"
@@ -103,7 +103,7 @@ def json_to_plantuml_class(json_class, links=[]):
 
                 elif package_name == 'Typedefs':
                     for typedef in items:
-                        typedef_name = typedef.get('$label', 'UnknownTypedef')
+                        typedef_name = typedef.get('label', 'UnknownTypedef')
                         typedef_datatype = get_datatype(typedef.get('datatype'), links)
                         visibility = typedef.get('visibility', 'private')
                         visibility_symbol = get_visibility_symbol(visibility)
@@ -113,14 +113,14 @@ def json_to_plantuml_class(json_class, links=[]):
 
                 elif package_name == 'Enumerators':
                     for enumerator in items:
-                        enum_name = enumerator.get('$label', 'UnknownEnum')
+                        enum_name = enumerator.get('label', 'UnknownEnum')
                         visibility = enumerator.get('visibility', 'public')
                         visibility_symbol = get_visibility_symbol(visibility)
 
                         plantuml_output += f'class {enum_name} <<enumeration>> {{\n'
 
                         for member in enumerator.get('members', []):
-                            member_name = member.get('$label', 'UnknownMember')
+                            member_name = member.get('label', 'UnknownMember')
                             value = member.get('value', 'UnknownValue')
                             plantuml_output += f"    {visibility_symbol}{member_name} = {value}\n"
 
@@ -130,7 +130,7 @@ def json_to_plantuml_class(json_class, links=[]):
                     for requirement_id in items:
                         requirement = search_id(links, requirement_id)
                         if requirement:
-                            requirement_name = requirement.get('$label', 'UnknownRequirement')
+                            requirement_name = requirement.get('label', 'UnknownRequirement')
                             # Use a custom symbol or notation for requirements and mark as abstract
                             plantuml_output += f'class {requirement_name} <<requirement>> {{}}\n'
 
@@ -146,7 +146,7 @@ def json_to_plantuml_class(json_class, links=[]):
 
             visibility = variable.get('visibility', 'public')
             visibility_symbol = get_visibility_symbol(visibility)
-            plantuml_output += f"    {visibility_symbol}{variable['$label']} : {datatype}\n"
+            plantuml_output += f"    {visibility_symbol}{variable['label']} : {datatype}\n"
 
         plantuml_output += '\n'
 
@@ -157,10 +157,10 @@ def json_to_plantuml_class(json_class, links=[]):
 
             # Parameters
             parameters = func.get('parameters', [])
-            param_strs = [f"{p['$label']}: {get_datatype(p.get('datatype'), links, p)}" for p in parameters]
+            param_strs = [f"{p['label']}: {get_datatype(p.get('datatype'), links, p)}" for p in parameters]
 
             # Function signature
-            plantuml_output += f"    {visibility_symbol}{func['$label']}({', '.join(param_strs)})"
+            plantuml_output += f"    {visibility_symbol}{func['label']}({', '.join(param_strs)})"
 
             # Return type
             return_type_info = func.get('returntype', {})
@@ -205,9 +205,9 @@ def json_to_plantuml_hsm(hsm, links=[]):
 
             is_initial = state.get('isInit', True)
             if is_initial:
-                plantuml += f"{indent_str}[*] --> {state['$label']}\n"
+                plantuml += f"{indent_str}[*] --> {state['label']}\n"
 
-            plantuml += f'{indent_str}state "{state["$label"]}" as {state["$label"]} #{colors[indent]} {{\n'
+            plantuml += f'{indent_str}state "{state["label"]}" as {state["label"]} #{colors[indent]} {{\n'
 
             states = state.get('states', [])
             for substate in states:
@@ -215,22 +215,22 @@ def json_to_plantuml_hsm(hsm, links=[]):
 
             guards = state.get('guards', [])
             for guard in guards:
-                choice_state = guard['$label']
+                choice_state = guard['label']
                 condition = guard.get('condition', 'undefined condition')
                 plantuml += f"{indent_str}    state {choice_state} <<choice>> : {condition}\n"
 
-                true_target_state = search_id(links, guard['true']['to'])['$label']
-                false_target_state = search_id(links, guard['false']['to'])['$label']
+                true_target_state = search_id(links, guard['true']['to'])['label']
+                false_target_state = search_id(links, guard['false']['to'])['label']
 
                 plantuml += f"{indent_str}    {choice_state} --> {true_target_state} : [{guard['condition']}=true]\n"
                 plantuml += f"{indent_str}    {choice_state} --> {false_target_state} : [{guard['condition']}=false]\n"
 
             transitions = state.get('transitions', [])
             for transition in transitions:
-                event = search_id(links, transition['event'])['$label']
-                target_state = search_id(links, transition['transition']['to'])['$label']
-                if target_state != state['$label']:
-                    plantuml += f"{indent_str}    {state['$label']} --> {target_state} : {event}\n"
+                event = search_id(links, transition['event'])['label']
+                target_state = search_id(links, transition['transition']['to'])['label']
+                if target_state != state['label']:
+                    plantuml += f"{indent_str}    {state['label']} --> {target_state} : {event}\n"
                 else:
                     plantuml += f"{indent_str}    {target_state} : {event}\n"
 
@@ -275,7 +275,7 @@ def json_to_plantuml(json_path, id):
                     libraries = structure['libraries']
                     for library in libraries:
                         #Check id mathces the one requested
-                        if('$id' in library and library['$id'] == id):
+                        if('id' in library and library['id'] == id):
                             plantuml_content = json_to_plantuml_class(library, data['$links'])
 
         return plantuml_content

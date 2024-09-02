@@ -30,11 +30,11 @@ export class JsonGenerator {
         const property = resolveRef(this.schema.properties[key], this.rootSchema);
         
         switch (key) {
-          case '$label':
-            jsonResult.$label = name;
+          case 'label':
+            jsonResult.label = name;
             break;
-          case '$id':
-            jsonResult.$id = this.generateUUID();
+          case 'id':
+            jsonResult.id = this.generateUUID();
             break;
           case '$model':
             jsonResult.$model = this.schema.$id;

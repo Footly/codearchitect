@@ -82,7 +82,7 @@ export class JsonTreeDecoder {
                 index.toString(),
                 itemSchema,
                 parentPath.concat(index.toString()),
-                itemValue?.$label,
+                itemValue?.label,
                 parent
             );
 

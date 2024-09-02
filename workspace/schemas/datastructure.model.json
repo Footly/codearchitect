@@ -2,31 +2,43 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "DataStructure",
-  "modelType": "parent-object",
-  "vscodeIcon": "symbol-struct",
   "properties": {
-    "$id": {
+    "id": {
       "type": "string",
       "hidden": true
     },
-    "$label": {
+    "label": {
       "type": "string",
       "hidden": true
     },
     "visibility": {
+      "$ref": "./visibility.model.json",
+      "const": "public",
+      "hidden": true
+    },
+    "tags": {
       "hidden": true,
-      "modelType": "dropdown-select",
-      "$ref": "./visibility.model.json"
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "types"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "symbol-struct"
     },
     "type": {
+      "editable": true,
       "hidden": true,
-      "modelType": "dropdown-select",
       "type": "string",
       "enum": ["struct", "union"]
     },
     "members": {
       "hidden": true,
-      "modelType": "folder",
       "type": "array",
       "items": {
         "$ref": "./datamember.model.json"
@@ -34,11 +46,10 @@
     },
     "documentation": {
       "hidden": true,
-      "modelType": "input-string",
+      "editable": true,
+      "multiline": true,
+      "markdown": true,
       "type": "string"
     }
-  },
-  "$link": {
-    "tags": ["*", "types"]
   }
 }

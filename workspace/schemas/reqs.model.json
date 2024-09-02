@@ -2,29 +2,40 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Requirements",
-  "modelType": "parent-object",
-  "vscodeIcon": "book",
   "properties": {
-    "$id": {
+    "id": {
       "type": "string",
       "hidden": true
     },
-    "$label": {
+    "label": {
       "type": "string",
       "hidden": true
     },
     "visibility": {
-      "hidden": true,
       "$ref": "./visibility.model.json",
-      "const": "public"
+      "const": "public",
+      "hidden": true
+    },
+    "tags": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "reqs"
+      ]
     },
     "description": {
       "hidden": true,
-      "modelType": "text-area",
+      "editable": true,
+      "multiline": true,
       "type": "string"
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "book"
     }
-  },
-  "$link": {
-    "tags": ["*", "reqs"]
   }
 }

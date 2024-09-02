@@ -140,7 +140,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     const options: Array<[string, number]> = [];
 
     this.schemas.forEach((schema, index) => {
-      if (schema?.modelType === 'root') {
+      if (schema?.root === true) {
         options.push([schema.$id, index]);
       }
     });
@@ -318,25 +318,25 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     }
   }
 
-  private removeAllRefsToID($id: string, rootJSON: any): void {
+  private removeAllRefsToID(id: string, rootJSON: any): void {
     for (const key in rootJSON) {
-      if (rootJSON[key].$id === $id) {
-        //If rootJSON is an array, remove the $id from the array
+      if (rootJSON[key].id === id) {
+        //If rootJSON is an array, remove the id from the array
         if (Array.isArray(rootJSON)) {
           rootJSON.splice(Number(key), 1);
         } else {
           delete rootJSON[key];
         }
       }
-      else if (rootJSON[key] === $id) {
-        // If rootJSON is a array, remove the $id from the array
+      else if (rootJSON[key] === id) {
+        // If rootJSON is a array, remove the id from the array
         if (Array.isArray(rootJSON)) {
           rootJSON.splice(Number(key), 1);
         } else {
-          rootJSON[key] = ''; // Remove the $id
+          rootJSON[key] = ''; // Remove the id
         }
       } else if (typeof rootJSON[key] === 'object') {
-        this.removeAllRefsToID($id, rootJSON[key]);
+        this.removeAllRefsToID(id, rootJSON[key]);
       }
     }
   }
@@ -373,7 +373,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     }
 
     // Show a quick pick dialog to confirm item removal
-    const response = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: `Are you sure you want to remove item ${item.$label}?` });
+    const response = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: `Are you sure you want to remove item ${item.label}?` });
     if (response !== 'Yes') {
       return;
     }
@@ -382,13 +382,13 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
 
     if (item?.contextValue?.includes('root')) {
       //Add another prompt to confirm the removal of the root object in the disk
-      const response = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: `The root object ${item.$label}.json will be removed from the disk. Are you sure you want to proceed?` });
+      const response = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: `The root object ${item.label}.json will be removed from the disk. Are you sure you want to proceed?` });
       if (response !== 'Yes') {
         return;
       }
       // Remove the root object
       fs.unlinkSync(item.filePath);
-      vscode.window.showInformationMessage(`Item ${item.$label} removed successfully!`);
+      vscode.window.showInformationMessage(`Item ${item.label} removed successfully!`);
       this.refresh();
       return;
     }
@@ -400,14 +400,14 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     }
 
     // Get the ID of the item
-    const $id = current.$id;
+    const id = current.id;
 
     // Remove all references to this itemr recursively
-    this.removeAllRefsToID($id, rootJSON);
+    this.removeAllRefsToID(id, rootJSON);
 
     try {
       fs.writeFileSync(item.filePath, JSON.stringify(rootJSON, null, 2), 'utf-8');
-      vscode.window.showInformationMessage(`Item ${item.$label} removed successfully!`);
+      vscode.window.showInformationMessage(`Item ${item.label} removed successfully!`);
       this.refresh();
     } catch (error) {
       const errorMessage = (error instanceof Error) ? error.message : String(error);
@@ -448,7 +448,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     //        childCurrent = childCurrent[key];
     //      }
     //      const childLastKey = child.jsonPath[child.jsonPath.length - 1];
-    //      if (child.value !== childCurrent[childLastKey] && childLastKey === '$label' &&
+    //      if (child.value !== childCurrent[childLastKey] && childLastKey === 'label' &&
     //        item?.contextValue?.includes('root')) {
     //        //Change the name of the file
     //        const newFilePath = path.join(this.rootPath, `${child.value}.json`);
@@ -504,36 +504,33 @@ export class Item extends vscode.TreeItem {
   public children: Item[]; // Add children[] property
 
   constructor(
-    public readonly $label: string,
+    public readonly label: string,
     public readonly schema: any,
     public filePath: string,
     public jsonPath: string[] = [], // New property to track JSON path
     public root_schema: any,
     public parentJsonPath: string[]
   ) {
-    super($label, vscode.TreeItemCollapsibleState.Collapsed);
+    super(label, vscode.TreeItemCollapsibleState.Collapsed);
     if (this.schema?.title) {
       this.description = this.schema?.title;
       //this.tooltip = this.schema?.title;
     }
 
-    if (this.schema?.vscodeIcon) {
-      this.iconPath = new vscode.ThemeIcon(this.schema?.vscodeIcon);
+    if (this.schema?.properties?.icon?.const) {
+      this.iconPath = new vscode.ThemeIcon(this.schema?.properties?.icon?.const);
     }
 
-    if (this.schema?.modelType) {
-      this.contextValue = this.schema?.modelType;
-      if (this.schema.modelType === 'root') {
-        this.contextValue += ".rm";
-      } else if (this.schema.modelType === 'parent-object') {
-        this.contextValue += ".add";
-        this.contextValue += ".rm";
-        this.contextValue += ".duplicate";
-      } else if (this.schema.modelType === 'folder') {
-        this.contextValue += ".add";
-      }
-    } else {
-      this.contextValue = "";
+    this.contextValue = "";
+
+    if (this.schema.root === true) {
+      this.contextValue += ".rm";
+    } else if (!this.schema.hidden === true && this.schema.type === 'object') {
+      this.contextValue += ".add";
+      this.contextValue += ".rm";
+      this.contextValue += ".duplicate";
+    } else if (!this.schema.hidden === true && this.schema.type === 'array') {
+      this.contextValue += ".add";
     }
 
     if (this.schema?.commands && this.schema?.commands.length != 0) {
