@@ -53,130 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
         },
     };
 
-    //A list of 20 vgeetables
-    const vegetables = [
-        {
-            "name": "Carrot",
-            "color": "Orange",
-            "type": "Root",
-            "tag": ["cha", "bro"]
-        },
-        {
-            "name": "Broccoli",
-            "color": "Green",
-            "type": "Stem",
-            "tag": ["bro"]
-        },
-        {
-            "name": "Cabbage",
-            "color": "Green",
-            "type": "Leafy",
-            "tag": ["cha"]
-        },
-        {
-            "name": "Spinach",
-            "color": "Green",
-            "type": "Leafy",
-            "tag": ["cha"]
-        },
-        {
-            "name": "Lettuce",
-            "color": "Green",
-            "type": "Leafy",
-            "tag": ["cha"]
-        },
-        {
-            "name": "Tomato",
-            "color": "Red",
-            "type": "Fruit",
-            "tag": ["bro"]
-        },
-        {
-            "name": "Cucumber",
-            "color": "Green",
-            "type": "Fruit",
-            "tag": ["bro"]
-        },
-        {
-            "name": "Potato",
-            "color": "Brown",
-            "type": "Root",
-            "tag": ["cha"]
-        },
-        {
-            "name": "Onion",
-            "color": "White",
-            "type": "Bulb",
-            "tag": ["cha"]
-        },
-        {
-            "name": "Garlic",
-            "color": "White",
-            "type": "Bulb",
-            "tag": ["cha"]
-        },
-        {
-            "name": "Bell Pepper",
-            "color": "Red",
-            "type": "Fruit",
-            "tag": ["bro"]
-        },
-        {
-            "name": "Eggplant",
-            "color": "Purple",
-            "type": "Fruit",
-            "tag": ["bro"]
-        },
-        {
-            "name": "Zucchini",
-            "color": "Green",
-            "type": "Fruit",
-            "tag": ["bro"]
-        },
-        {
-            "name": "Pumpkin",
-            "color": "Orange",
-            "type": "Fruit",
-            "tag": ["bro"]
-        },
-        {
-            "name": "Radish",
-            "color": "Red",
-            "type": "Root",
-            "tag": ["cha"]
-        },
-        {
-            "name": "Beetroot",
-            "color": "Red",
-            "type": "Root",
-            "tag": ["cha"]
-        },
-        {
-            "name": "Celery",
-            "color": "Green",
-            "type": "Stalk",
-            "tag": ["bro"]
-        },
-        {
-            "name": "Cauliflower",
-            "color": "White",
-            "type": "Flower",
-            "tag": ["bro"]
-        },
-        {
-            "name": "Mushroom",
-            "color": "White",
-            "type": "Fungus",
-            "tag": ["bro"]
-        },
-        {
-            "name": "Asparagus",
-            "color": "Green",
-            "type": "Stalk",
-            "tag": ["bro"]
-        }
-    ];
-
     // Async function to handle fetching and populating the select options
     async function simpleSearchItem(key, formGroup, properties) {
         const { query, readonly } = properties;
@@ -570,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             textareaContainer.appendChild(textarea);
                             textareaContainer.appendChild(markdownContainer);
 
-                            markdownContainer.style.fontSize = '8px'; // Set the font size to a smaller value
+                            markdownContainer.style.fontSize = '10px'; // Set the font size to a smaller value
                         } else {
                             // If markdown is not enabled, just add the textarea
                             textareaContainer.appendChild(toolbarContainer);
@@ -950,13 +826,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 }
-            }
-
-            const icon = schema.properties[key].icon;
-            if (icon) {
-                const iconElement = document.createElement('vscode-icon');
-                iconElement.name = icon;
-                formGroup.appendChild(iconElement);
             }
 
             // Append formGroup to form
