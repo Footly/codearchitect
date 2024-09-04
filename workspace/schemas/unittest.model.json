@@ -1,7 +1,7 @@
 {
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
-  "title": "Structure",
+  "title": "Unit Test",
   "properties": {
     "id": {
       "type": "string",
@@ -23,27 +23,20 @@
         "type": "string"
       },
       "const": [
-        "structure"
+        "unittest"
       ]
     },
     "icon": {
       "hidden": true,
       "type": "string",
-      "const": "folder"
+      "const": "beaker"
     },
-    "structures": {
-      "type": "array",
+    "documentation": {
       "hidden": true,
-      "items": {
-        "$ref": "./structure.model.json"
-      }
-    },
-    "libraries": {
-      "type": "array",
-      "hidden": true,
-      "items": {
-        "$ref": "./library.model.json"
-      }
+      "editable": true,
+      "multiline": true,
+      "markdown": true,
+      "type": "string"
     }
   }
 }

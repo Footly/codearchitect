@@ -1,0 +1,82 @@
+{
+  "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
+  "type": "object",
+  "title": "Qual. Test",
+  "properties": {
+    "id": {
+      "type": "string",
+      "hidden": true
+    },
+    "label": {
+      "type": "string",
+      "hidden": true
+    },
+    "visibility": {
+      "$ref": "./visibility.model.json",
+      "const": "public",
+      "hidden": true
+    },
+    "tags": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "qualtest"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "beaker"
+    },
+    "documentation": {
+      "hidden": true,
+      "editable": true,
+      "multiline": true,
+      "markdown": true,
+      "type": "string"
+    },
+    "requirements": {
+      "type": "array",
+      "hidden": true,
+      "editable": true,
+      "items": {
+        "type": "string",
+        "search": {
+          "query": [
+            [
+              {
+                "field": "tags",
+                "regex": "reqs"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    "satisfied by": {
+      "type": "array",
+      "hidden": true,
+      "editable": true,
+      "items": {
+        "type": "string",
+        "search": {
+          "query": [
+            [
+              {
+                "field": "tags",
+                "regex": "unittest"
+              },
+              {
+                "field": "tags",
+                "regex": "inttest"
+              }
+            ]
+          ]
+        }
+      }
+    }
+  }
+}

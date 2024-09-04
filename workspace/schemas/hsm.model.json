@@ -40,16 +40,28 @@
     },
     "Events": {
       "type": "array",
-      "icon": "folder",
       "items": {
         "$ref": "./event.model.json"
+      },
+      "properties": {
+        "icon": {
+          "hidden": true,
+          "type": "string",
+          "const": "folder"
+        }
       }
     },
     "Activities": {
       "type": "array",
-      "icon": "folder",
       "items": {
         "$ref": "./activity.model.json"
+      },
+      "properties": {
+        "icon": {
+          "hidden": true,
+          "type": "string",
+          "const": "folder"
+        }
       }
     }
   }

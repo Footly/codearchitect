@@ -1,7 +1,7 @@
 {
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
-  "title": "Requirements",
+  "title": "Requirement",
   "properties": {
     "id": {
       "type": "string",

@@ -1,0 +1,49 @@
+{
+  "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
+  "type": "object",
+  "title": "Package",
+  "properties": {
+    "id": {
+      "type": "string",
+      "hidden": true
+    },
+    "label": {
+      "type": "string",
+      "hidden": true
+    },
+    "visibility": {
+      "$ref": "./visibility.model.json",
+      "const": "public",
+      "hidden": true
+    },
+    "tags": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "package"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "package"
+    },
+    "packages": {
+      "type": "array",
+      "hidden": true,
+      "items": {
+        "$ref": "./package.model.json"
+      }
+    },
+    "libraries": {
+      "type": "array",
+      "hidden": true,
+      "items": {
+        "$ref": "./library.model.json"
+      }
+    }
+  }
+}

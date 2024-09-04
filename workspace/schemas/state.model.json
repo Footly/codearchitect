@@ -53,9 +53,16 @@
       }
     },
     "isInit": {
-      "editbale": true,
+      "editable": true,
       "hidden": true,
       "type":"boolean"
+    },
+    "documentation": {
+      "hidden": true,
+      "editable": true,
+      "multiline": true,
+      "markdown": true,
+      "type": "string"
     }
   }
 }

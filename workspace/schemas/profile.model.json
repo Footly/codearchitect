@@ -55,19 +55,6 @@
       "editable": true,
       "file": "*"
     },
-    "Structure": {
-      "type": "array",
-      "items": {
-        "$ref": "./structure.model.json"
-      },
-      "properties": {
-        "icon": {
-          "hidden": true,
-          "type": "string",
-          "const": "folder"
-        }
-      }
-    },
     "Requirements": {
       "type": "array",
       "items": {
@@ -81,10 +68,36 @@
         }
       }
     },
-    "Primitive Types": {
+    "Architecture": {
       "type": "array",
       "items": {
-        "$ref": "./primitivetypes.model.json"
+        "$ref": "./package.model.json"
+      },
+      "properties": {
+        "icon": {
+          "hidden": true,
+          "type": "string",
+          "const": "folder"
+        }
+      }
+    },
+    "Integration Tests": {
+      "type": "array",
+      "items": {
+        "$ref": "./inttest.model.json"
+      },
+      "properties": {
+        "icon": {
+          "hidden": true,
+          "type": "string",
+          "const": "folder"
+        }
+      }
+    },
+    "Qualification Tests": {
+      "type": "array",
+      "items": {
+        "$ref": "./qualitest.model.json"
       },
       "properties": {
         "icon": {
