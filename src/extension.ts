@@ -6,8 +6,6 @@ import $RefParser from "@apidevtools/json-schema-ref-parser";
 import { runCustomCommand, Command } from './customCommand';
 import { PropertiesWebviewViewProvider } from './WebviewProvider';
 
-const viewType = "communityUiToolkit";
-
 let schemas: any = [];
 let itemTreeProvider: ItemTreeProvider; // Declare the itemTreeProvider variable at the top level
 let itemTreeView: vscode.TreeView<Item> | undefined; // To keep a reference to the tree view
@@ -170,10 +168,19 @@ export function activate(context: vscode.ExtensionContext) {
         await runCustomCommand(current, item.filePath, selectedCommand);
     });
 
+    const handleMessage = (message: any) => {
+        //// Handle the message received from the webview
+        //// You can perform actions based on the message content
+        if (message.command === 'saveObject') {
+            itemTreeProvider.saveObject(message.json, message.jsonPath, message.jsonFile);
+        }
+    }
+
     const editObjectCommand = vscode.commands.registerCommand('codearchitect.editObject', async (jsonPath: string[], filePath: string) => {
         const item = itemTreeProvider.getItem(jsonPath, filePath);
         if (!item)
             return;
+
         await itemTreeView?.reveal(item, { select: true, focus: true });
         //Edit the object
         propertiesWebviewProvider.updateWebview(item.schema, item.filePath, item.jsonPath);
@@ -188,7 +195,7 @@ export function activate(context: vscode.ExtensionContext) {
     }));
 
     // Register the Webview View provider
-    const propertiesWebviewProvider = new PropertiesWebviewViewProvider(context.extensionUri);
+    const propertiesWebviewProvider = new PropertiesWebviewViewProvider(context.extensionUri, handleMessage);
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider('codearchitect-properties', propertiesWebviewProvider)
     );

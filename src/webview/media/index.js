@@ -23,9 +23,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
+            function findItemById(rootJson, id) {
+                // Base case: if the input is an object, check each key
+                if (typeof rootJson === 'object' && rootJson !== null) {
+                    // Check if this object itself contains the id we are looking for
+                    if (rootJson.id === id) {
+                        return rootJson;
+                    }
+
+                    // If it's an array, check each element recursively
+                    if (Array.isArray(rootJson)) {
+                        for (let item of rootJson) {
+                            const result = findItemById(item, id);
+                            if (result) return result;
+                        }
+                    } else {
+                        // If it's an object, check each property recursively
+                        for (let key in rootJson) {
+                            if (rootJson.hasOwnProperty(key)) {
+                                const result = findItemById(rootJson[key], id);
+                                if (result) return result;
+                            }
+                        }
+                    }
+                }
+
+                // Return null if no matching item is found
+                return null;
+            }
+
             // Async function to handle fetching and populating the select options
-            async function simpleSearchItem(key, formGroup, properties, initialVal) {
-                const { query, readonly } = properties;
+            async function simpleSearchItem(key, formGroup, properties, initialVal, parentpath) {
+                const { query, readonly, text } = properties;
 
                 //Create master container
                 const masterContainer = document.createElement('div');
@@ -55,8 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 //Create a div to hold the selected item
                 const selectedItemContainer = document.createElement('div');
                 selectedItemContainer.addEventListener('tree-updated', (e) => {
-                    console.log('Tree updated with value:', e);
-
                     //Find the vscode-textfield in the selected item container
                     const textField = selectedItemContainer.querySelector('vscode-textfield');
 
@@ -87,11 +114,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 const selectedItem = document.createElement('vscode-textfield');
                 selectedItem.textContent = key;
                 selectedItem.style.userSelect = 'none'; // Disable text selection on this item
-                selectedItem.style.display = 'inline-block';
-                //Add on input event listener
-                selectedItem.oninput = (e) => {
-                    console.log(e.target.value);
+                selectedItem.onchange = (e) => {
+                    const updateJson = new CustomEvent('updateJSON', {
+                        detail: {
+                            path: [...parentpath, key],
+                            value: selectedItem.value
+                        },
+                    });
+
+                    // Dispatch the custom event into the select element
+                    form.dispatchEvent(updateJson);
                 };
+                if (!text === true)
+                    selectedItem.disabled = true;
+
                 selectedItemContainer.appendChild(selectedItem);
 
                 //Create the badge element
@@ -102,6 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Create a span element to hold the icon
                 const iconSpan = document.createElement('span');
                 iconSpan.className = 'codicon codicon-';
+                iconSpan.style.marginRight = '3px';
                 selectedBadge.appendChild(iconSpan);
                 // Set the new label as the text content
                 const textContent = document.createElement('span');
@@ -118,6 +155,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     selectedItem.value = '';
                     //Show the text field
                     selectedItem.style.display = 'inline-block';
+                    const updateJson = new CustomEvent('updateJSON', {
+                        detail: {
+                            path: [...parentpath, key],
+                            value: ""
+                        },
+                    });
+
+                    // Dispatch the custom event into the select element
+                    form.dispatchEvent(updateJson);
                 };
                 removeButton.actionIcon = true;
                 selectedBadge.appendChild(removeButton);
@@ -132,87 +178,57 @@ document.addEventListener('DOMContentLoaded', () => {
                 treeContainer.className = 'tree-container';
                 treeContainer.style.display = 'none';
                 const tree = document.createElement('vscode-tree');
-                tree.data = fetchOptionsFromSearch(query, initialVal);
+                tree.arrows = true;
+                let mySet = [];
+                [tree.data, mySet] = fetchOptionsFromSearch(query, initialVal);
 
                 tree.addEventListener('dblclick', (event) => {
-                    //Make the tree container invisible
-                    treeContainer.style.display = 'none';
-                    // Set the value of the selectedItemContainer
-                    const changeEvent = new CustomEvent('tree-updated', {
-                        detail: {
-                            value: tree._selectedItem,
-                        },
-                    });
+                    if ([...mySet].some(set => set.id === tree._selectedItem.id)) {
+                        //Make the tree container invisible
+                        treeContainer.style.display = 'none';
+                        // Set the value of the selectedItemContainer
+                        const changeEvent = new CustomEvent('tree-updated', {
+                            detail: {
+                                value: tree._selectedItem,
+                            },
+                        });
 
-                    // Dispatch the custom event into the select element
-                    selectedItemContainer.dispatchEvent(changeEvent);
+                        const updateJson = new CustomEvent('updateJSON', {
+                            detail: {
+                                path: [...parentpath, key],
+                                value: "${id:" + tree._selectedItem.id + "}"
+                            },
+                        });
+
+                        // Dispatch the custom event into the select element
+                        form.dispatchEvent(updateJson);
+
+                        // Dispatch the custom event into the select element
+                        selectedItemContainer.dispatchEvent(changeEvent);
+                    }
                 });
                 treeContainer.appendChild(tree);
                 masterContainer.appendChild(treeContainer);
 
                 if (initialVal !== "" && initialVal.startsWith("${id")) {
-                    //Find the vscode-badge in the selected item container
-                    iconSpan.className = 'codicon codicon-';
-                    //Get the tetx node
-                    textContent.textContent = initialVal;
-                    console.log(textContent);
-                    selectedBadge.style.display = 'inline-block';
-                    selectedItem.style.display = 'none';
+                    // Regular expression to match ${idTHIS} or similar patterns
+                    const regex = /\$\{id:([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})\}/;
+                    // Get the first match
+                    const match = initialVal.match(regex);
+                    if (match) {
+                        //Find the vscode-badge in the selected item container
+                        iconSpan.className = 'codicon codicon-' + findItemById(rootJson, match[1]).icon;
+                        //Get the tetx node
+                        textContent.textContent = findItemById(rootJson, match[1]).label;
+                        selectedBadge.style.display = 'inline-block';
+                        selectedItem.style.display = 'none';
+                    }
                 } else if (initialVal !== "" && !initialVal.startsWith("${id")) {
                     selectedItem.value = initialVal;
                 }
             }
 
             function fetchOptionsFromSearch(query, initialValue) {
-                const icons = {
-                    branch: 'folder',
-                    leaf: 'file',
-                    open: 'folder-opened',
-                };
-                const data = [
-                    {
-                        icons,
-                        label: 'node_modules',
-                        value: 'black hole',
-                        subItems: [
-                            {
-                                icons: { ...icons, branch: 'account', leaf: 'account', open: 'account' },
-                                label: '.bin',
-                                guid: 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx',
-                                subItems: [
-                                    { icons, label: '_mocha_', icon: 'folder' },
-                                    { icons, label: '_mocha.cmd_', icon: 'account', guid: 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx' },
-                                    { icons, label: '_mocha.ps1_' },
-                                    { icons, label: 'acorn' },
-                                    { icons, label: 'acorn.cmd' },
-                                    { icons, label: 'acorn.ps1' },
-                                ],
-                            },
-                            {
-                                icons,
-                                label: '@11ty',
-                                open: true,
-                                subItems: [
-                                    { icons, label: 'lorem.js' },
-                                    { icons, label: 'ipsum.js' },
-                                    { icons, label: 'dolor.js' },
-                                ],
-                            },
-                            { icons, label: '.DS_Store' },
-                        ],
-                    },
-                    {
-                        icons,
-                        label: 'scripts',
-                        subItems: [
-                            { icons, label: 'build.js' },
-                            { icons, label: 'start.js' },
-                        ],
-                    },
-                    { icons, label: '.editorconfig', selected: true },
-                    { icons, label: '2021-01-18T22_10_20_535Z-debug.log' },
-                ];
-
                 let json = rootJson;
                 const mySet = new Set();
                 const rootPath = [[], [json["label"]], [], []];
@@ -232,9 +248,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     for (const key in json) {
                         const newPath = [[...path[0], key], [...path[1]], [...path[2], json["id"]], [...path[3], json["icon"]]]
                         if (typeof json[key] === 'object') {
-                            if(isArr)
-                            {
-                                newPath[1].push(json[key].label);
+                            if (isArr) {
+                                newPath[1].push(json[key]?.label);
                             }
                             else
                                 newPath[1].push(key);
@@ -249,16 +264,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 decodeTreeOptions(query, json, initialValue, rootPath, false);
-
-                for(const item of mySet)
-                {
-                    let tree = {};
-
+                let tree = {};
+                for (const item of mySet) {
                     const fullpath = [];
-                    for(const [index, value] of item.path[2].entries())
-                    {
-                        if(value)
-                        {
+                    for (const [index, value] of item.path[2].entries()) {
+                        if (value) {
                             const dict = {
                                 icons: {
                                     branch: item.path[3][index],
@@ -268,60 +278,104 @@ document.addEventListener('DOMContentLoaded', () => {
                                 label: item.path[1][index],
                                 id: item.path[2][index],
                                 subItems: []
-
                             }
 
-                            if (Object.keys(tree).length === 0)
-                            {
-                                tree = dict;
+                            if ([...mySet].some(set => set.id === item.path[2][index])) {
+                                dict.decorations = [];
+                                dict.decorations.push({ visibleWhen: 'always', appearance: 'filled-circle' });
                             } else {
+                                dict.open = true;
+                            }
+
+                            if (Object.keys(tree).length === 0) {
+                                tree = dict;
+                                tree.value = 'black hole';
+                            } else if (index !== 0) {
                                 let temp = tree;
-                                for (const p in fullpath){
-                                    console.error(temp.subItems);
-                                    for (const [index, subitem] in temp.subItems.entries())
-                                    {
-                                        console.log('Subitem: ', subitem, p);
-                                        if(subitem.label === p)
-                                        {
+                                for (const p of fullpath.slice(1)) {
+                                    for (const [index, subitem] of temp.subItems.entries()) {
+                                        if (subitem.label === p) {
                                             temp = temp.subItems[index];
                                             break;
                                         }
                                     }
                                 }
-                                console.log(temp);
-                                console.log(fullpath);
-                                temp.subItems.push(dict);
+                                if (temp.subItems.length === 0)
+                                    temp.subItems.push(dict);
+                                else {
+                                    if (!temp.subItems.some(sub => sub.id === item.path[2][index])) {
+                                        temp.subItems.push(dict);
+                                    }
+                                }
                             }
-                            let current = tree;
-
-                            //for (let i = 0; i < fullpath.length - 1; i++) 
-                            //{
-                            //    const key = fullpath[i];
-                            //    current=current[key];
-                            //}
-                            //console.warn(item.path[1][index], current);
-                            //current[item.path[1][index]] = dict;
                             fullpath.push(item.path[1][index]);
                         }
                     }
-                    console.warn(tree);
                 }
-
-                return data;
+                return [[tree], mySet];
             }
 
             //Create function to iterate over schema and create a form.
             const createForm = (schema, jsonItem) => {
                 const form = document.createElement('div');
+                const updateJSONHandler = (e) => {
+                    let current = jsonItem;
+                    const path = [...e.detail.path];
+                    const value = e.detail.value;
 
-                // Create the header element
-                const header = document.createElement('h1'); // You can use 'h1', 'h2', etc., or 'div' with a class
-                header.textContent = jsonItem["label"].toUpperCase();
+                    if (path.length > 0) {
+                        let key = path[0];
+
+                        for (let i = 0; i < path.length - 1; i++) {
+                            key = path[i];
+                            current = current[key];
+                        }
+                        key = path[path.length - 1];
+                        current[key] = value;
+                    }
+
+                    // Handle the editObject command
+                    vscode.postMessage({ command: 'saveObject', json: jsonItem, jsonPath: jsonPath, jsonFile: jsonFile });
+                };
+
+                // Initial event listener setup
+                form.addEventListener('updateJSON', updateJSONHandler);
+
+                const header = document.createElement('vscode-textfield');
+                header.name = jsonItem["label"];
+                header.value = jsonItem["label"];
+
+                header.onchange = (e) => {
+                    const updateJson = new CustomEvent('updateJSON', {
+                        detail: {
+                            path: ["label"],
+                            value: header.value
+                        },
+                    });
+
+                    // Dispatch the custom event into the select element
+                    form.dispatchEvent(updateJson);
+                    header.disabled = true;
+                };
+                header.onblur = (e) => {
+                    header.disabled = true;
+                };
+                header.disabled = true;
+                form.appendChild(header);
+
+                const headerIcon = document.createElement('vscode-icon');
+                headerIcon.style.marginLeft = "5px";
+                headerIcon.name = 'edit';
+                headerIcon.actionIcon = true;
+                headerIcon.onclick = (e) => {
+                    header.disabled = false;
+                };
                 form.append(header); // Append the header first
+                form.append(headerIcon);
 
                 const properties = schema.properties;
 
-                function decodeProperty(properties, parent, schema, json) {
+                function decodeProperty(properties, parent, schema, json, parentpath) {
                     for (const key in properties) {
                         const initialValue = json[key];
                         if (!properties[key].editable === true)
@@ -348,8 +402,16 @@ document.addEventListener('DOMContentLoaded', () => {
                                     textarea.value = initialValue;
                                     // Make minimum height of 10em
                                     textarea.style.minHeight = '10em';
-                                    textarea.oninput = (e) => {
-                                        console.log(e.target.value);
+                                    textarea.onchange = (e) => {
+                                        const updateJson = new CustomEvent('updateJSON', {
+                                            detail: {
+                                                path: [...parentpath, key],
+                                                value: textarea.value
+                                            },
+                                        });
+
+                                        // Dispatch the custom event into the select element
+                                        form.dispatchEvent(updateJson);
                                     };
                                     textarea.disabled = properties[key].readonly ? true : false;
 
@@ -378,9 +440,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                             } else {
                                                 // Parse the markdown content
                                                 const markdown = textarea.value;
-                                                console.log(textarea.textContent);
                                                 const html = marked.parse(markdown);
-                                                console.log(html);
                                                 markdownContainer.innerHTML = html;
                                                 textarea.style.display = 'none';
                                                 markdownContainer.style.display = 'block';
@@ -409,8 +469,16 @@ document.addEventListener('DOMContentLoaded', () => {
                                     const input = document.createElement('vscode-textfield');
                                     input.name = key;
                                     input.value = initialValue;
-                                    input.oninput = (e) => {
-                                        console.log(e.target.value);
+                                    input.onchange = (e) => {
+                                        const updateJson = new CustomEvent('updateJSON', {
+                                            detail: {
+                                                path: [...parentpath, key],
+                                                value: input.value
+                                            },
+                                        });
+
+                                        // Dispatch the custom event into the select element
+                                        form.dispatchEvent(updateJson);
                                     };
                                     input.disabled = properties[key].readonly ? true : false;
                                     input.type = properties[key].file ? 'file' : 'text';
@@ -422,7 +490,15 @@ document.addEventListener('DOMContentLoaded', () => {
                                 select.value = initialValue;;
                                 select.disabled = properties[key].readonly ? true : false;
                                 select.onchange = (e) => {
-                                    console.log(e.target.value);
+                                    const updateJson = new CustomEvent('updateJSON', {
+                                        detail: {
+                                            path: [...parentpath, key],
+                                            value: select.value
+                                        },
+                                    });
+
+                                    // Dispatch the custom event into the select element
+                                    form.dispatchEvent(updateJson);
                                 };
                                 properties[key].enum.forEach((item) => {
                                     const option = document.createElement('vscode-option');
@@ -432,14 +508,22 @@ document.addEventListener('DOMContentLoaded', () => {
                                 });
                                 formGroup.appendChild(select);
                             } else if (properties[key].search) {
-                                simpleSearchItem(key, formGroup, properties[key].search, initialValue);
+                                simpleSearchItem(key, formGroup, properties[key].search, initialValue, parentpath);
                             }
                         } else if (type === 'boolean') {
                             const checkbox = document.createElement('vscode-checkbox');
                             checkbox.name = key;
                             checkbox.checked = initialValue;
                             checkbox.onchange = (e) => {
-                                console.log(e.target.checked);
+                                const updateJson = new CustomEvent('updateJSON', {
+                                    detail: {
+                                        path: [...parentpath, key],
+                                        value: checkbox.checked
+                                    },
+                                });
+
+                                // Dispatch the custom event into the select element
+                                form.dispatchEvent(updateJson);
                             };
                             checkbox.disabled = properties[key].readonly ? true : false;
                             formGroup.appendChild(checkbox);
@@ -447,12 +531,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             const items = properties[key].items;
                             if (items.type === 'string') {
                                 if (!items.enum && !items.search) {
-                                    //Create a div to hold the array of textfields
                                     const arrayContainer = document.createElement('div');
                                     arrayContainer.className = 'array-container';
                                     arrayContainer.style.display = 'flex';
                                     arrayContainer.style.alignItems = 'center';
                                     arrayContainer.style.flexWrap = 'wrap';
+
                                     formGroup.appendChild(arrayContainer);
 
                                     // Function to handle drag and drop
@@ -504,6 +588,24 @@ document.addEventListener('DOMContentLoaded', () => {
                                             // Optionally, you can add logic to remove the highlight
                                             dropzone.classList.remove('drop-highlight');
                                         }
+
+                                        console.log("Drop Item");
+
+                                        const arr = [];
+
+                                        for (const [index, child] of Array.from(arrayContainer.children).entries()) {
+                                            arr.push(child.value);
+                                        }
+
+                                        const updateJson = new CustomEvent('updateJSON', {
+                                            detail: {
+                                                path: [...parentpath, key],
+                                                value: arr
+                                            },
+                                        });
+
+                                        // Dispatch the custom event into the select element
+                                        form.dispatchEvent(updateJson);
                                     }
 
                                     function createItem(container, value) {
@@ -529,20 +631,48 @@ document.addEventListener('DOMContentLoaded', () => {
                                         input.style.marginRight = '5px'; // Add margin right
                                         input.style.marginBottom = '5px'; // Add margin bottom
                                         input.onchange = (e) => {
+                                            console.log("Change Item");
                                             //Resize it to current content
                                             input.style.width = input.value.length + 6 + 'ch';
-                                        };
-                                        input.oninput = (e) => {
-                                            //Resize it to fit the content
-                                            console.log(e.target.value);
+                                            const arr = [];
+
+                                            for (const [index, child] of Array.from(container.children).entries()) {
+                                                arr.push(child.value);
+                                            }
+
+                                            const updateJson = new CustomEvent('updateJSON', {
+                                                detail: {
+                                                    path: [...parentpath, key],
+                                                    value: arr
+                                                },
+                                            });
+
+                                            // Dispatch the custom event into the select element
+                                            form.dispatchEvent(updateJson);
                                         };
                                         // Create a close icon
                                         const closeIcon = document.createElement('vscode-icon');
                                         closeIcon.name = 'close';
                                         closeIcon.onclick = (e) => {
-                                            console.log('Close icon clicked');
+                                            console.log("Remove Item");
                                             //Remove the input
                                             container.removeChild(input);
+                                            //
+                                            const arr = [];
+
+                                            for (const [index, child] of Array.from(container.children).entries()) {
+                                                arr.push(child.value);
+                                            }
+
+                                            const updateJson = new CustomEvent('updateJSON', {
+                                                detail: {
+                                                    path: [...parentpath, key],
+                                                    value: arr
+                                                },
+                                            });
+
+                                            // Dispatch the custom event into the select element
+                                            form.dispatchEvent(updateJson);
                                         };
                                         closeIcon.actionIcon = true;
                                         closeIcon.slot = 'content-after';
@@ -562,7 +692,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                     addButton.name = 'add';
                                     addButton.actionIcon = true;
                                     addButton.onclick = (e) => {
-                                        console.log('Add button clicked');
                                         createItem(arrayContainer, "");
                                     };
 
@@ -573,13 +702,21 @@ document.addEventListener('DOMContentLoaded', () => {
                                     select.value = initialValue;
                                     select.disabled = properties[key].readonly ? true : false;
                                     select.onchange = (e) => {
-                                        console.log(e.target.value);
-                                    };
-                                    select.oninput = (e) => {
-                                        console.log(e.target.value);
+                                        const updateJson = new CustomEvent('updateJSON', {
+                                            detail: {
+                                                path: [...parentpath, key],
+                                                value: select.value
+                                            },
+                                        });
+
+                                        // Dispatch the custom event into the select element
+                                        form.dispatchEvent(updateJson);
                                     };
                                     items.enum.forEach((item) => {
                                         const option = document.createElement('vscode-option');
+                                        if (initialValue.some(val => val === item)) {
+                                            option.selected = true;
+                                        }
                                         option.value = item;
                                         option.textContent = item; // Use textContent for option text
                                         select.appendChild(option);
@@ -587,6 +724,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     formGroup.appendChild(select);
                                 } else if (items.search) {
                                     const query = items.search.query;
+                                    const text = items.search.text;
 
                                     // Create a main div to hold button and select
                                     const mainContainer = document.createElement('div');
@@ -651,6 +789,27 @@ document.addEventListener('DOMContentLoaded', () => {
                                             // Optionally, you can add logic to remove the highlight
                                             dropzone.classList.remove('drop-highlight');
                                         }
+
+                                        const arr = [];
+
+                                        for (const [index, child] of Array.from(arrayContainer.children).entries()) {
+                                            if (child.nodeName === 'VSCODE-TEXTFIELD') {
+                                                arr.push(child.value);
+                                            }
+                                            else {
+                                                arr.push('${id:' + child.taggedValue.id + '}');
+                                            }
+                                        }
+
+                                        const updateJson = new CustomEvent('updateJSON', {
+                                            detail: {
+                                                path: [...parentpath, key],
+                                                value: arr
+                                            },
+                                        });
+
+                                        // Dispatch the custom event into the select element
+                                        form.dispatchEvent(updateJson);
                                     }
 
                                     function createText(container, value) {
@@ -677,13 +836,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                         input.onchange = (e) => {
                                             input.style.width = input.value.length + 6 + 'ch';
+                                            const arr = [];
+
+                                            for (const [index, child] of Array.from(arrayContainer.children).entries()) {
+                                                if (child.nodeName === 'VSCODE-TEXTFIELD') {
+                                                    arr.push(child.value);
+                                                }
+                                                else {
+                                                    arr.push('${id:' + child.taggedValue.id + '}');
+                                                }
+                                            }
+
+                                            const updateJson = new CustomEvent('updateJSON', {
+                                                detail: {
+                                                    path: [...parentpath, key],
+                                                    value: arr
+                                                },
+                                            });
+
+                                            // Dispatch the custom event into the select element
+                                            form.dispatchEvent(updateJson);
                                         };
 
                                         const closeIcon = document.createElement('vscode-icon');
                                         closeIcon.name = 'close';
                                         closeIcon.onclick = (e) => {
-                                            console.log('Close icon clicked');
                                             container.removeChild(input);
+                                            const arr = [];
+
+                                            for (const [index, child] of Array.from(container.children).entries()) {
+                                                if (child.nodeName === 'VSCODE-TEXTFIELD') {
+                                                    arr.push(child.value);
+                                                }
+                                                else {
+                                                    arr.push('${id:' + child.taggedValue.id + '}');
+                                                }
+                                            }
+
+                                            const updateJson = new CustomEvent('updateJSON', {
+                                                detail: {
+                                                    path: [...parentpath, key],
+                                                    value: arr
+                                                },
+                                            });
+
+                                            // Dispatch the custom event into the select element
+                                            form.dispatchEvent(updateJson);
                                         };
                                         closeIcon.actionIcon = true;
                                         closeIcon.slot = 'content-after';
@@ -712,6 +910,15 @@ document.addEventListener('DOMContentLoaded', () => {
                                         iconSpan.className = 'codicon codicon-' + item.icons.leaf;
                                         iconSpan.style.inherit = 'inherit';
 
+                                        // Example of additional data that you might want to store
+                                        const taggedValue = {
+                                            label: item.label,
+                                            id: item.id,
+                                            item: item
+                                        };
+
+                                        badge.taggedValue = taggedValue;
+
                                         const textContent = document.createTextNode(item.label);
                                         badge.appendChild(iconSpan);
                                         badge.appendChild(textContent);
@@ -719,8 +926,27 @@ document.addEventListener('DOMContentLoaded', () => {
                                         const removeButton = document.createElement('vscode-icon');
                                         removeButton.name = 'close';
                                         removeButton.onclick = (e) => {
-                                            console.log('Remove button clicked');
                                             arrayContainer.removeChild(badge);
+                                            const arr = [];
+
+                                            for (const [index, child] of Array.from(arrayContainer.children).entries()) {
+                                                if (child.nodeName === 'VSCODE-TEXTFIELD') {
+                                                    arr.push(child.value);
+                                                }
+                                                else {
+                                                    arr.push('${id:' + child.taggedValue.id + '}');
+                                                }
+                                            }
+
+                                            const updateJson = new CustomEvent('updateJSON', {
+                                                detail: {
+                                                    path: [...parentpath, key],
+                                                    value: arr
+                                                },
+                                            });
+
+                                            // Dispatch the custom event into the select element
+                                            form.dispatchEvent(updateJson);
                                         };
                                         removeButton.actionIcon = true;
                                         badge.appendChild(removeButton);
@@ -730,8 +956,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                     // Listen for tree-updated event to create badges
                                     arrayContainer.addEventListener('tree-updated', (e) => {
-                                        console.log('Tree updated with value:', e);
                                         createBadge(e.detail.value);
+                                        const arr = [];
+
+                                        for (const [index, child] of Array.from(arrayContainer.children).entries()) {
+                                            if (child.nodeName === 'VSCODE-TEXTFIELD') {
+                                                arr.push(child.value);
+                                            }
+                                            else {
+                                                arr.push('${id:' + child.taggedValue.id + '}');
+                                            }
+                                        }
+
+                                        const updateJson = new CustomEvent('updateJSON', {
+                                            detail: {
+                                                path: [...parentpath, key],
+                                                value: arr
+                                            },
+                                        });
+
+                                        // Dispatch the custom event into the select element
+                                        form.dispatchEvent(updateJson);
                                     });
 
                                     // Create a div to hold a single select and a button
@@ -742,19 +987,23 @@ document.addEventListener('DOMContentLoaded', () => {
                                     singleSelectContainer.style.flexWrap = 'wrap';
                                     mainContainer.appendChild(singleSelectContainer);
 
-                                    // Create a select element
                                     const select = document.createElement('vscode-single-select');
-                                    select.name = key;
-                                    select.style.width = "Search".length + 6 + 'ch';
-                                    select.disabled = properties[key].readonly ? true : false;
-                                    const option1 = document.createElement('vscode-option');
-                                    option1.value = 'Text';
-                                    option1.textContent = 'Text';
-                                    select.appendChild(option1);
-                                    const option2 = document.createElement('vscode-option');
-                                    option2.value = 'Search';
-                                    option2.textContent = 'Search';
-                                    select.appendChild(option2);
+                                    select.style.display = 'none';
+                                    // Create a select element
+                                    if (text === true) {
+                                        select.name = key;
+                                        select.style.width = "Search".length + 6 + 'ch';
+                                        select.disabled = properties[key].readonly ? true : false;
+                                        const option1 = document.createElement('vscode-option');
+                                        option1.value = 'Text';
+                                        option1.textContent = 'Text';
+                                        select.appendChild(option1);
+                                        const option2 = document.createElement('vscode-option');
+                                        option2.value = 'Search';
+                                        option2.textContent = 'Search';
+                                        select.appendChild(option2);
+                                        select.style.display = 'inline-block';
+                                    }
 
                                     // Create a button element
                                     const addButton = document.createElement('vscode-icon');
@@ -762,7 +1011,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                     addButton.actionIcon = true;
                                     addButton.onclick = (e) => {
                                         const value = select.value;
-                                        console.log(value);
                                         if (value === 'Text') {
                                             createText(arrayContainer, "");
                                         } else {
@@ -773,8 +1021,18 @@ document.addEventListener('DOMContentLoaded', () => {
                                     singleSelectContainer.appendChild(select);
 
                                     for (const value of initialValue) {
-                                        console.log(value);
                                         if (value.startsWith("${id")) {
+                                            // Regular expression to match ${idTHIS} or similar patterns
+                                            const regex = /\$\{id:([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})\}/;
+                                            // Get the first match
+                                            const match = value.match(regex);
+                                            if (match) {
+                                                const item = findItemById(rootJson, match[1]);
+                                                item.icons = {
+                                                    leaf: item.icon
+                                                };
+                                                createBadge(item);
+                                            }
 
                                         } else {
                                             createText(arrayContainer, value);
@@ -786,16 +1044,24 @@ document.addEventListener('DOMContentLoaded', () => {
                                     treeContainer.className = 'tree-container';
                                     treeContainer.style.display = 'none';
                                     const tree = document.createElement('vscode-tree');
-                                    tree.data = fetchOptionsFromSearch(query, initialValue);
+                                    tree.arrows = true;
+                                    let mySet = [];
+                                    [tree.data, mySet] = fetchOptionsFromSearch(query, initialValue);
 
                                     tree.addEventListener('dblclick', (event) => {
-                                        treeContainer.style.display = 'none';
-                                        const changeEvent = new CustomEvent('tree-updated', {
-                                            detail: {
-                                                value: tree._selectedItem,
-                                            },
-                                        });
-                                        arrayContainer.dispatchEvent(changeEvent);
+                                        if ([...mySet].some(set => set.id === tree._selectedItem.id)) {
+                                            //Make the tree container invisible
+                                            treeContainer.style.display = 'none';
+                                            // Set the value of the selectedItemContainer
+                                            const changeEvent = new CustomEvent('tree-updated', {
+                                                detail: {
+                                                    value: tree._selectedItem,
+                                                },
+                                            });
+
+                                            // Dispatch the custom event into the select element
+                                            arrayContainer.dispatchEvent(changeEvent);
+                                        }
                                     });
 
                                     treeContainer.appendChild(tree);
@@ -809,7 +1075,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             form.removeChild(badge);
                             formGroup.appendChild(collabsibleItem);
                             //Decode the sub object
-                            decodeProperty(schema.properties[key].properties, collabsibleItem, schema.properties[key], json[key]);
+                            decodeProperty(schema.properties[key].properties, collabsibleItem, schema.properties[key], json[key], [...parentpath, key]);
                         }
 
                         // Append formGroup to form
@@ -817,15 +1083,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                decodeProperty(properties, form, schema, jsonItem);
+                decodeProperty(properties, form, schema, jsonItem, []);
 
                 return form;
             }
             const form = createForm(schema, itemJson);
 
             document.body.appendChild(form);
-
-            console.log('Media module loaded');
         }
         else {
             console.error('Command not implemented yet');

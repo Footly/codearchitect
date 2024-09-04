@@ -46,7 +46,7 @@
         ]
       }
     },
-    "isArray": {
+    "Array": {
       "hidden": true,
       "type": "array",
       "editable": true,
@@ -60,7 +60,8 @@
                 "regex": "enummember"
               }
             ]
-          ]
+          ],
+          "text": true
         }
       }
     },
@@ -86,21 +87,21 @@
       "items": {
         "type": "string",
         "search": {
-        "query": [
-          [
-            {
-              "field": "tags",
-              "regex": "enummember"
-            },
-            {
+          "query": [
+            [
+              {
+                "field": "tags",
+                "regex": "enummember"
+              },
+              {
                 "field": "tags",
                 "regex": "defines"
-            }
-          ]
-        ]
+              }
+            ]
+          ],
+          "text": true
+        }
       }
-      }
-
     },
     "documentation": {
       "hidden": true,

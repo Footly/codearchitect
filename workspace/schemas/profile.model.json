@@ -56,7 +56,6 @@
       "file": "*"
     },
     "Structure": {
-      "icon": "folder",
       "type": "array",
       "items": {
         "$ref": "./structure.model.json"

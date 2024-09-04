@@ -4,12 +4,20 @@ import * as fs from 'fs';
 
 export class PropertiesWebviewViewProvider implements vscode.WebviewViewProvider {
 	private _view?: vscode.WebviewView;
+	private _messageHandler: (message: any) => void;
 
-	constructor(private readonly extensionUri: vscode.Uri) { }
+	constructor(private readonly extensionUri: vscode.Uri, handle: (message: any) => void) { 
+		// Step 3: Add the handler message callback
+		this._messageHandler = handle;
+	}
 
 	resolveWebviewView(webviewView: vscode.WebviewView, context: vscode.WebviewViewResolveContext, token: vscode.CancellationToken) {
 		this._view = webviewView;
 		webviewView.webview.options = this.getWebviewOptions();
+
+		this._view.webview.onDidReceiveMessage(message => {
+			this._messageHandler(message);
+		});
 
 		// Set the initial HTML content
 		this.initWebview();

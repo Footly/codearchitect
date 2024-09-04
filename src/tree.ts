@@ -341,31 +341,6 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     }
   }
 
-  async selectDirectory(item: Item, id: string): Promise<void> {
-    //const uri = await vscode.window.showOpenDialog({
-    //  canSelectFiles: false,
-    //  canSelectFolders: true,
-    //  canSelectMany: false,
-    //  openLabel: 'Select Directory'
-    //});
-    //
-    //if (!uri) {
-    //  vscode.window.showWarningMessage('No directory selected');
-    //  return;
-    //}
-    //
-    //const selectedDirectory = uri[0].fsPath;
-    //
-    //// Fill current with the selected directory
-    //item.value = selectedDirectory;
-    //
-    ////Edit the object again
-    //await this.updateItem(item, id);
-    //
-    ////Send command to edit the object
-    //vscode.commands.executeCommand('codearchitect.editObject', item.jsonPath, item.filePath);
-  }
-
   async removeItem(item: Item): Promise<void> {
     if (!this.rootPath) {
       vscode.window.showInformationMessage('No folder or workspace opened');
@@ -380,7 +355,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
 
     const rootJSON = JSON.parse(fs.readFileSync(item.filePath, 'utf-8'));
 
-    if (item?.contextValue?.includes('root')) {
+    if (item.jsonPath.length === 0) {
       //Add another prompt to confirm the removal of the root object in the disk
       const response = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: `The root object ${item.label}.json will be removed from the disk. Are you sure you want to proceed?` });
       if (response !== 'Yes') {
@@ -415,88 +390,56 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     }
   }
 
-  async updateItem(item: Item, id: string): Promise<void> {
-    //  if (!this.rootPath) {
-    //    vscode.window.showInformationMessage('No folder or workspace opened');
-    //    return;
-    //  }
-    //
-    //  const parentJSON = JSON.parse(fs.readFileSync(item.filePath, 'utf-8'));
-    //
-    //  const updateItemInJSON = (jsonObject: any, item: Item): void => {
-    //    let current = jsonObject;
-    //    for (let i = 0; i < item.jsonPath.length - 1; i++) {
-    //      const key = item.jsonPath[i];
-    //      if (!current[key]) {
-    //        current[key] = {}; // Initialize if not exist
-    //      }
-    //      current = current[key];
-    //    }
-    //
-    //    const lastKey = item.jsonPath[item.jsonPath.length - 1];
-    //    if (item.value !== undefined) {
-    //      current[lastKey] = item.value;
-    //    }
-    //
-    //    item.hidden_children.forEach((child) => {
-    //      let childCurrent = jsonObject;
-    //      for (let i = 0; i < child.jsonPath.length - 1; i++) {
-    //        const key = child.jsonPath[i];
-    //        if (!childCurrent[key]) {
-    //          childCurrent[key] = {}; // Initialize if not exist
-    //        }
-    //        childCurrent = childCurrent[key];
-    //      }
-    //      const childLastKey = child.jsonPath[child.jsonPath.length - 1];
-    //      if (child.value !== childCurrent[childLastKey] && childLastKey === 'label' &&
-    //        item?.contextValue?.includes('root')) {
-    //        //Change the name of the file
-    //        const newFilePath = path.join(this.rootPath, `${child.value}.json`);
-    //        fs.renameSync(item.filePath, newFilePath);
-    //        item.filePath = newFilePath;
-    //      }
-    //      if (child.value !== undefined) {
-    //        if (childLastKey === '$id') {
-    //        }
-    //        childCurrent[childLastKey] = child.value;
-    //      }
-    //      if (child.children.length > 0) {
-    //        updateItemInJSON(jsonObject, child);
-    //      }
-    //    });
-    //  };
-    //
-    //  updateItemInJSON(parentJSON, item);
-    //
-    //  const jsonUpdated = this.findObjectByID(id, parentJSON);
-    //
-    //  interface Link {
-    //    $id: string;
-    //    $label: string;
-    //    $jsonPath: string[];
-    //    $tags: string[];
-    //    $visibility: string;
-    //  }
-    //
-    //  if (parentJSON?.$links.length != 0) {
-    //    (parentJSON.$links as Link[]).forEach((link: Link) => {
-    //      if (link.$id === jsonUpdated?.$id) {
-    //        if (jsonUpdated?.$label)
-    //          link.$label = jsonUpdated.$label;
-    //        if (jsonUpdated?.visibility)
-    //          link.$visibility = jsonUpdated.visibility;
-    //      }
-    //    });
-    //  }
-    //
-    //  try {
-    //    fs.writeFileSync(item.filePath, JSON.stringify(parentJSON, null, 2), 'utf-8');
-    //    vscode.window.showInformationMessage(`Item ${item.$label} updated successfully!`);
-    //    this.refresh();
-    //  } catch (error) {
-    //    const errorMessage = (error instanceof Error) ? error.message : String(error);
-    //    vscode.window.showErrorMessage(`Failed to update item: ${errorMessage}`);
-    //  }
+  async saveObject(json: any, jsonPath: string[], jsonFile: string): Promise<void> {
+
+    if (jsonPath.length === 0) {
+      const rootJSON = JSON.parse(fs.readFileSync(jsonFile, 'utf-8'));
+
+      const oldName = rootJSON.label;
+      const newName = json.label;
+
+      if (oldName !== newName) {
+        // Get the last string from the last '/' to '.json'
+        const oldFileName = path.basename(jsonFile); // Extracts the filename from the full path
+        const oldFilePath = path.dirname(jsonFile); // Extracts the directory path
+
+        // Construct the full path to the old file
+        const oldFileFullPath = path.join(oldFilePath, oldFileName);
+
+        // Construct the new file path with the new name
+        const newFileName = newName + '.json'; // Assuming you're appending '.json' to the new label
+        const newJsonFile = path.join(oldFilePath, newFileName);
+
+        // Remove the old file
+        fs.unlinkSync(oldFileFullPath); // Synchronously removes the old file
+
+        // Write the new JSON data to a file with the new name
+        fs.writeFileSync(newJsonFile, JSON.stringify(json, null, 2), 'utf-8');
+      } else {
+        fs.writeFileSync(jsonFile, JSON.stringify(json, null, 2), 'utf-8');
+      }
+
+      this.refresh();
+    } else {
+      //Read the file
+      const rootJSON = JSON.parse(fs.readFileSync(jsonFile, 'utf-8'));
+
+      //Drill down
+      let current = rootJSON;
+
+      if (jsonPath.length > 0) {
+        let key = jsonPath[0];
+        for (let i = 0; i < jsonPath.length - 1; i++) {
+          key = jsonPath[i];
+          current = current[key];
+        }
+        key = jsonPath[jsonPath.length - 1];
+        current[key] = json;
+      }
+
+      fs.writeFileSync(jsonFile, JSON.stringify(rootJSON, null, 2), 'utf-8');
+      this.refresh();
+    }
   }
 }
 
@@ -528,7 +471,7 @@ export class Item extends vscode.TreeItem {
     } else if (!this.schema.hidden === true && this.schema.type === 'object') {
       this.contextValue += ".add";
       this.contextValue += ".rm";
-      this.contextValue += ".duplicate";
+      //this.contextValue += ".duplicate";
     } else if (!this.schema.hidden === true && this.schema.type === 'array') {
       this.contextValue += ".add";
     }
