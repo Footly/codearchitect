@@ -256,8 +256,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             decodeTreeOptions(query, json[key], initialValue, newPath, Array.isArray(json[key]));
                         } else if (typeof json === 'object') {
                             if (matchesQuery(json, query)) {
-                                json.path = newPath;
-                                mySet.add(json);
+                                const newJson = { ...json };
+                                newJson.path = newPath;
+                                mySet.add(newJson);
                             }
                         }
                     }
@@ -333,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         key = path[path.length - 1];
                         current[key] = value;
                     }
-
+                    
                     // Handle the editObject command
                     vscode.postMessage({ command: 'saveObject', json: jsonItem, jsonPath: jsonPath, jsonFile: jsonFile });
                 };

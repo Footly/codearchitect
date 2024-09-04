@@ -225,7 +225,6 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
         .map(([key, value], index) => ({
           parent_key: key,
           title: value.items!.title!,
-          index: parent.children.length,
           items: value.items
         }));
 
@@ -258,13 +257,13 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       }
 
       return {
-        jsonPath: [...parent.jsonPath, selectedValue.parent_key, selectedValue.index.toString()],
+        jsonPath: [...parent.jsonPath, selectedValue.parent_key],
         items: selectedValue.items
       };
     };
 
     const handleSchemaForArray = (parent: any) => ({
-      jsonPath: [...parent.jsonPath, parent.children.length.toString()],
+      jsonPath: [...parent.jsonPath],
       items: parent.schema?.items
     });
 
@@ -299,14 +298,14 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
     // Open rootJSONfile
     const rootJSON = JSON.parse(fs.readFileSync(rootJSONfile, 'utf-8'));
 
-    // On jsonPath write newJson using reduce for a more modern approach
-    jsonPath.slice(0, -1).reduce((acc, key) => {
-      // If the key does not exist, create an empty object at that key
-      if (!(key in acc)) {
-        acc[key] = {};
-      }
-      return acc[key]; // Return the nested object for the next iteration
-    }, rootJSON)[jsonPath[jsonPath.length - 1]] = newJson;
+    let current = rootJSON;
+
+    // Drill down to the desired part of the JSON
+    for (const key of jsonPath) {
+      current = current[key];
+    }
+
+    current.push(newJson);
 
     try {
       fs.writeFileSync(rootJSONfile, JSON.stringify(rootJSON, null, 2), 'utf-8');
