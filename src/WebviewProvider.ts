@@ -6,7 +6,7 @@ export class PropertiesWebviewViewProvider implements vscode.WebviewViewProvider
 	private _view?: vscode.WebviewView;
 	private _messageHandler: (message: any) => void;
 
-	constructor(private readonly extensionUri: vscode.Uri, handle: (message: any) => void) { 
+	constructor(private readonly extensionUri: vscode.Uri, handle: (message: any) => void) {
 		// Step 3: Add the handler message callback
 		this._messageHandler = handle;
 	}
@@ -23,6 +23,36 @@ export class PropertiesWebviewViewProvider implements vscode.WebviewViewProvider
 		this.initWebview();
 	}
 
+	// Function to handle circular references and return an object
+	private handleCircularReferences(obj: any): any {
+		const seen = new WeakSet();
+
+		function processObject(value: any): any {
+			if (value !== null && typeof value === 'object') {
+				if (seen.has(value)) {
+					return '[Circular]';
+				}
+				seen.add(value);
+
+				// Process arrays and objects separately
+				if (Array.isArray(value)) {
+					return value.map(processObject);
+				} else {
+					const output: any = {};
+					for (const key in value) {
+						if (value.hasOwnProperty(key)) {
+							output[key] = processObject(value[key]);
+						}
+					}
+					return output;
+				}
+			}
+			return value;
+		}
+
+		return processObject(obj);
+	}
+
 	updateWebview(schema: any, jsonFile: string, jsonPath: string[]) {
 		if (this?._view?.webview) {
 			// Step 1: Create the JSON object
@@ -31,7 +61,7 @@ export class PropertiesWebviewViewProvider implements vscode.WebviewViewProvider
 			// Step 2: Send the JSON object to the webview
 			this._view.webview.postMessage({
 				command: 'editObject',
-				schema: schema,
+				schema: this.handleCircularReferences(schema),
 				json: json,
 				jsonPath: jsonPath,
 				jsonFile: jsonFile
