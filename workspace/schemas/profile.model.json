@@ -49,12 +49,6 @@
       "markdown": true,
       "type": "string"
     },
-    "srcPath": {
-      "type": "string",
-      "hidden": true,
-      "editable": true,
-      "file": "*"
-    },
     "Requirements": {
       "type": "array",
       "items": {
