@@ -326,17 +326,18 @@ def process_swe2(json_data, libs):
         if "packages" in json_data:
             packages.extend(json_data['packages'])
 
+        if "layers" in json_data:
             # Recursively process nested packages
-            for item in json_data['packages']:
+            for item in json_data['layers']:
                 if isinstance(item, dict):
                     packages.extend(look_for_packages(item))
-
         return packages
 
     # Check if 'Architecture' exists and is not empty
     architecture = json_data.get('Architecture', [])
     # Initialize packages list
-    packages = architecture
+    packages = []
+
     if architecture:
         for item in architecture:
             if isinstance(item, dict):
@@ -349,6 +350,7 @@ def process_swe2(json_data, libs):
     for id in ids:
         target_id = "${id:" + id + "}"
         int_tests.extend(get_all_refs_to_object(target_id, json_data, json_data, "inttest"))
+    print(packages)
     for pack in packages:
         libs[pack['label']] = {}
         libs[pack['label']]['desc'] = pack['documentation']

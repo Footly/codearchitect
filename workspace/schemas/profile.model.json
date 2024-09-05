@@ -65,7 +65,7 @@
     "Architecture": {
       "type": "array",
       "items": {
-        "$ref": "./package.model.json"
+        "$ref": "./layer.model.json"
       },
       "properties": {
         "icon": {

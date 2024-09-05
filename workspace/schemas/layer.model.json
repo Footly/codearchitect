@@ -1,7 +1,7 @@
 {
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
-  "title": "Package",
+  "title": "Layer",
   "properties": {
     "id": {
       "type": "string",
@@ -29,7 +29,7 @@
     "icon": {
       "hidden": true,
       "type": "string",
-      "const": "package"
+      "const": "layers"
     },
     "documentation": {
       "hidden": true,
@@ -38,29 +38,18 @@
       "markdown": true,
       "type": "string"
     },
-    "requirements": {
+    "layers": {
       "type": "array",
       "hidden": true,
-      "editable": true,
       "items": {
-        "type": "string",
-        "search": {
-          "query": [
-            [
-              {
-                "field": "tags",
-                "regex": "reqs"
-              }
-            ]
-          ]
-        }
+        "$ref": "./layer.model.json"
       }
     },
-    "libraries": {
+    "packages": {
       "type": "array",
       "hidden": true,
       "items": {
-        "$ref": "./library.model.json"
+        "$ref": "./package.model.json"
       }
     }
   }
