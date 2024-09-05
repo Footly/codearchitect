@@ -3,6 +3,7 @@ import argparse
 import re
 import os
 import argparse
+from json2plantuml import PlantUMLConverter 
 
 def format_anchor(text, name=""):
     """Format the text to be used as an anchor link."""
@@ -98,7 +99,7 @@ def extract_guid(text):
     # Return the matched GUID or None if not found
     return match.group(0) if match else None
 
-def generate_markdown_swe1(libs, name):
+def generate_markdown_swe1(libs, name, filepath):
     markdown = "# Traceability SWE1 View\n\n"
     markdown += "This document presents the relationships between requirements, packages, and qualification tests. Each requirement is associated with one or more packages that depend on it and the verification tests that confirm these relationships.\n\n"
     
@@ -147,7 +148,7 @@ def generate_markdown_swe1(libs, name):
     
     return markdown
 
-def generate_markdown_swe2(libs, name):
+def generate_markdown_swe2(libs, name, filepath):
     markdown = "# Traceability SWE2 View\n\n"
     markdown += "This document presents the relationships between packages, libraries, requirements, and integration tests. Each package consists of a architectural block satisfying requirement/s, implemented by librarie/s and verified by integration test/s.\n\n"
     
@@ -206,7 +207,7 @@ def generate_markdown_swe2(libs, name):
     
     return markdown
 
-def generate_markdown_swe3(libs, name):
+def generate_markdown_swe3(libs, name, filepath):
     markdown = "# Traceability SWE3 View\n\n"
     markdown += "This document presents the relationships between libraries, packages, and unit tests. Each library implements a package and is verified by unit test/s\n\n"
     
@@ -232,7 +233,11 @@ def generate_markdown_swe3(libs, name):
     markdown += f"[Back to Table of Contents](#table-of-contents)\n\n"
     for library, details in libs.items():
         markdown += f"### `{library}`\n"
+        converter = PlantUMLConverter(filepath, details.get('id'))
+        item = search_by_id(details.get('id'), json_data)
+        plantuml = converter.json_to_plantuml_class(item)
         markdown += f"**Description:** {details.get('desc', 'No description available')}\n\n"
+        markdown += f"```puml\n{plantuml}\n```\n\n"
         markdown += "- **Satisfies Packages:**\n"
         
         for requirement in details.get('satisfies', []):
@@ -255,19 +260,19 @@ def generate_markdown_swe3(libs, name):
     
     return markdown
 
-def generate_markdown_swe4(libs, name):
+def generate_markdown_swe4(libs, name, filepath):
     markdown = "# Traceability SWE4 View\n\n"
     # Implement swe4 view specific Markdown generation here
     # ...
     return markdown
 
-def generate_markdown_swe5(libs, name):
+def generate_markdown_swe5(libs, name, filepath):
     markdown = "# Traceability SWE5 View\n\n"
     # Implement swe5 view specific Markdown generation here
     # ...
     return markdown
 
-def generate_markdown_swe6(libs, name):
+def generate_markdown_swe6(libs, name, filepath):
     markdown = "# Traceability SWE6 View\n\n"
     # Implement swe6 view specific Markdown generation here
     # ...
@@ -353,10 +358,11 @@ def process_swe2(json_data, libs):
     for id in ids:
         target_id = "${id:" + id + "}"
         int_tests.extend(get_all_refs_to_object(target_id, json_data, json_data, "inttest"))
-    print(packages)
+
     for pack in packages:
         libs[pack['label']] = {}
         libs[pack['label']]['desc'] = pack['documentation']
+        libs[pack['label']]['id'] = pack['id']
         libs[pack['label']]['satisfies'] = []
         libs[pack['label']]['implemented by'] = []
         libs[pack['label']]['verified by'] = []
@@ -445,6 +451,7 @@ def process_swe3(json_data, libs):
             for lib in value['libraries']:
                 libs[lib['label']] = {}
                 libs[lib['label']]['desc'] = lib['documentation']
+                libs[lib['label']]['id'] = lib['id']
                 pack_dict = {
                   'label': pack,
                   'description': value['description']
@@ -472,7 +479,7 @@ def process_swe6(json_data, libs):
     # swe6 specific data processing
     pass
 
-def process_view(view_type, json_data, libs, name):
+def process_view(view_type, json_data, libs, name, filepath):
     view_processors = {
         'swe1': (process_swe1, generate_markdown_swe1),
         'swe2': (process_swe2, generate_markdown_swe2),
@@ -484,7 +491,7 @@ def process_view(view_type, json_data, libs, name):
     if view_type in view_processors:
         process_func, markdown_func = view_processors[view_type]
         process_func(json_data, libs)
-        return markdown_func(libs, name)
+        return markdown_func(libs, name, filepath)
     else:
         raise ValueError(f"Unsupported view type: {view_type}")
 
@@ -505,17 +512,17 @@ if __name__ == "__main__":
             json_data = json.load(json_file)
 
         # Process the JSON data and generate the Markdown content for swe1 upto swe6
-        swe1_markdown = process_view('swe1', json_data, libs, args.name)
+        swe1_markdown = process_view('swe1', json_data, libs, args.name, args.file)
         libs = {}
-        swe2_markdown = process_view('swe2', json_data, libs, args.name)
+        swe2_markdown = process_view('swe2', json_data, libs, args.name, args.file)
         libs = {}
-        swe3_markdown = process_view('swe3', json_data, libs, args.name)
+        swe3_markdown = process_view('swe3', json_data, libs, args.name, args.file)
         libs = {}
-        swe4_markdown = process_view('swe4', json_data, libs, args.name)
+        swe4_markdown = process_view('swe4', json_data, libs, args.name, args.file)
         libs = {}
-        swe5_markdown = process_view('swe5', json_data, libs, args.name)
+        swe5_markdown = process_view('swe5', json_data, libs, args.name, args.file)
         libs = {}
-        swe6_markdown = process_view('swe6', json_data, libs, args.name)
+        swe6_markdown = process_view('swe6', json_data, libs, args.name, args.file)
 
         # Write the Markdown content to the output file.
         # File name shall be name_view.md
