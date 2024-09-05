@@ -319,6 +319,8 @@ document.addEventListener('DOMContentLoaded', () => {
             //Create function to iterate over schema and create a form.
             const createForm = (schema, jsonItem) => {
                 const form = document.createElement('div');
+                //Add a class to the form
+                form.className = 'form';
                 const updateJSONHandler = (e) => {
                     let current = jsonItem;
                     const path = [...e.detail.path];

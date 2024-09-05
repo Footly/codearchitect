@@ -17,6 +17,10 @@
   "contributes": {
     "commands": [
       {
+        "command": "codearchitect.openWebview",
+        "title": "Code Architect: Open Webview"
+      },
+      {
         "command": "codearchitect.helloWorld",
         "title": "Code Architect: Hello World"
       },
@@ -92,12 +96,6 @@
           "name": "Tree View",
           "contextualTitle": "Code Architect: Tree View",
           "type": "tree"
-        },
-        {
-          "id": "codearchitect-properties",
-          "name": "Properties",
-          "contextualTitle": "Code Architect: Properties",
-          "type": "webview"
         }
       ]
     },

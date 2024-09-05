@@ -4,13 +4,25 @@ import * as fs from 'fs';
 import { ItemTreeProvider, Item } from './tree';
 import $RefParser from "@apidevtools/json-schema-ref-parser";
 import { runCustomCommand, Command } from './customCommand';
-import { PropertiesWebviewViewProvider } from './WebviewProvider';
 
 let schemas: any = [];
 let itemTreeProvider: ItemTreeProvider; // Declare the itemTreeProvider variable at the top level
 let itemTreeView: vscode.TreeView<Item> | undefined; // To keep a reference to the tree view
+let webViewPanel: vscode.WebviewPanel | undefined; // To keep a reference to the webview panel
 
 export function activate(context: vscode.ExtensionContext) {
+    const handleMessage = (message: any) => {
+        try {
+            // Handle the message received from the webview
+            // Perform actions based on the message content
+            if (message.command === 'saveObject') {
+                itemTreeProvider.saveObject(message.json, message.jsonPath, message.jsonFile);
+            }
+        } catch (error) {
+            vscode.window.showErrorMessage('Error handling webview message.');
+        }
+    };
+
     try {
         const config = vscode.workspace.getConfiguration('codearchitect');
         const pathModels = config.get<string>('pathModels', '');
@@ -19,7 +31,6 @@ export function activate(context: vscode.ExtensionContext) {
         const readSchemaFiles = async (pathModels: string, pathProjects: string) => {
             try {
                 const files = await fs.promises.readdir(pathModels);
-
                 const schemaFiles = files.filter(file => file.endsWith('.model.json'));
 
                 if (schemaFiles.length === 0) {
@@ -56,6 +67,14 @@ export function activate(context: vscode.ExtensionContext) {
                 vscode.window.showErrorMessage('Error reading the schema directory.');
             }
         };
+
+        const editObjectCommand = vscode.commands.registerCommand('codearchitect.editObject', async (jsonPath: string[], filePath: string) => {
+            try {
+                await vscode.commands.executeCommand('codearchitect.openWebview', jsonPath, filePath);
+            } catch (error) {
+                vscode.window.showErrorMessage('Error editing object.');
+            }
+        });
 
         const initializeSchemaTree = (pathProjects: string, schemas: any[]) => {
             try {
@@ -189,32 +208,163 @@ export function activate(context: vscode.ExtensionContext) {
             }
         });
 
-        const handleMessage = (message: any) => {
-            try {
-                //// Handle the message received from the webview
-                //// You can perform actions based on the message content
-                if (message.command === 'saveObject') {
-                    itemTreeProvider.saveObject(message.json, message.jsonPath, message.jsonFile);
-                }
-            } catch (error) {
-                vscode.window.showErrorMessage('Error handling webview message.');
-            }
-        }
+        // Command to open the webview in a new tab
+        const openWebviewCommand = vscode.commands.registerCommand('codearchitect.openWebview', async (jsonPath: string[], filePath: string) => {
+            const openJson = (jsonFile: string): any => {
+                const filePath = path.resolve(jsonFile);
+                let jsonData: any;
 
-        const editObjectCommand = vscode.commands.registerCommand('codearchitect.editObject', async (jsonPath: string[], filePath: string) => {
+                try {
+                    const fileContents = fs.readFileSync(filePath, 'utf8');
+                    jsonData = JSON.parse(fileContents);
+                } catch (error) {
+                    vscode.window.showErrorMessage('Error reading or parsing JSON file. Error: ' + error);
+                    return null;
+                }
+
+                return jsonData;
+            };
+
+            const handleCircularReferences = (obj: any): any => {
+                try {
+                    const seen = new WeakSet();
+
+                    const processObject = (value: any): any => {
+                        if (value !== null && typeof value === 'object') {
+                            if (seen.has(value)) {
+                                return '[Circular]';
+                            }
+                            seen.add(value);
+
+                            if (Array.isArray(value)) {
+                                return value.map(processObject);
+                            } else {
+                                const output: any = {};
+                                for (const key in value) {
+                                    if (value.hasOwnProperty(key)) {
+                                        output[key] = processObject(value[key]);
+                                    }
+                                }
+                                return output;
+                            }
+                        }
+                        return value;
+                    };
+
+                    return processObject(obj);
+                } catch (error) {
+                    vscode.window.showErrorMessage('Error handling circular references. Error: ' + error);
+                    return null;
+                }
+            };
+
+            const updateWebview = (webview: vscode.Webview, schema: any, jsonFile: string, jsonPath: string[]) => {
+                try {
+                    if (webview) {
+                        const json = openJson(jsonFile);
+
+                        webview.postMessage({
+                            command: 'editObject',
+                            schema: handleCircularReferences(schema),
+                            json: json,
+                            jsonPath: jsonPath,
+                            jsonFile: jsonFile
+                        });
+                    }
+                } catch (error) {
+                    vscode.window.showErrorMessage('Error updating webview. Error: ' + error);
+                }
+            };
+
+            const getWebviewOptions = (): vscode.WebviewOptions => {
+                try {
+                    return {
+                        enableScripts: true,
+                        localResourceRoots: [
+                            vscode.Uri.joinPath(context.extensionUri, 'resources', 'webview', 'media'),
+                            vscode.Uri.joinPath(context.extensionUri, 'node_modules', '@vscode-elements', 'elements', 'dist'),
+                            vscode.Uri.joinPath(context.extensionUri, 'node_modules', '@vscode', 'codicons', 'dist'),
+                        ]
+                    };
+                } catch (error) {
+                    vscode.window.showErrorMessage('Error getting webview options. Error: ' + error);
+                    return { enableScripts: true };
+                }
+            };
+
             try {
+                // If the webViewPanel exists but is disposed, recreate it
+                if (webViewPanel && webViewPanel.viewColumn === vscode.ViewColumn.One) {
+                    webViewPanel.reveal(vscode.ViewColumn.One);
+                    const item = itemTreeProvider.getItem(jsonPath, filePath);
+                    if (item) {
+                        updateWebview(webViewPanel.webview, item.schema, item.filePath, jsonPath);
+                    }
+                    return;  // Exit the function if the panel is just refreshed
+                }
+
+                // Create a new webview panel
+                const panel = vscode.window.createWebviewPanel(
+                    'codearchitectWebview',  // Webview identifier
+                    'Code Architect',         // Title of the panel
+                    vscode.ViewColumn.One,    // Display in the first editor column
+                    getWebviewOptions()
+                );
+
+                panel.iconPath = {
+                    light: vscode.Uri.file(path.join(context.extensionPath, 'resources', 'light', 'code-architect.svg')),
+                    dark: vscode.Uri.file(path.join(context.extensionPath, 'resources', 'dark', 'code-architect.svg'))
+                };
+
+                const webview = panel.webview;
+                const indexPath = vscode.Uri.file(path.join(context.extensionUri.path, 'resources', 'webview', 'media', 'index.html'));
+                let html = fs.readFileSync(indexPath.fsPath, 'utf8');
+
+                const codiconCss = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'resources', 'webview', 'media', 'codicon.css'));
+                const styleCss = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'resources', 'webview', 'media', 'style.css'));
+                const indexJs = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'resources', 'webview', 'media', 'index.js'));
+                const bundledJs = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'resources', 'webview', 'media', 'bundled.js'));
+
+                html = html.replace('codicon.css', codiconCss.toString());
+                html = html.replace('style.css', styleCss.toString());
+                html = html.replace('index.js', indexJs.toString());
+                html = html.replace('bundled.js', bundledJs.toString());
+
+                panel.webview.html = html;
+
+                panel.webview.onDidReceiveMessage((message) => {
+                    handleMessage(message);  // Update this to handle specific messages
+                });
+
+                panel.onDidDispose(() => {
+                    webViewPanel = undefined;
+                });
+
+                panel.onDidChangeViewState((event) => {
+                    if (event.webviewPanel.active) {
+                        const item = itemTreeProvider.getItem(jsonPath, filePath);
+                        if (item) {
+                            updateWebview(webview, item.schema, item.filePath, jsonPath);
+                        }
+                    }
+                });
+
                 const item = itemTreeProvider.getItem(jsonPath, filePath);
-                if (!item)
-                    return;
+                if (!item) return;
 
                 await itemTreeView?.reveal(item, { select: true, focus: true });
-                // Edit the object
-                propertiesWebviewProvider.updateWebview(item.schema, item.filePath, item.jsonPath);
+
+                webViewPanel = panel;
+
+                updateWebview(webview, item.schema, item.filePath, jsonPath);
+
             } catch (error) {
-                vscode.window.showErrorMessage('Error editing object.');
+                vscode.window.showErrorMessage('Error opening webview. Error: ' + error);
             }
         });
 
+
+        // Other existing commands...
         context.subscriptions.push(vscode.commands.registerCommand('codearchitect.navigateBack', async (item: Item) => {
             try {
                 itemTreeProvider.navigateBack(item);
@@ -231,21 +381,18 @@ export function activate(context: vscode.ExtensionContext) {
             }
         }));
 
-        // Register the Webview View provider
-        const propertiesWebviewProvider = new PropertiesWebviewViewProvider(context.extensionUri, handleMessage);
-        context.subscriptions.push(
-            vscode.window.registerWebviewViewProvider('codearchitect-properties', propertiesWebviewProvider)
-        );
-
+        // Initialize schema reading and tree view
         readSchemaFiles(pathModels, pathProjects);
 
+        // Register commands
         context.subscriptions.push(helloWorldCommand);
         context.subscriptions.push(newProjectCommand);
         context.subscriptions.push(refreshProjectsCommand);
         context.subscriptions.push(addItemCommand);
-        context.subscriptions.push(editObjectCommand);
         context.subscriptions.push(removeItemCommand);
         context.subscriptions.push(customCommand);
+        context.subscriptions.push(openWebviewCommand); // Register the new webview command
+        context.subscriptions.push(editObjectCommand);
     } catch (error) {
         vscode.window.showErrorMessage('Error during extension activation.');
     }

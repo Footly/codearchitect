@@ -48,7 +48,6 @@
       "hidden": true,
       "editable": true,
       "multiline": true,
-      "markdown": true,
       "type": "string"
     }
   }
