@@ -37,6 +37,24 @@
       "multiline": true,
       "markdown": true,
       "type": "string"
+    },
+    "verifying": {
+      "type": "array",
+      "hidden": true,
+      "editable": true,
+      "items": {
+        "type": "string",
+        "search": {
+          "query": [
+            [
+              {
+                "field": "tags",
+                "regex": "funcio"
+              }
+            ]
+          ]
+        }
+      }
     }
   }
 }

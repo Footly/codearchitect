@@ -38,7 +38,7 @@
       "markdown": true,
       "type": "string"
     },
-    "packages": {
+    "verifying": {
       "type": "array",
       "hidden": true,
       "editable": true,
