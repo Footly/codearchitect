@@ -41,45 +41,7 @@
       ],
       "icon": "layers",
       "documentation": "",
-      "layers": [
-        {
-          "id": "79b9fc1a-ed36-4d6c-801d-eedb0fe076ea",
-          "label": "app2",
-          "visibility": "public",
-          "tags": [
-            "package"
-          ],
-          "icon": "layers",
-          "documentation": "",
-          "layers": [],
-          "packages": [
-            {
-              "id": "1b26fbb7-af39-4aa9-b097-789bd9038fd5",
-              "label": "pack2",
-              "visibility": "public",
-              "tags": [
-                "package"
-              ],
-              "icon": "package",
-              "documentation": "",
-              "requirements": [],
-              "libraries": []
-            },
-            {
-              "id": "0a6fa390-ffc1-4942-8a8a-47b6cceef49b",
-              "label": "ota",
-              "visibility": "public",
-              "tags": [
-                "package"
-              ],
-              "icon": "package",
-              "documentation": "",
-              "requirements": [],
-              "libraries": []
-            }
-          ]
-        }
-      ],
+      "layers": [],
       "packages": [
         {
           "id": "ee364c90-69be-47db-a63d-6e1f841b1553",
