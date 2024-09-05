@@ -7,8 +7,8 @@
   ],
   "icon": "symbol-method",
   "$model": "profile.model.json",
-  "version": "",
-  "documentation": "",
+  "version": "dsadsaasasas",
+  "documentation": "sadasdasdsadasdasd",
   "Requirements": [
     {
       "id": "c72a730a-d20d-45fa-87f9-36439f1c65e6",
@@ -17,7 +17,7 @@
       "tags": [
         "reqs"
       ],
-      "description": "",
+      "description": "System shall have a wifi connection available",
       "icon": "book"
     },
     {
@@ -27,7 +27,17 @@
       "tags": [
         "reqs"
       ],
-      "description": "",
+      "description": "System shall measure tank temperature",
+      "icon": "book"
+    },
+    {
+      "id": "0f66f357-07dd-49c2-b3f6-c320e8d83950",
+      "label": "REQ3",
+      "visibility": "public",
+      "tags": [
+        "reqs"
+      ],
+      "description": "System shall be able to update over the air",
       "icon": "book"
     }
   ],
@@ -52,8 +62,63 @@
           ],
           "icon": "package",
           "documentation": "",
-          "requirements": [],
-          "libraries": []
+          "requirements": [
+            "${id:c72a730a-d20d-45fa-87f9-36439f1c65e6}"
+          ],
+          "libraries": [
+            {
+              "id": "26f598f7-c481-4933-910f-71a7911f87a4",
+              "label": "wifiAO",
+              "visibility": "public",
+              "tags": [
+                "lib"
+              ],
+              "documentation": "",
+              "icon": "repo",
+              "public dependencies": [],
+              "private dependencies": [],
+              "variables": [],
+              "funcions": [
+                {
+                  "id": "fbaebfee-2709-4727-81e7-ab336d9e9bdf",
+                  "label": "state_init",
+                  "visibility": "public",
+                  "tags": [
+                    "funcio"
+                  ],
+                  "icon": "symbol-property",
+                  "returntype": {
+                    "datatype": "",
+                    "isPointer": true,
+                    "isConst": true
+                  },
+                  "parameters": [],
+                  "documentation": ""
+                }
+              ],
+              "datastructures": [],
+              "typedefs": [],
+              "enumerators": [],
+              "macros": [],
+              "Ports In": [],
+              "HSM": [],
+              "Unit Tests": [
+                {
+                  "id": "0e66bc12-3ca6-4c6a-a37c-070cd1fb6a82",
+                  "label": "wifiAOInit",
+                  "visibility": "public",
+                  "tags": [
+                    "unittest"
+                  ],
+                  "icon": "beaker",
+                  "documentation": "",
+                  "verifying": [
+                    "${id:fbaebfee-2709-4727-81e7-ab336d9e9bdf}"
+                  ]
+                }
+              ]
+            }
+          ]
         },
         {
           "id": "fb53b1c1-26c9-40ae-81ee-0c855dd81d31",
@@ -64,7 +129,9 @@
           ],
           "icon": "package",
           "documentation": "",
-          "requirements": [],
+          "requirements": [
+            "${id:28be1e37-f45b-4bb3-96b7-ca39a9953b05}"
+          ],
           "libraries": []
         },
         {
@@ -76,7 +143,9 @@
           ],
           "icon": "package",
           "documentation": "",
-          "requirements": [],
+          "requirements": [
+            "${id:0f66f357-07dd-49c2-b3f6-c320e8d83950}"
+          ],
           "libraries": []
         }
       ]
@@ -107,5 +176,20 @@
     }
   ],
   "Integration Tests": [],
-  "Qualification Tests": []
+  "Qualification Tests": [
+    {
+      "id": "90c64225-a7f0-41d0-bc9f-d307fa10f8ba",
+      "label": "Quali1",
+      "visibility": "public",
+      "tags": [
+        "qualtest"
+      ],
+      "icon": "beaker",
+      "documentation": "Check that stations can connect intot he system",
+      "requirements": [
+        "${id:c72a730a-d20d-45fa-87f9-36439f1c65e6}"
+      ],
+      "satisfied by": []
+    }
+  ]
 }

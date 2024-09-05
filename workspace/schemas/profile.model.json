@@ -1,5 +1,5 @@
 {
-  "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
+  "$schema": "file:///C:/Users/narci/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "$id": "profile.model.json",
   "title": "Project",
   "type": "object",
@@ -109,20 +109,20 @@
           "tool": "shell",
           "args": [
             "python",
-            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\workspace\\python_scripts\\generate_view.py",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\generate_view.py",
             "-f",
             "${path}",
             "-o",
-            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\workspace\\python_scripts\\swe1_view.md",
-            "-v",
-            "swe1"
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\",
+            "-n",
+            "${label}"
           ]
         },
         {
           "tool": "vscode",
           "args": [
             "openFile",
-            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\workspace\\python_scripts\\swe1_view.md"
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\${label}_swe1.md"
           ]
         },
         {
@@ -141,20 +141,20 @@
           "tool": "shell",
           "args": [
             "python",
-            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\workspace\\python_scripts\\generate_view.py",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\generate_view.py",
             "-f",
             "${path}",
             "-o",
-            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\workspace\\python_scripts\\swe2_view.md",
-            "-v",
-            "swe2"
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\",
+            "-n",
+            "${label}"
           ]
         },
         {
           "tool": "vscode",
           "args": [
             "openFile",
-            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\workspace\\python_scripts\\swe2_view.md"
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\${label}_swe2.md"
           ]
         },
         {
@@ -173,20 +173,20 @@
           "tool": "shell",
           "args": [
             "python",
-            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\workspace\\python_scripts\\generate_view.py",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\generate_view.py",
             "-f",
             "${path}",
             "-o",
-            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\workspace\\python_scripts\\swe3_view.md",
-            "-v",
-            "swe3"
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\",
+            "-n",
+            "${label}"
           ]
         },
         {
           "tool": "vscode",
           "args": [
             "openFile",
-            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\workspace\\python_scripts\\swe3_view.md"
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\${label}_swe3.md"
           ]
         },
         {

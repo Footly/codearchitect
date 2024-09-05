@@ -1,17 +1,23 @@
 import json
 import argparse
 import re
+import os
+import argparse
 
-def format_anchor(text):
+def format_anchor(text, name=""):
     """Format the text to be used as an anchor link."""
-    return text.replace(' ', '-').replace(':', '').lower()
+    new_text = "#"+text.replace(' ', '-').replace(':', '').lower()
+    # Check if the name is provided and prepend it to the anchor
+    if name:
+        new_text = f"{name}{new_text}"
+    return new_text
 
-def format_list(items):
+def format_list(items, name=""):
     """Format a list of items into a Markdown string with links or error symbol."""
     if not items:
-        return '<span style="color: red;">[NOT FOUND] No items</span>'
+        return '<span style="color: red;">❌ No items</span>'
     return '<br>'.join([
-        f"[{item['label']}](#{format_anchor(item['label'])}): <i style='font-size: smaller;'>{item['description'][:80] + ('...' if len(item['description']) > 80 else '')}</i>" 
+        f"[{item['label']}]({format_anchor(item['label'], name)}): <i style='font-size: smaller;'>{item['description'][:80] + ('...' if len(item['description']) > 80 else '')}</i>" 
         for item in items
     ])
 
@@ -92,7 +98,7 @@ def extract_guid(text):
     # Return the matched GUID or None if not found
     return match.group(0) if match else None
 
-def generate_markdown_swe1(libs):
+def generate_markdown_swe1(libs, name):
     markdown = "# Traceability SWE1 View\n\n"
     markdown += "This document presents the relationships between requirements, packages, and qualification tests. Each requirement is associated with one or more packages that depend on it and the verification tests that confirm these relationships.\n\n"
     
@@ -107,44 +113,43 @@ def generate_markdown_swe1(libs):
     markdown += "|--------------|--------------|-------------|\n"
     
     for req_id, details in libs.items():
-        satisfied_by = format_list(details.get('libs', []))
-        verified_by = format_list(details.get('verified_by', []))
+        satisfied_by = format_list(details.get('libs', []), name+"_swe2.md")
+        verified_by = format_list(details.get('verified_by', []), name+"_swe6.md")
         description = details.get('desc', 'No description available')
         anchor_req_id = format_anchor(req_id)
-        markdown += f"| [`{req_id}`](#{anchor_req_id}): {description[:80] + ('...' if len(description) > 80 else '')} | {satisfied_by} | {verified_by} |\n"
+        markdown += f"| [`{req_id}`]({anchor_req_id}): {description[:80] + ('...' if len(description) > 80 else '')} | {satisfied_by} | {verified_by} |\n"
 
     # Requirements
     markdown += "## Requirements\n\n"
     markdown += f"[Back to Table of Contents](#table-of-contents)\n\n"
     for req_id, details in libs.items():
-        anchor_req_id = format_anchor(req_id)
         markdown += f"### `{req_id}`\n"
         markdown += f"**Description:** {details.get('desc', 'No description available')}\n\n"
         markdown += f"- **Satisfied by:**\n"
         
         for library in details.get('libs', []):
-            anchor_library = format_anchor(library['label'])
-            markdown += f"  - **[{library['label']}](#{anchor_library})**\n"
+            anchor_library = format_anchor(library['label'], name+"_swe2.md")
+            markdown += f"  - **[{library['label']}]({anchor_library})**\n"
         
         if not details.get('libs'):
-            markdown += "  - <span style='color: red;'>[NOT FOUND] No packages satisfied this requirement.</span>\n"
+            markdown += "  - <span style='color: red;'>❌ No packages satisfied this requirement.</span>\n"
         
         markdown += f"- **Verified by:**\n"
         for qualtest in details.get('verified_by', []):
-            anchor_qualtest = format_anchor(qualtest['label'])
-            markdown += f"  - **[{qualtest['label']}](#{anchor_qualtest})**\n"
+            anchor_qualtest = format_anchor(qualtest['label'], name+"_swe6.md")
+            markdown += f"  - **[{qualtest['label']}]({anchor_qualtest})**\n"
         
         if not details.get('verified_by'):
-            markdown += "  - <span style='color: red;'>[NOT FOUND] No qualification tests verified this requirement.</span>\n"
+            markdown += "  - <span style='color: red;'>❌ No qualification tests verified this requirement.</span>\n"
         markdown += "\n"
 
     markdown += "---\n\n"
     
     return markdown
 
-def generate_markdown_swe2(libs):
+def generate_markdown_swe2(libs, name):
     markdown = "# Traceability SWE2 View\n\n"
-    markdown += "This document presents the relationships between packages, libraries, requirements, and integration tests. Each package consists of a architectural block satisfying requirement/s, implemented by librarie/s and verified by integration test/s."
+    markdown += "This document presents the relationships between packages, libraries, requirements, and integration tests. Each package consists of a architectural block satisfying requirement/s, implemented by librarie/s and verified by integration test/s.\n\n"
     
     # Table of Contents
     markdown += "## Table of Contents\n\n"
@@ -157,52 +162,51 @@ def generate_markdown_swe2(libs):
     markdown += "|-----------|---------|----------------|-------------|\n"
     
     for package, details in libs.items():
-        implemented_by = format_list(details.get('implemented by', []))
-        satisfies = format_list(details.get('satisfies', []))
-        verified_by = format_list(details.get('verified by', []))
+        implemented_by = format_list(details.get('implemented by', []), name+"_swe3.md")
+        satisfies = format_list(details.get('satisfies', []), name+"_swe1.md")
+        verified_by = format_list(details.get('verified by', []), name+"_swe5.md")
         description = details.get('desc', 'No description available')
         anchor_package = format_anchor(package)
-        markdown += f"| {satisfies} | [`{package}`](#{anchor_package}): {description[:80] + ('...' if len(description) > 80 else '')} | {implemented_by} | {verified_by} |\n"
+        markdown += f"| {satisfies} | [`{package}`]({anchor_package}): {description[:80] + ('...' if len(description) > 80 else '')} | {implemented_by} | {verified_by} |\n"
 
     # Packages
     markdown += "## Packages\n\n"
     markdown += f"[Back to Table of Contents](#table-of-contents)\n\n"
     for package, details in libs.items():
-        anchor_package = format_anchor(package)
         markdown += f"### `{package}`\n"
         markdown += f"**Description:** {details.get('desc', 'No description available')}\n\n"
         markdown += "- **Satisfies Requirements:**\n"
         
         for requirement in details.get('satisfies', []):
-            anchor_requirement = format_anchor(requirement['label'])
-            markdown += f"  - **[{requirement['label']}](#{anchor_requirement})**: {requirement['description']}\n"
+            anchor_requirement = format_anchor(requirement['label'], name+"_swe1.md")
+            markdown += f"  - **[{requirement['label']}]({anchor_requirement})**: {requirement['description']}\n"
         
         if not details.get('satisfies'):
-            markdown += "  - <span style='color: red;'>[NOT FOUND] No requirements satisfied by this package.</span>\n"
+            markdown += "  - <span style='color: red;'>❌ No requirements satisfied by this package.</span>\n"
 
         markdown += "- **Implemented by:**\n"
         
         for lib in details.get('implemented by', []):
-            anchor_lib = format_anchor(lib['label'])
-            markdown += f"  - **[{lib['label']}](#{anchor_lib})**: {lib['description']}\n"
+            anchor_lib = format_anchor(lib['label'], name+"_swe3.md")
+            markdown += f"  - **[{lib['label']}]({anchor_lib})**: {lib['description']}\n"
         
         if not details.get('implemented by'):
-            markdown += "  - <span style='color: red;'>[NOT FOUND] No libraries implementing this package.</span>\n"
+            markdown += "  - <span style='color: red;'>❌ No libraries implementing this package.</span>\n"
         
         markdown += "- **Verified by:**\n"
         for inttest in details.get('verified by', []):
-            anchor_inttest = format_anchor(inttest['label'])
-            markdown += f"  - **[{inttest['label']}](#{anchor_inttest})**: {inttest.get('description', 'No description available')}\n"
+            anchor_inttest = format_anchor(inttest['label'], name+"_swe5.md")
+            markdown += f"  - **[{inttest['label']}]({anchor_inttest})**: {inttest.get('description', 'No description available')}\n"
         
         if not details.get('verified by'):
-            markdown += "  - <span style='color: red;'>[NOT FOUND] No Int. tests verify this package.</span>\n"
+            markdown += "  - <span style='color: red;'>❌ No Int. tests verify this package.</span>\n"
         markdown += "\n"
 
     markdown += "---\n\n"
     
     return markdown
 
-def generate_markdown_swe3(libs):
+def generate_markdown_swe3(libs, name):
     markdown = "# Traceability SWE3 View\n\n"
     markdown += "This document presents the relationships between libraries, packages, and unit tests. Each library implements a package and is verified by unit test/s\n\n"
     
@@ -217,54 +221,53 @@ def generate_markdown_swe3(libs):
     markdown += "|-----------|---------|-------------|\n"
     
     for library, details in libs.items():
-        satisfies = format_list(details.get('satisfies', []))
-        verified_by = format_list(details.get('verified by', []))
+        satisfies = format_list(details.get('satisfies', []), name+"_swe2.md")
+        verified_by = format_list(details.get('verified by', []), name+"_swe4.md")
         description = details.get('desc', 'No description available')
         anchor_library = format_anchor(library)
-        markdown += f"| {satisfies} | [`{library}`](#{anchor_library}): {description[:80] + ('...' if len(description) > 80 else '')} | {verified_by} |\n"
+        markdown += f"| {satisfies} | [`{library}`]({anchor_library}): {description[:80] + ('...' if len(description) > 80 else '')} | {verified_by} |\n"
 
     # Libraries
     markdown += "## Libraries\n\n"
     markdown += f"[Back to Table of Contents](#table-of-contents)\n\n"
     for library, details in libs.items():
-        anchor_library = format_anchor(library)
         markdown += f"### `{library}`\n"
         markdown += f"**Description:** {details.get('desc', 'No description available')}\n\n"
         markdown += "- **Satisfies Packages:**\n"
         
         for requirement in details.get('satisfies', []):
-            anchor_requirement = format_anchor(requirement['label'])
-            markdown += f"  - **[{requirement['label']}](#{anchor_requirement})**: {requirement['description']}\n"
+            anchor_requirement = format_anchor(requirement['label'], name+"_swe2.md")
+            markdown += f"  - **[{requirement['label']}]({anchor_requirement})**: {requirement['description']}\n"
         
         if not details.get('satisfies'):
-            markdown += "  - <span style='color: red;'>[NOT FOUND] No package is satisfied by this library.</span>\n"
+            markdown += "  - <span style='color: red;'>❌ No package is satisfied by this library.</span>\n"
         
         markdown += "- **Verified by:**\n"
         for unittest in details.get('verified by', []):
-            anchor_unittest = format_anchor(unittest['label'])
-            markdown += f"  - **[{unittest['label']}](#{anchor_unittest})**: {unittest.get('description', 'No description available')}\n"
+            anchor_unittest = format_anchor(unittest['label'], name+"_swe4.md")
+            markdown += f"  - **[{unittest['label']}]({anchor_unittest})**: {unittest.get('description', 'No description available')}\n"
         
         if not details.get('verified by'):
-            markdown += "  - <span style='color: red;'>[NOT FOUND] No Unit tests verify this library.</span>\n"
+            markdown += "  - <span style='color: red;'>❌ No Unit tests verify this library.</span>\n"
         markdown += "\n"
 
     markdown += "---\n\n"
     
     return markdown
 
-def generate_markdown_swe4(libs):
+def generate_markdown_swe4(libs, name):
     markdown = "# Traceability SWE4 View\n\n"
     # Implement swe4 view specific Markdown generation here
     # ...
     return markdown
 
-def generate_markdown_swe5(libs):
+def generate_markdown_swe5(libs, name):
     markdown = "# Traceability SWE5 View\n\n"
     # Implement swe5 view specific Markdown generation here
     # ...
     return markdown
 
-def generate_markdown_swe6(libs):
+def generate_markdown_swe6(libs, name):
     markdown = "# Traceability SWE6 View\n\n"
     # Implement swe6 view specific Markdown generation here
     # ...
@@ -469,7 +472,7 @@ def process_swe6(json_data, libs):
     # swe6 specific data processing
     pass
 
-def process_view(view_type, json_data, libs):
+def process_view(view_type, json_data, libs, name):
     view_processors = {
         'swe1': (process_swe1, generate_markdown_swe1),
         'swe2': (process_swe2, generate_markdown_swe2),
@@ -481,21 +484,16 @@ def process_view(view_type, json_data, libs):
     if view_type in view_processors:
         process_func, markdown_func = view_processors[view_type]
         process_func(json_data, libs)
-        return markdown_func(libs)
+        return markdown_func(libs, name)
     else:
         raise ValueError(f"Unsupported view type: {view_type}")
 
 if __name__ == "__main__":
+
     parser = argparse.ArgumentParser(description="Convert JSON to Autogenerated Markdown")
     parser.add_argument("-f", "--file", required=True, help="Path to the JSON file")
-    parser.add_argument("-o", "--output", required=True, help="Path where to save the generated Markdown")
-    parser.add_argument(
-        "-v", "--view",
-        required=True,
-        choices=['swe1', 'swe2', 'swe3', 'swe4', 'swe5', 'swe6'],
-        help="Specify the view option. Choices are: swe1, swe2, swe3, swe4, swe5, swe6"
-    )
-
+    parser.add_argument("-n", "--name", required=True, help="Name of the output file")
+    parser.add_argument("-o", "--output", required=True, help="Path to the output directory")  # Added output directory argument
     args = parser.parse_args()
 
     try:
@@ -506,12 +504,43 @@ if __name__ == "__main__":
         with open(args.file, 'r') as json_file:
             json_data = json.load(json_file)
 
-        # Process the specified view
-        markdown_content = process_view(args.view, json_data, libs)
-   
-        # Write the markdown content to the output file
-        with open(args.output, 'w') as md_file:
-            md_file.write(markdown_content)
+        # Process the JSON data and generate the Markdown content for swe1 upto swe6
+        swe1_markdown = process_view('swe1', json_data, libs, args.name)
+        libs = {}
+        swe2_markdown = process_view('swe2', json_data, libs, args.name)
+        libs = {}
+        swe3_markdown = process_view('swe3', json_data, libs, args.name)
+        libs = {}
+        swe4_markdown = process_view('swe4', json_data, libs, args.name)
+        libs = {}
+        swe5_markdown = process_view('swe5', json_data, libs, args.name)
+        libs = {}
+        swe6_markdown = process_view('swe6', json_data, libs, args.name)
+
+        # Write the Markdown content to the output file.
+        # File name shall be name_view.md
+        output_directory = args.output if args.output else ""  # Added output directory handling
+        with open(f"{output_directory}{args.name}_swe1.md", 'w', encoding='utf-8') as file:
+            file.write(swe1_markdown)
+        with open(f"{output_directory}{args.name}_swe2.md", 'w', encoding='utf-8') as file:
+            file.write(swe2_markdown)
+        with open(f"{output_directory}{args.name}_swe3.md", 'w', encoding='utf-8') as file:
+            file.write(swe3_markdown)
+        with open(f"{output_directory}{args.name}_swe4.md", 'w', encoding='utf-8') as file:
+            file.write(swe4_markdown)
+        with open(f"{output_directory}{args.name}_swe5.md", 'w', encoding='utf-8') as file:
+            file.write(swe5_markdown)
+        with open(f"{output_directory}{args.name}_swe6.md", 'w', encoding='utf-8') as file:
+            file.write(swe6_markdown)
 
     except Exception as e:
         print(f"An error occurred: {e}")
+        exit(1)
+    else:
+        print("Markdown files generated successfully.")
+        exit(0)
+
+# Run the script with the following command:
+# python generate_view.py -f path/to/json/file.json -n output_filename -v path/to/output/directory
+# Example: python generate_view.py -f data.json -n output -v output/
+# The output files will be saved in the specified output directory as output_swe1.md, output_swe2.md, ..., output_swe6.md
