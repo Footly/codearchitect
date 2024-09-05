@@ -1,0 +1,204 @@
+{
+  "id": "3af998c3-aee2-47bb-8049-2012d16c5400",
+  "label": "954068",
+  "visibility": "public",
+  "tags": [
+    "project"
+  ],
+  "icon": "symbol-method",
+  "$model": "profile.model.json",
+  "version": "v0.0",
+  "documentation": "This project consists on device capable of hosting a webservice via wifi which monitors a solarthermal installation.",
+  "Requirements": [
+    {
+      "id": "59928a90-b272-47d0-9dbb-6ad66b9d2365",
+      "label": "REQ1",
+      "visibility": "public",
+      "tags": [
+        "reqs"
+      ],
+      "description": "System shall have a wifi connection capability",
+      "icon": "book"
+    },
+    {
+      "id": "48bc45c6-ef0f-4131-b375-71f3dfec16cd",
+      "label": "REQ2",
+      "visibility": "public",
+      "tags": [
+        "reqs"
+      ],
+      "description": "System shall measure the temperature of the tank",
+      "icon": "book"
+    },
+    {
+      "id": "4202601d-1c97-418a-826e-62818bf54629",
+      "label": "REQ3",
+      "visibility": "public",
+      "tags": [
+        "reqs"
+      ],
+      "description": "System shall notify the user when temperature is too high (>80ºC).",
+      "icon": "book"
+    }
+  ],
+  "Architecture": [
+    {
+      "id": "ec03fb19-0a0e-482e-a34b-d36ea79207f8",
+      "label": "app",
+      "visibility": "public",
+      "tags": [
+        "package"
+      ],
+      "documentation": "",
+      "icon": "package",
+      "requirements": [],
+      "packages": [
+        {
+          "id": "c784748e-23c2-4989-96ca-5cdcdd8918f2",
+          "label": "wificontrol",
+          "visibility": "public",
+          "tags": [
+            "package"
+          ],
+          "icon": "package",
+          "documentation": "Controls all the stuff related to the wifi connectivity",
+          "requirements": [
+            "${id:59928a90-b272-47d0-9dbb-6ad66b9d2365}"
+          ],
+          "packages": [],
+          "libraries": [
+            {
+              "id": "4ae30ab4-3872-4332-9680-4c8297337cd3",
+              "label": "wifi_ao",
+              "visibility": "public",
+              "tags": [
+                "lib"
+              ],
+              "documentation": "Implements the wifi connectivity state machine",
+              "icon": "repo",
+              "public dependencies": [],
+              "private dependencies": [],
+              "variables": [],
+              "funcions": [],
+              "datastructures": [],
+              "typedefs": [],
+              "enumerators": [],
+              "macros": [],
+              "Ports In": [],
+              "HSM": [],
+              "Unit Tests": [
+                {
+                  "id": "e779cf13-5e58-4e11-9fc7-47fb4fd26993",
+                  "label": "unit-2",
+                  "visibility": "public",
+                  "tags": [
+                    "unittest"
+                  ],
+                  "icon": "beaker",
+                  "documentation": "test cheks the initialization function of the wifi"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "8e3f36ea-9b42-4e9e-86c1-8d6778b50d0c",
+          "label": "monitorcontroller",
+          "visibility": "public",
+          "tags": [
+            "package"
+          ],
+          "documentation": "Monitors all the data read by the system and send the accoridng events when certainsituations are met.",
+          "icon": "package",
+          "requirements": [
+            "${id:48bc45c6-ef0f-4131-b375-71f3dfec16cd}",
+            "${id:4202601d-1c97-418a-826e-62818bf54629}"
+          ],
+          "packages": [],
+          "libraries": [
+            {
+              "id": "59aea13b-bc3f-4889-9b5e-83bbd62a00b4",
+              "label": "monitoring_ao",
+              "visibility": "public",
+              "tags": [
+                "lib"
+              ],
+              "documentation": "Implements the state machine of the monitoring control",
+              "icon": "repo",
+              "public dependencies": [],
+              "private dependencies": [],
+              "variables": [],
+              "funcions": [],
+              "datastructures": [],
+              "typedefs": [],
+              "enumerators": [],
+              "macros": [],
+              "Ports In": [],
+              "HSM": [],
+              "Unit Tests": []
+            }
+          ]
+        }
+      ],
+      "libraries": []
+    },
+    {
+      "id": "bd8aab5e-7ed9-4ccc-91ee-57e1a5584f69",
+      "label": "bsp",
+      "visibility": "public",
+      "tags": [
+        "package"
+      ],
+      "icon": "package",
+      "documentation": "",
+      "requirements": [],
+      "packages": [],
+      "libraries": []
+    },
+    {
+      "id": "6ae39822-8636-4005-ae16-bb1a8db466f5",
+      "label": "middleware",
+      "visibility": "public",
+      "tags": [
+        "package"
+      ],
+      "icon": "package",
+      "documentation": "",
+      "requirements": [],
+      "packages": [],
+      "libraries": []
+    }
+  ],
+  "Integration Tests": [
+    {
+      "id": "fb9600db-eeb4-465e-b655-6d266d5d1486",
+      "label": "int-1",
+      "visibility": "public",
+      "tags": [
+        "inttest"
+      ],
+      "icon": "beaker",
+      "documentation": "Test to check the interaction between wifi amnd monitoring packages",
+      "packages": [
+        "${id:c784748e-23c2-4989-96ca-5cdcdd8918f2}",
+        "${id:8e3f36ea-9b42-4e9e-86c1-8d6778b50d0c}"
+      ]
+    }
+  ],
+  "Qualification Tests": [
+    {
+      "id": "b954d1ee-e286-44fb-9f54-a3dbfbf655f4",
+      "label": "qual-0",
+      "visibility": "public",
+      "tags": [
+        "qualtest"
+      ],
+      "icon": "beaker",
+      "documentation": "testing the connectivity of maximum 1 device as station mode into the wifi access point",
+      "requirements": [
+        "${id:59928a90-b272-47d0-9dbb-6ad66b9d2365}"
+      ],
+      "satisfied by": []
+    }
+  ]
+}

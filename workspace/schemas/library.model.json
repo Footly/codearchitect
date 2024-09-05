@@ -26,28 +26,17 @@
         "lib"
       ]
     },
+    "documentation": {
+      "hidden": true,
+      "editable": true,
+      "multiline": true,
+      "markdown": true,
+      "type": "string"
+    },
     "icon": {
       "hidden": true,
       "type": "string",
       "const": "repo"
-    },
-    "requirements": {
-      "type": "array",
-      "hidden": true,
-      "editable": true,
-      "items": {
-        "type": "string",
-        "search": {
-          "query": [
-            [
-              {
-                "field": "tags",
-                "regex": "reqs"
-              }
-            ]
-          ]
-        }
-      }
     },
     "public dependencies": {
       "type": "array",

@@ -101,5 +101,103 @@
         }
       }
     }
-  }
+  },
+  "commands": [
+    {
+      "title": "Traceability SWE1 View",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\workspace\\python_scripts\\generate_view.py",
+            "-f",
+            "${path}",
+            "-o",
+            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\workspace\\python_scripts\\swe1_view.md",
+            "-v",
+            "swe1"
+          ]
+        },
+        {
+          "tool": "vscode",
+          "args": [
+            "openFile",
+            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\workspace\\python_scripts\\swe1_view.md"
+          ]
+        },
+        {
+          "tool": "vscode",
+          "args": [
+            "executeCommand",
+            "markdown.showPreview"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Traceability SWE2 View",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\workspace\\python_scripts\\generate_view.py",
+            "-f",
+            "${path}",
+            "-o",
+            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\workspace\\python_scripts\\swe2_view.md",
+            "-v",
+            "swe2"
+          ]
+        },
+        {
+          "tool": "vscode",
+          "args": [
+            "openFile",
+            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\workspace\\python_scripts\\swe2_view.md"
+          ]
+        },
+        {
+          "tool": "vscode",
+          "args": [
+            "executeCommand",
+            "markdown.showPreview"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Traceability SWE3 View",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\workspace\\python_scripts\\generate_view.py",
+            "-f",
+            "${path}",
+            "-o",
+            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\workspace\\python_scripts\\swe3_view.md",
+            "-v",
+            "swe3"
+          ]
+        },
+        {
+          "tool": "vscode",
+          "args": [
+            "openFile",
+            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\workspace\\python_scripts\\swe3_view.md"
+          ]
+        },
+        {
+          "tool": "vscode",
+          "args": [
+            "executeCommand",
+            "markdown.showPreview"
+          ]
+        }
+      ]
+    }
+  ]
 }
