@@ -319,7 +319,7 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
 
   private removeAllRefsToID(id: string, rootJSON: any): void {
     for (const key in rootJSON) {
-      if (rootJSON[key].id === ("${id:"+id+"}")) {
+      if (rootJSON[key].id === (id)) {
         //If rootJSON is an array, remove the id from the array
         if (Array.isArray(rootJSON)) {
           rootJSON.splice(Number(key), 1);
