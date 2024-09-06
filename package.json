@@ -85,7 +85,7 @@
         {
           "id": "codearchitect",
           "title": "Code Architect",
-          "icon": "resources/code-architect.svg"
+          "icon": "resources/dark/code-architect.svg"
         }
       ]
     },

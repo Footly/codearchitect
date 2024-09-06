@@ -109,7 +109,7 @@
     --vscode-editor-focusedStackFrameHighlightBackground: rgba(122, 189, 122, 0.3);
     --vscode-editor-foldBackground: rgba(38, 79, 120, 0.3);
     --vscode-editor-font-family: Consolas, 'Courier New', monospace;
-    --vscode-editor-font-size: 14px;
+    --vscode-editor-font-size: 20px;
     --vscode-editor-font-weight: normal;
     --vscode-editor-foreground: #d4d4d4;
     --vscode-editor-hoverHighlightBackground: rgba(38, 79, 120, 0.25);
@@ -267,7 +267,7 @@
     --vscode-extensionIcon-verifiedForeground: #3794ff;
     --vscode-focusBorder: #007fd4;
     --vscode-font-family: "Segoe WPC", "Segoe UI", sans-serif;
-    --vscode-font-size: 13px;
+    --vscode-font-size: 20px;
     --vscode-font-weight: normal;
     --vscode-foreground: #cccccc;
     --vscode-gitDecoration-addedResourceForeground: #81b88b;
@@ -618,6 +618,31 @@
     --vscode-welcomePage-tileHoverBackground: #2c2c2d;
     --vscode-widget-border: #303031;
     --vscode-widget-shadow: rgba(0, 0, 0, 0.36);
+}
+
+vscode-textfield {
+    width: 500px;
+}
+
+vscode-textarea {
+    width: 500px;
+    font-size: medium;
+}
+
+vscode-label {
+    font-size: large;
+}
+
+vscode-collapsible {
+    width: 500px;
+}
+
+.header {
+    --vscode-font-size: x-large;
+}
+
+.array-container {
+    width: 500px;
 }
 
 .drop-highlight {

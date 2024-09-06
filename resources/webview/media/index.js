@@ -318,9 +318,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             //Create function to iterate over schema and create a form.
             const createForm = (schema, jsonItem) => {
-                const form = document.createElement('div');
-                //Add a class to the form
-                form.className = 'form';
+                const form = document.createElement('vscode-form-group');
+                form.variant = 'vertical';
                 const updateJSONHandler = (e) => {
                     let current = jsonItem;
                     const path = [...e.detail.path];
@@ -345,6 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 form.addEventListener('updateJSON', updateJSONHandler);
 
                 const header = document.createElement('vscode-textfield');
+                header.classList.add('header');
                 header.name = jsonItem["label"];
                 header.value = jsonItem["label"];
 
