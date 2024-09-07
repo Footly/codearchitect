@@ -621,31 +621,47 @@
 }
 
 vscode-textfield {
-    width: 500px;
+    width: 100%;
 }
 
 vscode-textarea {
-    width: 500px;
     font-size: medium;
+    width: 100%;
+}
+
+vscode-form-group {
+    margin: 5px;
+    width: 100%;
+}
+
+vscode-split-layout{
+    display: flex;
+    flex: 1; /* Set flex property to 1 to make it as big as its parent */
 }
 
 vscode-label {
     font-size: large;
+    width: 100%;
 }
 
-vscode-collapsible {
-    width: 500px;
+vscode-scrollable {
+    padding: 5px;
+    flex: 1;
+    box-sizing: border-box;
 }
 
 .header {
     --vscode-font-size: x-large;
 }
 
-.array-container {
-    width: 500px;
-}
-
 .drop-highlight {
     border: 2px dashed #007acc; /* Example border color and style */
     background-color: rgba(0, 122, 204, 0.1); /* Semi-transparent background color */
+}
+
+body {
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
 }

@@ -318,8 +318,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
             //Create function to iterate over schema and create a form.
             const createForm = (schema, jsonItem) => {
-                const form = document.createElement('vscode-form-group');
-                form.variant = 'vertical';
+                const layoutForm = document.createElement('vscode-split-layout');
+                layoutForm.split = 'vertical';
+
+                const form = document.createElement('vscode-scrollable');
+                form.slot = 'start';
+                const viewer = document.createElement('vscode-scrollable');
+                viewer.slot = 'end';
+                viewer.style.display = 'none';
+                layoutForm.initialHandlePosition = "100%";
+                layoutForm.appendChild(form); // Add the viewer to the slot
+                layoutForm.appendChild(viewer); // Add the viewer to the slot
+                layoutForm.handleSize = '0';
+                if (schema?.view) {
+                    const openView = document.createElement('vscode-icon');
+                    openView.style.marginLeft = "5px";
+                    openView.name = 'eye';
+                    openView.actionIcon = true;
+                    form.appendChild(openView);
+
+                    openView.onclick = () => {
+                        viewer.style.display = viewer.style.display === 'none' ? 'block' : 'none';
+                        if(viewer.style.display === 'none')
+                        {
+                            openView.name = 'eye';
+                            layoutForm.handleSize = '0';
+                            layoutForm.initialHandlePosition = "100%";
+                            layoutForm.initializeResizeHandler();
+                        } else {
+                            openView.name = 'eye-closed';
+                            layoutForm.handleSize = '4';
+                            layoutForm.initialHandlePosition = "50%";
+                            layoutForm.initializeResizeHandler();
+                        }
+                    };
+                }
                 const updateJSONHandler = (e) => {
                     let current = jsonItem;
                     const path = [...e.detail.path];
@@ -335,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         key = path[path.length - 1];
                         current[key] = value;
                     }
-                    
+
                     // Handle the editObject command
                     vscode.postMessage({ command: 'saveObject', json: jsonItem, jsonPath: jsonPath, jsonFile: jsonFile });
                 };
@@ -390,15 +423,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         // Create a container for the property
                         const formGroup = document.createElement('vscode-form-group');
-                        formGroup.style.margin = "5px";
                         const type = properties[key].type;
                         if (type === 'string') {
                             if (!properties[key].enum && !properties[key].search) {
                                 if (properties[key].multiline) {
-                                    // Create a container to hold the textarea and other elements
-                                    const textareaContainer = document.createElement('div');
-                                    textareaContainer.style.position = 'relative';
-
                                     // Check if markdown is enabled
                                     const textarea = document.createElement('vscode-textarea');
                                     textarea.name = key;
@@ -418,56 +446,56 @@ document.addEventListener('DOMContentLoaded', () => {
                                     };
                                     textarea.disabled = properties[key].readonly ? true : false;
 
-                                    // Create a toolbar container at the top of the textarea
-                                    const toolbarContainer = document.createElement('div');
-                                    toolbarContainer.style.display = 'flex';
-                                    toolbarContainer.style.justifyContent = 'flex-start';
-                                    toolbarContainer.style.alignItems = 'center';
-                                    toolbarContainer.style.marginBottom = '0.5em'; // Add some space below the toolbar
-
-                                    if (properties[key].markdown) {
-                                        // Create a div to hold the markdown text
-                                        const markdownContainer = document.createElement('div');
-                                        markdownContainer.id = 'markdown-container';
-                                        // Hide it initially
-                                        markdownContainer.style.display = 'none';
-
-                                        // Create a preview button
-                                        const buttonPreview = document.createElement('vscode-icon');
-                                        buttonPreview.name = 'eye';
-                                        buttonPreview.onclick = (e) => {
-                                            // Toggle the markdown and HTML content
-                                            if (textarea.style.display === 'none') {
-                                                textarea.style.display = 'block';
-                                                markdownContainer.style.display = 'none';
-                                            } else {
-                                                // Parse the markdown content
-                                                const markdown = textarea.value;
-                                                const html = marked.parse(markdown);
-                                                markdownContainer.innerHTML = html;
-                                                textarea.style.display = 'none';
-                                                markdownContainer.style.display = 'block';
-                                            }
-                                        };
-                                        buttonPreview.actionIcon = true;
-
-                                        // Add the buttons to the toolbar
-                                        toolbarContainer.appendChild(buttonPreview);
-
-                                        // Add the toolbar and textarea to the container
-                                        textareaContainer.appendChild(toolbarContainer);
-                                        textareaContainer.appendChild(textarea);
-                                        textareaContainer.appendChild(markdownContainer);
-
-                                        markdownContainer.style.fontSize = '10px'; // Set the font size to a smaller value
-                                    } else {
-                                        // If markdown is not enabled, just add the textarea
-                                        textareaContainer.appendChild(toolbarContainer);
-                                        textareaContainer.appendChild(textarea);
-                                    }
+                                    //// Create a toolbar container at the top of the textarea
+                                    //const toolbarContainer = document.createElement('div');
+                                    //toolbarContainer.style.display = 'flex';
+                                    //toolbarContainer.style.justifyContent = 'flex-start';
+                                    //toolbarContainer.style.alignItems = 'center';
+                                    //toolbarContainer.style.marginBottom = '0.5em'; // Add some space below the toolbar
+                                    //
+                                    //if (properties[key].markdown) {
+                                    //    // Create a div to hold the markdown text
+                                    //    const markdownContainer = document.createElement('div');
+                                    //    markdownContainer.id = 'markdown-container';
+                                    //    // Hide it initially
+                                    //    markdownContainer.style.display = 'none';
+                                    //
+                                    //    // Create a preview button
+                                    //    const buttonPreview = document.createElement('vscode-icon');
+                                    //    buttonPreview.name = 'eye';
+                                    //    buttonPreview.onclick = (e) => {
+                                    //        // Toggle the markdown and HTML content
+                                    //        if (textarea.style.display === 'none') {
+                                    //            textarea.style.display = 'block';
+                                    //            markdownContainer.style.display = 'none';
+                                    //        } else {
+                                    //            // Parse the markdown content
+                                    //            const markdown = textarea.value;
+                                    //            const html = marked.parse(markdown);
+                                    //            markdownContainer.innerHTML = html;
+                                    //            textarea.style.display = 'none';
+                                    //            markdownContainer.style.display = 'block';
+                                    //        }
+                                    //    };
+                                    //    buttonPreview.actionIcon = true;
+                                    //
+                                    //    // Add the buttons to the toolbar
+                                    //    toolbarContainer.appendChild(buttonPreview);
+                                    //
+                                    //    // Add the toolbar and textarea to the container
+                                    //    textareaContainer.appendChild(toolbarContainer);
+                                    //    textareaContainer.appendChild(textarea);
+                                    //    textareaContainer.appendChild(markdownContainer);
+                                    //
+                                    //    markdownContainer.style.fontSize = '10px'; // Set the font size to a smaller value
+                                    //} else {
+                                    //    // If markdown is not enabled, just add the textarea
+                                    //    textareaContainer.appendChild(toolbarContainer);
+                                    //    textareaContainer.appendChild(textarea);
+                                    //}
 
                                     // Finally, append the textareaContainer to the formGroup
-                                    formGroup.appendChild(textareaContainer);
+                                    formGroup.appendChild(textarea);
                                 } else {
                                     const input = document.createElement('vscode-textfield');
                                     input.name = key;
@@ -1088,11 +1116,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 decodeProperty(properties, form, schema, jsonItem, []);
 
-                return form;
+                return layoutForm;
             }
-            const form = createForm(schema, itemJson);
 
-            document.body.appendChild(form);
+            const form1 = createForm(schema, itemJson);
+
+            const form2 = createForm(schema, itemJson);
+
+            document.body.appendChild(form1);
+            document.body.appendChild(form2);
         }
         else {
             console.error('Command not implemented yet');

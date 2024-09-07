@@ -76,5 +76,14 @@
       "multiline": true,
       "type": "string"
     }
-  }
+  },
+  "view": [
+    {
+      "title": "Block Diagram",
+      "command": [
+        "python",
+        "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\html_test.py"
+      ]
+    }
+  ]
 }
