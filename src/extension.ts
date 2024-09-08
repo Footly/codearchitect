@@ -11,12 +11,38 @@ let itemTreeView: vscode.TreeView<Item> | undefined; // To keep a reference to t
 let webViewPanel: vscode.WebviewPanel | undefined; // To keep a reference to the webview panel
 
 export function activate(context: vscode.ExtensionContext) {
-    const handleMessage = (message: any) => {
+
+    const showInWebview = (webview: vscode.Webview, panelId: string, view: string, schema: any, index: number, json: any, filepath: string) => {
+        try {
+            if (webview) {
+
+                webview.postMessage({
+                    command: 'showView',
+                    panelId: panelId,
+                    view: view,
+                    schema: schema, 
+                    index: index,
+                    json: json,
+                    filepath: filepath
+                });
+            }
+        } catch (error) {
+            vscode.window.showErrorMessage('Error updating webview. Error: ' + error);
+        }
+    };
+
+    const handleMessage = async (message: any) => {
         try {
             // Handle the message received from the webview
             // Perform actions based on the message content
             if (message.command === 'saveObject') {
-                itemTreeProvider.saveObject(message.json, message.jsonPath, message.jsonFile);
+                await itemTreeProvider.saveObject(message.json, message.jsonPath, message.jsonFile);
+            } else if(message.command === 'viewObject') {
+                //Get view command
+                const viewCommand = message.schema.view[message.index];
+                const output = await runCustomCommand(message.json, viewCommand, message.filePath);
+                if(webViewPanel)
+                    showInWebview(webViewPanel?.webview, message.panelId, output, message.schema, message.index, message.json, message.filePath);
             }
         } catch (error) {
             vscode.window.showErrorMessage('Error handling webview message.');
@@ -202,7 +228,7 @@ export function activate(context: vscode.ExtensionContext) {
                     current = current[key];
                 }
 
-                await runCustomCommand(current, item.filePath, selectedCommand);
+                await runCustomCommand(current, selectedCommand, item.filePath);
             } catch (error) {
                 vscode.window.showErrorMessage('Error executing custom command.');
             }
@@ -268,7 +294,8 @@ export function activate(context: vscode.ExtensionContext) {
                             schema: handleCircularReferences(schema),
                             json: json,
                             jsonPath: jsonPath,
-                            jsonFile: jsonFile
+                            jsonFile: jsonFile,
+                            panelId: 'tree1'
                         });
                     }
                 } catch (error) {

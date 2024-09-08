@@ -155,6 +155,60 @@
       }
     }
   },
+  "view": [
+    {
+      "title": "Block Diagram",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\json2plantuml.py",
+            "-f",
+            "${path}",
+            "-i",
+            "${id}",
+            "|",
+            "java",
+            "-D'file.encoding'=UTF8",
+            "-jar",
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\plantuml.jar",
+            "-pipe",
+            "-charset",
+            "UTF-8",
+            "-pipe",
+            "-tsvg"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Block Diagram 2",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\json2plantuml.py",
+            "-f",
+            "${path}",
+            "-i",
+            "${id}",
+            "|",
+            "java",
+            "-D'file.encoding'=UTF8",
+            "-jar",
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\plantuml.jar",
+            "-pipe",
+            "-charset",
+            "UTF-8",
+            "-pipe",
+            "-tsvg"
+          ]
+        }
+      ]
+    }
+  ],
   "commands": [
     {
       "title": "PlantUml Preview SVG",
@@ -163,7 +217,7 @@
           "tool": "shell",
           "args": [
             "python",
-            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\json2plantuml.py",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\json2plantuml.py",
             "-f",
             "${path}",
             "-i",

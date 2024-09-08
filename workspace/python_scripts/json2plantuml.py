@@ -2,6 +2,7 @@ import json
 import sys
 import argparse
 import os
+import re
 
 # Define colors array
 colors = [
@@ -18,27 +19,27 @@ class PlantUMLConverter:
         self.id = id
         self.links = []
 
-    def search_by_id(target_id, json_data, path=""):
+    def search_by_id(self, target_id, json_data, path=""):
         if isinstance(json_data, dict):
             for key, value in json_data.items():
                 if key == "id" and value == target_id:  # Check if the key is 'id' and the value matches target_id
                     return json_data  # Return the entire object (dictionary)
                 else:
                     # Recursively search deeper within nested dictionaries or lists
-                    result = search_by_id(target_id, value, path + f".{key}" if path else key)
+                    result = self.search_by_id(target_id, value, path + f".{key}" if path else key)
                     if result:  # Return as soon as the object is found
                         return result
 
         elif isinstance(json_data, list):
             for index, item in enumerate(json_data):
                 # Recursively search within lists
-                result = search_by_id(target_id, item, path + f".{index}")
+                result = self.search_by_id(target_id, item, path + f".{index}")
                 if result:  # Return as soon as the object is found
                     return result
 
         return None  # Return None if no matching object is found
 
-    def extract_guid(text):
+    def extract_guid(self, text):
         # Regular expression to match the GUID pattern inside the text
         match = re.search(r'\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b', text)
 
@@ -56,7 +57,8 @@ class PlantUMLConverter:
         """Retrieve and format the datatype from json_data."""
         if not datatype_id:
             return default or 'UnknownType'
-        found_id = self.search_by_id(datatype_id, json_data)
+        guid = self.extract_guid(datatype_id)
+        found_id = self.search_by_id(guid, json_data)
         return found_id.get('label', default) if found_id else default or 'UnknownType'
 
     def apply_modifiers(self, datatype, item):
@@ -80,17 +82,17 @@ class PlantUMLConverter:
         else:  # default to public
             return '+'
 
-    def json_to_plantuml_class(self, json_class):
+    def json_to_plantuml_class(self, json_class, json_data):
         try:
             class_name = json_class.get('label', 'UnknownClass')
             variables = json_class.get('variables', [])
-            functions = json_class.get('functions', [])
+            functions = json_class.get('funcions', [])
             datastructures = json_class.get('datastructures', [])
             typedefs = json_class.get('typedefs', [])
             enumerators = json_class.get('enumerators', [])
 
             # Initialize PlantUML output
-            plantuml_output = '@startuml\n'
+            plantuml_output = f"@startuml {json_class.get('id', 'unknown')}\n\n"
 
             # Process non-class items into separate packages
             non_class_items = {
@@ -99,53 +101,53 @@ class PlantUMLConverter:
                 'Enumerators': enumerators,
             }
 
-            for package_name, items in non_class_items.items():
-                if items:
-                    plantuml_output += f'package {package_name} {{\n'
+            #for package_name, items in non_class_items.items():
+            #    if items:
+            #        plantuml_output += f'package {package_name} {{\n'
 
-                    if package_name == 'DataStructures':
-                        for ds in items:
-                            ds_name = ds.get('label', 'UnknownDS')
-                            ds_type = ds.get('type', 'struct')
-                            visibility = ds.get('visibility', 'public')
-                            visibility_symbol = self.get_visibility_symbol(visibility)
+            #        if package_name == 'DataStructures':
+            #            for ds in items:
+            #                ds_name = ds.get('label', 'UnknownDS')
+            #                ds_type = ds.get('type', 'struct')
+            #                visibility = ds.get('visibility', 'public')
+            #                visibility_symbol = self.get_visibility_symbol(visibility)
 
-                            plantuml_output += f'class {ds_name} <<{ds_type}>> {{\n'
+            #                plantuml_output += f'class {ds_name} <<{ds_type}>> {{\n'
 
-                            for member in ds.get('members', []):
-                                member_name = member.get('label', 'UnknownMember')
-                                datatype = self.get_datatype(member.get('datatype'), json_data)
-                                datatype = self.apply_modifiers(datatype, member)
-                                plantuml_output += f"    {visibility_symbol}{member_name} : {datatype}\n"
+            #                for member in ds.get('members', []):
+            #                   member_name = member.get('label', 'UnknownMember')
+            #                   datatype = self.get_datatype(member.get('datatype'), json_data)
+            #                   datatype = self.apply_modifiers(datatype, member)
+            #                   plantuml_output += f"    {visibility_symbol}{member_name} : {datatype}\n"
 
-                            plantuml_output += '}\n'
+            #                plantuml_output += '}\n'
 
-                    elif package_name == 'Typedefs':
-                        for typedef in items:
-                            typedef_name = typedef.get('label', 'UnknownTypedef')
-                            typedef_datatype = self.get_datatype(typedef.get('datatype'), json_data)
-                            visibility = typedef.get('visibility', 'private')
-                            visibility_symbol = self.get_visibility_symbol(visibility)
-                            plantuml_output += f'class {typedef_name} <<typedef>> {{\n'
-                            plantuml_output += f"    {visibility_symbol}Type : {typedef_datatype}\n"
-                            plantuml_output += '}\n'
+            #        elif package_name == 'Typedefs':
+            #            for typedef in items:
+            #                typedef_name = typedef.get('label', 'UnknownTypedef')
+            #                typedef_datatype = self.get_datatype(typedef.get('datatype'), json_data)
+            #                visibility = typedef.get('visibility', 'private')
+            #                visibility_symbol = self.get_visibility_symbol(visibility)
+            #                plantuml_output += f'class {typedef_name} <<typedef>> {{\n'
+            #                plantuml_output += f"    {visibility_symbol}Type : {typedef_datatype}\n"
+            #                plantuml_output += '}\n'
 
-                    elif package_name == 'Enumerators':
-                        for enumerator in items:
-                            enum_name = enumerator.get('label', 'UnknownEnum')
-                            visibility = enumerator.get('visibility', 'public')
-                            visibility_symbol = self.get_visibility_symbol(visibility)
+            #        elif package_name == 'Enumerators':
+            #            for enumerator in items:
+            #                enum_name = enumerator.get('label', 'UnknownEnum')
+            #                visibility = enumerator.get('visibility', 'public')
+            #                visibility_symbol = self.get_visibility_symbol(visibility)
 
-                            plantuml_output += f'class {enum_name} <<enumeration>> {{\n'
+            #                plantuml_output += f'class {enum_name} <<enumeration>> {{\n'
 
-                            for member in enumerator.get('members', []):
-                                member_name = member.get('label', 'UnknownMember')
-                                value = member.get('value', 'UnknownValue')
-                                plantuml_output += f"    {visibility_symbol}{member_name} = {value}\n"
+            #                for member in enumerator.get('members', []):
+            #                    member_name = member.get('label', 'UnknownMember')
+            #                    value = member.get('value', 'UnknownValue')
+            #                    plantuml_output += f"    {visibility_symbol}{member_name} = {value}\n"
 
-                            plantuml_output += '}\n'
+            #                plantuml_output += '}\n'
 
-                    plantuml_output += '}\n'
+            #        plantuml_output += '}\n'
 
             # Process the main class
             plantuml_output += f'class {class_name} {{\n'
@@ -183,10 +185,10 @@ class PlantUMLConverter:
             plantuml_output += '}\n'
 
             # Add dependencies to packages
-            if datastructures or typedefs or enumerators:
-                plantuml_output += f'{class_name} --* DataStructures\n'
-                plantuml_output += f'{class_name} --* Typedefs\n'
-                plantuml_output += f'{class_name} --* Enumerators\n'
+            #if datastructures or typedefs or enumerators:
+            #    plantuml_output += f'{class_name} --* DataStructures\n'
+            #    plantuml_output += f'{class_name} --* Typedefs\n'
+            #    plantuml_output += f'{class_name} --* Enumerators\n'
 
             plantuml_output += 'hide <<union>> methods\n' 
             plantuml_output += 'hide <<union>> circle\n' 
@@ -272,17 +274,12 @@ class PlantUMLConverter:
 
             plantuml_content = ''
 
-            # Check if 'Structure' and 'libraries' keys are present and non-empty
-            if 'Structure' in data and len(data['Structure']) > 0:
-                structures = data['Structure']
-                for structure in structures:
-                    if 'libraries' in structure and len(structure['libraries']) > 0: 
-                        libraries = structure['libraries']
-                        for library in libraries:
-                            # Check id matches the one requested
-                            if 'id' in library and library['id'] == self.id:
-                                self.links = data.get('$links', [])
-                                plantuml_content = self.json_to_plantuml_class(library, self.links)
+
+            item = self.search_by_id(self.id, data)
+
+            if item:
+                if 'tags' in item and "lib" in item['tags']:
+                    plantuml_content = self.json_to_plantuml_class(item, data)
 
             return plantuml_content
         except Exception as e:

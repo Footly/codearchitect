@@ -5,15 +5,43 @@ document.addEventListener('DOMContentLoaded', () => {
         //Compute the new message
         const message = event.data;
 
+        function findItemById(rootJson, id) {
+            // Base case: if the input is an object, check each key
+            if (typeof rootJson === 'object' && rootJson !== null) {
+                // Check if this object itself contains the id we are looking for
+                if (rootJson.id === id) {
+                    return rootJson;
+                }
+
+                // If it's an array, check each element recursively
+                if (Array.isArray(rootJson)) {
+                    for (let item of rootJson) {
+                        const result = findItemById(item, id);
+                        if (result) return result;
+                    }
+                } else {
+                    // If it's an object, check each property recursively
+                    for (let key in rootJson) {
+                        if (rootJson.hasOwnProperty(key)) {
+                            const result = findItemById(rootJson[key], id);
+                            if (result) return result;
+                        }
+                    }
+                }
+            }
+
+            // Return null if no matching item is found
+            return null;
+        }
+
+
         //Check if command is correct
         if (message.command === 'editObject') {
-            // Reset previous content
-            document.body.innerHTML = '';
-
             const schema = message.schema;
             const rootJson = message.json;
             const jsonPath = message.jsonPath;
             const jsonFile = message.jsonFile;
+            const panelId = message.panelId;
 
             let itemJson = rootJson;
 
@@ -23,37 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            function findItemById(rootJson, id) {
-                // Base case: if the input is an object, check each key
-                if (typeof rootJson === 'object' && rootJson !== null) {
-                    // Check if this object itself contains the id we are looking for
-                    if (rootJson.id === id) {
-                        return rootJson;
-                    }
-
-                    // If it's an array, check each element recursively
-                    if (Array.isArray(rootJson)) {
-                        for (let item of rootJson) {
-                            const result = findItemById(item, id);
-                            if (result) return result;
-                        }
-                    } else {
-                        // If it's an object, check each property recursively
-                        for (let key in rootJson) {
-                            if (rootJson.hasOwnProperty(key)) {
-                                const result = findItemById(rootJson[key], id);
-                                if (result) return result;
-                            }
-                        }
-                    }
-                }
-
-                // Return null if no matching item is found
-                return null;
-            }
-
             // Async function to handle fetching and populating the select options
-            async function simpleSearchItem(key, formGroup, properties, initialVal, parentpath) {
+            async function simpleSearchItem(key, formGroup, properties, initialVal, parentpath, parent) {
                 const { query, readonly, text } = properties;
 
                 //Create master container
@@ -123,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
 
                     // Dispatch the custom event into the select element
-                    form.dispatchEvent(updateJson);
+                    parent.dispatchEvent(updateJson);
                 };
                 if (!text === true)
                     selectedItem.disabled = true;
@@ -163,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
 
                     // Dispatch the custom event into the select element
-                    form.dispatchEvent(updateJson);
+                    parent.dispatchEvent(updateJson);
                 };
                 removeButton.actionIcon = true;
                 selectedBadge.appendChild(removeButton);
@@ -201,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
 
                         // Dispatch the custom event into the select element
-                        form.dispatchEvent(updateJson);
+                        parent.dispatchEvent(updateJson);
 
                         // Dispatch the custom event into the select element
                         selectedItemContainer.dispatchEvent(changeEvent);
@@ -317,14 +316,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             //Create function to iterate over schema and create a form.
-            const createForm = (schema, jsonItem) => {
+            const createForm = (schema, jsonItem, panelId, filepath, rootJson) => {
                 const layoutForm = document.createElement('vscode-split-layout');
                 layoutForm.split = 'vertical';
+                layoutForm.classList.add(panelId);
 
                 const form = document.createElement('vscode-scrollable');
                 form.slot = 'start';
                 const viewer = document.createElement('vscode-scrollable');
                 viewer.slot = 'end';
+                viewer.classList.add('viewer');
                 viewer.style.display = 'none';
                 layoutForm.initialHandlePosition = "100%";
                 layoutForm.appendChild(form); // Add the viewer to the slot
@@ -339,8 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     openView.onclick = () => {
                         viewer.style.display = viewer.style.display === 'none' ? 'block' : 'none';
-                        if(viewer.style.display === 'none')
-                        {
+                        if (viewer.style.display === 'none') {
                             openView.name = 'eye';
                             layoutForm.handleSize = '0';
                             layoutForm.initialHandlePosition = "100%";
@@ -350,9 +350,21 @@ document.addEventListener('DOMContentLoaded', () => {
                             layoutForm.handleSize = '4';
                             layoutForm.initialHandlePosition = "50%";
                             layoutForm.initializeResizeHandler();
+                            // Remove all childs in viewer
+                            viewer.innerHTML = '';
+                            const loadingIcon = document.createElement('vscode-icon');
+                            loadingIcon.classList.add('loading-webview');
+                            loadingIcon.name = "loading";
+                            loadingIcon.spin = true;
+                            loadingIcon.spinDuration = "1";
+                            loadingIcon.size = "64";
+                            viewer.appendChild(loadingIcon);
+                            // Handle the editObject command
+                            vscode.postMessage({ command: 'viewObject', json: jsonItem, schema: schema, filePath: filepath, panelId: panelId, index: 0 });
                         }
                     };
                 }
+
                 const updateJSONHandler = (e) => {
                     let current = jsonItem;
                     const path = [...e.detail.path];
@@ -370,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     // Handle the editObject command
-                    vscode.postMessage({ command: 'saveObject', json: jsonItem, jsonPath: jsonPath, jsonFile: jsonFile });
+                    vscode.postMessage({ command: 'saveObject', json: jsonItem, jsonPath: jsonPath, jsonFile: jsonFile, panelId: panelId });
                 };
 
                 // Initial event listener setup
@@ -442,7 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                         });
 
                                         // Dispatch the custom event into the select element
-                                        form.dispatchEvent(updateJson);
+                                        parent.dispatchEvent(updateJson);
                                     };
                                     textarea.disabled = properties[key].readonly ? true : false;
 
@@ -509,7 +521,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                         });
 
                                         // Dispatch the custom event into the select element
-                                        form.dispatchEvent(updateJson);
+                                        parent.dispatchEvent(updateJson);
                                     };
                                     input.disabled = properties[key].readonly ? true : false;
                                     input.type = properties[key].file ? 'file' : 'text';
@@ -529,7 +541,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     });
 
                                     // Dispatch the custom event into the select element
-                                    form.dispatchEvent(updateJson);
+                                    parent.dispatchEvent(updateJson);
                                 };
                                 properties[key].enum.forEach((item) => {
                                     const option = document.createElement('vscode-option');
@@ -539,7 +551,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 });
                                 formGroup.appendChild(select);
                             } else if (properties[key].search) {
-                                simpleSearchItem(key, formGroup, properties[key].search, initialValue, parentpath);
+                                simpleSearchItem(key, formGroup, properties[key].search, initialValue, parentpath, form);
                             }
                         } else if (type === 'boolean') {
                             const checkbox = document.createElement('vscode-checkbox');
@@ -1119,14 +1131,63 @@ document.addEventListener('DOMContentLoaded', () => {
                 return layoutForm;
             }
 
-            const form1 = createForm(schema, itemJson);
+            const panelElement = document.body.querySelector(`.${panelId}`);
+            if (panelElement) {
+                panelElement.remove();
+            }
+            const form = createForm(schema, itemJson, panelId, jsonFile, rootJson);
+            if (panelId === 'tree1') {
+                document.body.prepend(form);
+            } else if (panelId === 'tree2') {
+                document.body.appendChild(form);
+            }
+        } else if (message.command === 'showView') {
+            const panelElement = document.body.querySelector(`.${message.panelId}`);
+            if (panelElement) {
+                const viewerdiv = document.body.querySelector(".viewer");
+                if (viewerdiv) {
+                    //Check if tabs existed before
+                    viewerdiv.innerHTML = '';
+                    //Create main tabs
+                    const tabs = document.createElement('vscode-tabs');
+                    tabs.selectedIndex = message.index;
+                    tabs.addEventListener('vsc-tabs-select', (e) => {
+                        vscode.postMessage({ command: 'viewObject', json: message.json, schema: message.schema, filePath: message.filepath, panelId: message.panelId, index: e.detail.selectedIndex});
+                        e.stopPropagation();
+                    });
+                    //Create a tabs div for each view
+                    const views = message.schema.view;
+                    Object.keys(views).forEach((key, index) => {
 
-            const form2 = createForm(schema, itemJson);
+                        const view = views[key]; // access the value of the current key
 
-            document.body.appendChild(form1);
-            document.body.appendChild(form2);
+                        const header = document.createElement('vscode-tab-header');
+                        header.slot = 'header';
+                        header.textContent = view.title;
+
+                        const panel = document.createElement('vscode-tab-panel');
+                        if(index === message.index)
+                        {
+                            panel.innerHTML = message.view;
+                        }
+                        else {
+                            const loadingIcon = document.createElement('vscode-icon');
+                            loadingIcon.name = "loading";
+                            loadingIcon.spin = true;
+                            loadingIcon.spinDuration = "1";
+                            loadingIcon.size = "64";
+                            panel.appendChild(loadingIcon);
+                        }
+
+                        tabs.appendChild(header);
+                        tabs.appendChild(panel);
+                    });
+                    viewerdiv.appendChild(tabs);
+                }
+            }
         }
         else {
+            console.error(message);
             console.error('Command not implemented yet');
         }
     });

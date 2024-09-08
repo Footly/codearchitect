@@ -101,6 +101,62 @@
       }
     }
   },
+  "view": [
+    {
+      "title": "SW1 View",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\generate_view.py",
+            "-f",
+            "${path}",
+            "-v",
+            "swe1",
+            "--format",
+            "html"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "SW2 View",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\generate_view.py",
+            "-f",
+            "${path}",
+            "-v",
+            "swe2",
+            "--format",
+            "html"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "SW3 View",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\generate_view.py",
+            "-f",
+            "${path}",
+            "-v",
+            "swe3",
+            "--format",
+            "html"
+          ]
+        }
+      ]
+    }
+  ],
   "commands": [
     {
       "title": "Traceability SWE1 View",

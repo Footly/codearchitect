@@ -80,9 +80,24 @@
   "view": [
     {
       "title": "Block Diagram",
-      "command": [
-        "python",
-        "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\html_test.py"
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\plantuml_test.py",
+            "|",
+            "java",
+            "-D'file.encoding'=UTF8",
+            "-jar",
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\plantuml.jar",
+            "-pipe",
+            "-charset",
+            "UTF-8",
+            "-pipe",
+            "-tsvg"
+          ]
+        }
       ]
     }
   ]

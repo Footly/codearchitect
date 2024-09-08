@@ -19,7 +19,7 @@ export interface Command {
 const exec = promisify(execCallback);
 
 // Function to substitute placeholders with item values
-function substitutePlaceholders(args: string[], json: { [key: string]: any }, filepath: string, stdout: any): string[] {
+function substitutePlaceholders(args: string[], json: { [key: string]: any }, stdout: any, filepath?: string,): string[] {
     return args.map(arg => {
         // Use a regular expression to find ${} placeholders
         return arg.replace(/\${(.*?)}/g, (_, key) => {
@@ -38,17 +38,16 @@ function substitutePlaceholders(args: string[], json: { [key: string]: any }, fi
 }
 
 // Function to run the command based on the tool and args
-export async function runCustomCommand(json: { [key: string]: any }, filepath: string, command: Command) {
-
+export async function runCustomCommand(json: { [key: string]: any }, command: Command,  filepath?: string, ): Promise<string> {
     try {
-        let output: string;
+        let output: string = '';
         let args: string[];
         let stdout: any;
         let stderr: any;
 
         for (const step of command.steps) {
             // Substitute placeholders in arguments
-            args = substitutePlaceholders(step.args, json, filepath, stdout);
+            args = substitutePlaceholders(step.args, json, stdout, filepath);
 
             if (step.tool === 'shell') {
                 const commandString = args.join(' ');
@@ -92,15 +91,19 @@ export async function runCustomCommand(json: { [key: string]: any }, filepath: s
                 output = `VSCODE: ${instruction} done successfully`;
             } else {
                 vscode.window.showErrorMessage(`Unknown tool: ${step.tool}`);
-                return;
+                return '';
             }
 
             vscode.window.showInformationMessage(`Command output: ${output}`);
         }
+
+        return output;
     } catch (e) {
         vscode.window.showErrorMessage(`Error processing command: ${e}`);
+        return '';
     }
 }
+
 // Function to run the Python script and capture its output
 async function runPythonScript(pythonScriptPath: string, jsonPath: string, id: string) {
     try {

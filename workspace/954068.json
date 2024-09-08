@@ -1,5 +1,5 @@
 {
-  "id": "02ac5a53-a024-4570-8cc6-e094ba9977f3",
+  "id": "7bf3f2a7-ee85-4073-aa26-5e022cd5f331",
   "label": "954068",
   "visibility": "public",
   "tags": [
@@ -7,43 +7,33 @@
   ],
   "icon": "symbol-method",
   "$model": "profile.model.json",
-  "version": "dsadsaasasas",
-  "documentation": "sadasdasdsadasdasd",
+  "version": "",
+  "documentation": "",
   "Requirements": [
     {
-      "id": "c72a730a-d20d-45fa-87f9-36439f1c65e6",
-      "label": "REQ1",
-      "visibility": "public",
-      "tags": [
-        "reqs"
-      ],
-      "description": "System shall have a wifi connection available",
-      "icon": "book"
-    },
-    {
-      "id": "28be1e37-f45b-4bb3-96b7-ca39a9953b05",
+      "id": "7543504f-800c-43ef-8ab6-1e481ffb4592",
       "label": "REQ2",
       "visibility": "public",
       "tags": [
         "reqs"
       ],
-      "description": "System shall measure tank temperature",
+      "description": "",
       "icon": "book"
     },
     {
-      "id": "0f66f357-07dd-49c2-b3f6-c320e8d83950",
-      "label": "REQ3",
+      "id": "dbeee17c-455c-4d32-b52c-7683680adbd8",
+      "label": "REQ1",
       "visibility": "public",
       "tags": [
         "reqs"
       ],
-      "description": "System shall be able to update over the air",
+      "description": "",
       "icon": "book"
     }
   ],
   "Architecture": [
     {
-      "id": "18c48a1b-fa67-4c68-a8f0-d51122501168",
+      "id": "4baddb9e-1bdf-4294-9a4c-3183b550fa0d",
       "label": "app",
       "visibility": "public",
       "tags": [
@@ -54,34 +44,34 @@
       "layers": [],
       "packages": [
         {
-          "id": "ee364c90-69be-47db-a63d-6e1f841b1553",
+          "id": "bc749dbd-f5b3-459b-b016-ee346401fdf0",
           "label": "wifi",
           "visibility": "public",
           "tags": [
             "package"
           ],
           "icon": "package",
-          "documentation": "",
+          "documentation": "Block manages all the wifi stuffm related",
           "requirements": [
-            "${id:c72a730a-d20d-45fa-87f9-36439f1c65e6}"
+            "${id:7543504f-800c-43ef-8ab6-1e481ffb4592}"
           ],
           "libraries": [
             {
-              "id": "26f598f7-c481-4933-910f-71a7911f87a4",
+              "id": "85783c30-a755-494f-9cd6-78910d2542aa",
               "label": "wifiAO",
               "visibility": "public",
               "tags": [
                 "lib"
               ],
-              "documentation": "",
+              "documentation": "This library includes the implementation of the wifi HSM",
               "icon": "repo",
               "public dependencies": [],
               "private dependencies": [],
               "variables": [],
               "funcions": [
                 {
-                  "id": "fbaebfee-2709-4727-81e7-ab336d9e9bdf",
-                  "label": "state_init",
+                  "id": "7c93f313-d5a7-44b9-8899-d723dd66483c",
+                  "label": "init",
                   "visibility": "public",
                   "tags": [
                     "funcio"
@@ -89,8 +79,8 @@
                   "icon": "symbol-property",
                   "returntype": {
                     "datatype": "",
-                    "isPointer": true,
-                    "isConst": true
+                    "isPointer": false,
+                    "isConst": false
                   },
                   "parameters": [],
                   "documentation": ""
@@ -104,54 +94,26 @@
               "HSM": [],
               "Unit Tests": [
                 {
-                  "id": "0e66bc12-3ca6-4c6a-a37c-070cd1fb6a82",
-                  "label": "wifiAOInit",
+                  "id": "a27cbd33-002b-41c7-a512-70ed65d01579",
+                  "label": "unit1",
                   "visibility": "public",
                   "tags": [
                     "unittest"
                   ],
                   "icon": "beaker",
-                  "documentation": "",
+                  "documentation": "test the initilaization of the wifiAO module",
                   "verifying": [
-                    "${id:fbaebfee-2709-4727-81e7-ab336d9e9bdf}"
+                    "${id:7c93f313-d5a7-44b9-8899-d723dd66483c}"
                   ]
                 }
               ]
             }
           ]
-        },
-        {
-          "id": "fb53b1c1-26c9-40ae-81ee-0c855dd81d31",
-          "label": "monitoring",
-          "visibility": "public",
-          "tags": [
-            "package"
-          ],
-          "icon": "package",
-          "documentation": "",
-          "requirements": [
-            "${id:28be1e37-f45b-4bb3-96b7-ca39a9953b05}"
-          ],
-          "libraries": []
-        },
-        {
-          "id": "be69b9f9-6a21-4ea0-b886-3223d35aac0b",
-          "label": "ota",
-          "visibility": "public",
-          "tags": [
-            "package"
-          ],
-          "icon": "package",
-          "documentation": "",
-          "requirements": [
-            "${id:0f66f357-07dd-49c2-b3f6-c320e8d83950}"
-          ],
-          "libraries": []
         }
       ]
     },
     {
-      "id": "d48405aa-9418-4ebe-8855-b11f9ec0fe3f",
+      "id": "cb40a4cd-eb8a-4935-a24e-4474aa1a1fe3",
       "label": "bsp",
       "visibility": "public",
       "tags": [
@@ -163,8 +125,8 @@
       "packages": []
     },
     {
-      "id": "ff9f0681-1c62-43e4-ade7-90ee6b59315b",
-      "label": "middleware",
+      "id": "9ddad064-4da4-46fb-902f-d81da02806d4",
+      "label": "mid",
       "visibility": "public",
       "tags": [
         "package"
@@ -175,21 +137,20 @@
       "packages": []
     }
   ],
-  "Integration Tests": [],
-  "Qualification Tests": [
+  "Integration Tests": [
     {
-      "id": "90c64225-a7f0-41d0-bc9f-d307fa10f8ba",
-      "label": "Quali1",
+      "id": "42cfda01-2e1b-4dd8-ba69-04333978a9ec",
+      "label": "test2",
       "visibility": "public",
       "tags": [
-        "qualtest"
+        "inttest"
       ],
       "icon": "beaker",
-      "documentation": "Check that stations can connect intot he system",
-      "requirements": [
-        "${id:c72a730a-d20d-45fa-87f9-36439f1c65e6}"
-      ],
-      "satisfied by": []
+      "documentation": "",
+      "verifying": [
+        "${id:bc749dbd-f5b3-459b-b016-ee346401fdf0}"
+      ]
     }
-  ]
+  ],
+  "Qualification Tests": []
 }
