@@ -1,0 +1,86 @@
+{
+  "id": "797eb725-79cb-46f2-bf37-0f72be0fe507",
+  "label": "911509",
+  "tags": [
+    "project"
+  ],
+  "icon": "symbol-method",
+  "$model": "aspice_profile.model.json",
+  "description": "",
+  "SWE1-Requirements": [
+    {
+      "id": "98baf2e0-47c5-40da-8032-981bb8c441d8",
+      "label": "REQ1",
+      "tags": [
+        "reqs"
+      ],
+      "description": "Aquest es el primer requeriment que fem",
+      "icon": "book"
+    },
+    {
+      "id": "469467af-9e0a-4a92-bd08-6e6a8206c067",
+      "label": "REQ2",
+      "tags": [
+        "reqs"
+      ],
+      "description": "",
+      "icon": "book"
+    }
+  ],
+  "SWE2-Architecture": {
+    "Layers": [
+      {
+        "id": "49d0a5c9-f988-40db-8b9d-eb2e375420ba",
+        "label": "app",
+        "tags": [
+          "layer"
+        ],
+        "icon": "layers",
+        "description": "",
+        "Layers": [],
+        "Components": [
+          {
+            "id": "111439a8-4fb3-4acc-885a-dcc23d690602",
+            "label": "motorControl",
+            "tags": [
+              "component"
+            ],
+            "icon": "package",
+            "description": "Mòdul és encarregat del control PID del motor, si s'escau informa la resta del sistema que la temperature del motor és crítica. Conté algoritmes de refrigerat",
+            "requirements": [
+              "${id:469467af-9e0a-4a92-bd08-6e6a8206c067}",
+              "${id:98baf2e0-47c5-40da-8032-981bb8c441d8}"
+            ],
+            "ports": [
+              {
+                "id": "a3e754a9-41f3-4386-81d6-1bf66e219aa8",
+                "label": "in",
+                "tags": [
+                  "port"
+                ],
+                "icon": "plug",
+                "description": "",
+                "direction": "",
+                "interface": "${id:f61fa331-714f-4f08-a8bf-99771c6bf52d}",
+                "use": ""
+              }
+            ],
+            "Components": []
+          }
+        ]
+      }
+    ],
+    "Interfaces": [
+      {
+        "id": "f61fa331-714f-4f08-a8bf-99771c6bf52d",
+        "label": "speed",
+        "tags": [
+          "interface"
+        ],
+        "icon": "symbol-interface",
+        "description": "Velocitat del motor en (m/s)"
+      }
+    ],
+    "icon": "folder"
+  }
+}

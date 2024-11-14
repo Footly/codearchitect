@@ -1,0 +1,36 @@
+{
+  "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
+  "type": "object",
+  "title": "Requirement",
+  "properties": {
+    "id": {
+      "type": "string",
+      "hidden": true
+    },
+    "label": {
+      "type": "string",
+      "hidden": true
+    },
+    "tags": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "reqs"
+      ]
+    },
+    "description": {
+      "hidden": true,
+      "editable": true,
+      "multiline": true,
+      "type": "string"
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "book"
+    }
+  }
+}

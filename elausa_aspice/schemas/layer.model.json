@@ -1,0 +1,65 @@
+{
+  "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
+  "type": "object",
+  "title": "Layer",
+  "properties": {
+    "id": {
+      "type": "string",
+      "hidden": true
+    },
+    "label": {
+      "type": "string",
+      "hidden": true
+    },
+    "tags": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "layer"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "layers"
+    },
+    "description": {
+      "hidden": true,
+      "editable": true,
+      "multiline": true,
+      "type": "string"
+    },
+    "Layers": {
+      "type": "array",
+      "items": {
+        "$ref": "./layer.model.json"
+      },
+      "properties": {
+        "icon": {
+          "hidden": true,
+          "editable": false,
+          "type": "string",
+          "const": "folder"
+        }
+      }
+    },
+    "Components": {
+      "type": "array",
+      "items": {
+        "$ref": "./component.model.json"
+      },
+      "properties": {
+        "icon": {
+          "hidden": true,
+          "editable": false,
+          "type": "string",
+          "const": "folder"
+        }
+      },
+      "editable": false
+    }
+  }
+}
