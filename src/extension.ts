@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import { ItemTreeProvider, Item } from './tree';
 import $RefParser from "@apidevtools/json-schema-ref-parser";
 import { runCustomCommand, Command } from './customCommand';
+import { JsonGenerator } from './JsonGenerator';
 
 let schemas: any = [];
 let itemTreeProvider: ItemTreeProvider; // Declare the itemTreeProvider variable at the top level
@@ -20,7 +21,7 @@ export function activate(context: vscode.ExtensionContext) {
                     command: 'showView',
                     panelId: panelId,
                     view: view,
-                    schema: schema, 
+                    schema: schema,
                     index: index,
                     json: json,
                     filepath: filepath
@@ -37,12 +38,50 @@ export function activate(context: vscode.ExtensionContext) {
             // Perform actions based on the message content
             if (message.command === 'saveObject') {
                 await itemTreeProvider.saveObject(message.json, message.jsonPath, message.jsonFile);
-            } else if(message.command === 'viewObject') {
+            } else if (message.command === 'viewObject') {
                 //Get view command
                 const viewCommand = message.schema.view[message.index];
                 const output = await runCustomCommand(message.json, viewCommand, message.filePath);
-                if(webViewPanel)
+                if (webViewPanel)
                     showInWebview(webViewPanel?.webview, message.panelId, output, message.schema, message.index, message.json, message.filePath);
+            } else if (message.command === 'createItem') {
+                //Create JSON generator instance
+                const generator = new JsonGenerator(message.schema, message.schema);
+                // Generate the JSON
+                const newJson = generator.generate("new");
+
+                // Open rootJSONfile
+                const rootJSON = JSON.parse(fs.readFileSync(message.filePath, 'utf-8'));
+
+                let current = rootJSON;
+
+                // Drill down to the desired part of the JSON
+                for (const key of message.jsonPath) {
+                    current = current[key];
+                }
+
+                current.push(newJson);
+
+                try {
+                    fs.writeFileSync(message.filePath, JSON.stringify(rootJSON, null, 2), 'utf-8');
+                    vscode.window.showInformationMessage(`Child object 'new' created successfully!`);
+                    //Send message back to webview
+                    if (webViewPanel)
+                    {
+                        webViewPanel?.webview.postMessage({
+                            command: 'createItem',
+                            panelId: message.panelId,
+                            jsonPath: message.jsonPath,
+                            index: current.length.toString(),
+                            json: newJson
+                        });
+                    }
+                        
+
+                } catch (error) {
+                    const errorMessage = (error instanceof Error) ? error.message : String(error);
+                    vscode.window.showErrorMessage(`Failed to create child object: ${errorMessage}`);
+                }
             }
         } catch (error) {
             vscode.window.showErrorMessage('Error handling webview message.');

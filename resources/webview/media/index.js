@@ -551,7 +551,105 @@ document.addEventListener('DOMContentLoaded', () => {
                                 });
                                 formGroup.appendChild(select);
                             } else if (properties[key].search) {
-                                simpleSearchItem(key, formGroup, properties[key].search, initialValue, parentpath, form);
+                                if (properties[key].multiline) {
+                                    // Check if markdown is enabled
+                                    const textarea = document.createElement('vscode-textarea');
+                                    textarea.name = key;
+                                    textarea.value = initialValue;
+                                    // Make minimum height of 10em
+                                    textarea.style.minHeight = '10em';
+                                    textarea.onchange = (e) => {
+                                        const updateJson = new CustomEvent('updateJSON', {
+                                            detail: {
+                                                path: [...parentpath, key],
+                                                value: textarea.value
+                                            },
+                                        });
+
+                                        // Dispatch the custom event into the select element
+                                        parent.dispatchEvent(updateJson);
+                                    };
+                                    textarea.addEventListener('tree-updated', (e) => {
+                                        e.stopPropagation();
+                                    });
+                                    textarea.disabled = properties[key].readonly ? true : false;
+                                    //Create popup div
+                                    const notificationLabel = document.createElement('vscode-badge');
+                                    notificationLabel.classList.add('popup-tree');
+                                    notificationLabel.style.position = 'absolute';
+                                    notificationLabel.style.top = '0'; // Adjust based on where you want the popup to appear
+                                    notificationLabel.style.left = '0'; // Adjust accordingly
+                                    notificationLabel.style.display = 'none'; // Initially hidden
+                                    notificationLabel.style.zIndex = '1000';  // Ensure it appears in front
+                                    notificationLabel.style.display = 'none'; // Initially hidden
+                                    notificationLabel.style.fontSize = 'medium';
+                                    //Create popup div
+                                    const popupTree = document.createElement('vscode-tree');
+                                    popupTree.classList.add('popup-tree');
+                                    popupTree.arrows = true;
+                                    let mySet = [];
+                                    [popupTree.data, mySet] = fetchOptionsFromSearch(properties[key].search.query, "");
+                                    popupTree.style.position = 'absolute';
+                                    popupTree.style.top = '0'; // Adjust based on where you want the popup to appear
+                                    popupTree.style.left = '0'; // Adjust accordingly
+                                    popupTree.style.display = 'none'; // Initially hidden
+                                    popupTree.style.zIndex = '1000';  // Ensure it appears in front
+                                    popupTree.addEventListener('dblclick', async (event) => {
+                                        if ([...mySet].some(set => set.id === popupTree._selectedItem.id)) {
+                                            // Make the tree container invisible
+                                            popupTree.style.display = 'none';
+
+                                            // Get the selected item value
+                                            const selectedValue = popupTree._selectedItem; // Adjust based on actual structure
+
+                                            //
+
+                                            try {
+                                                // Copy the value to the clipboard
+                                                await navigator.clipboard.writeText(`[${selectedValue.label}]($id:${selectedValue.id})`);
+
+                                                // Show the label
+                                                notificationLabel.style.display = 'block';
+                                                notificationLabel.textContent = `Copied into the clipboard: [${selectedValue.label}]($id:${selectedValue.id})`;
+                                                // Calculate and position the popup relative to the search icon (linkIdsIcon)
+                                                const iconRect = textarea.getBoundingClientRect();
+
+                                                // Set the popup position below the search icon
+                                                notificationLabel.style.top = `${iconRect.top + window.scrollY}px`; // Below the icon, add scrollY for page scrolling
+                                                notificationLabel.style.left = `${iconRect.left + window.scrollX}px`;  // Align left with the icon, adjust for scroll
+                                                // Hide the label after 2 seconds
+                                                setTimeout(() => {
+                                                    notificationLabel.style.display = 'none';
+                                                }, 1500);
+                                            } catch (err) {
+                                                console.error('Failed to copy to clipboard: ', err);
+                                            }
+                                        }
+                                    });
+                                    //Create icon to add ids links
+                                    const linkIdsIcon = document.createElement('vscode-icon');
+                                    linkIdsIcon.name = 'search';
+                                    linkIdsIcon.actionIcon = true;
+                                    // Add click event to the link icon to toggle popup visibility
+                                    linkIdsIcon.addEventListener('click', (e) => {
+                                        // Toggle the display of the popup div
+                                        popupTree.style.display = popupTree.style.display === 'none' ? 'block' : 'none';
+
+                                        // Calculate and position the popup relative to the search icon (linkIdsIcon)
+                                        const iconRect = textarea.getBoundingClientRect();
+
+                                        // Set the popup position below the search icon
+                                        popupTree.style.top = `${iconRect.top + window.scrollY}px`; // Below the icon, add scrollY for page scrolling
+                                        popupTree.style.left = `${iconRect.left + window.scrollX}px`;  // Align left with the icon, adjust for scroll
+                                    });
+
+                                    formGroup.appendChild(linkIdsIcon);
+                                    formGroup.appendChild(popupTree);
+                                    formGroup.appendChild(notificationLabel);
+                                    formGroup.appendChild(textarea);
+                                } else {
+                                    simpleSearchItem(key, formGroup, properties[key].search, initialValue, parentpath, form);
+                                }
                             }
                         } else if (type === 'boolean') {
                             const checkbox = document.createElement('vscode-checkbox');
@@ -1110,6 +1208,185 @@ document.addEventListener('DOMContentLoaded', () => {
                                     treeContainer.appendChild(tree);
                                     formGroup.appendChild(treeContainer);
                                 }
+                            } else if (items.type === 'object') {
+                                const arrayContainer = document.createElement('div');
+                                arrayContainer.className = 'array-container';
+                                arrayContainer.style.display = 'flex';
+                                arrayContainer.style.alignItems = 'center';
+                                arrayContainer.style.flexWrap = 'wrap';
+
+                                formGroup.appendChild(arrayContainer);
+
+                                // Function to handle drag and drop
+                                function handleDragStart(e) {
+                                    e.dataTransfer.setData('text/plain', e.target.id);
+                                }
+
+                                function handleDragOver(e) {
+                                    e.preventDefault();  // Necessary to allow a drop
+                                    e.dataTransfer.dropEffect = 'move';  // Set the desired drop effect
+                                }
+
+                                function handleDragEnter(e) {
+                                    e.preventDefault();
+                                    const target = e.target.closest('.array-item');
+                                    const container = e.target.closest('.array-container');
+                                    if (target && container && target.parentNode === container) {
+                                        target.classList.add('drop-highlight');
+                                    }
+                                }
+
+                                function handleDragLeave(e) {
+                                    const target = e.target.closest('.array-item');
+                                    if (target) {
+                                        target.classList.remove('drop-highlight');
+                                    }
+                                }
+
+                                function handleDrop(e) {
+                                    e.preventDefault();
+                                    const id = e.dataTransfer.getData('text');
+                                    const draggableElement = document.getElementById(id);
+                                    const dropzone = e.target.closest('.array-item');
+
+                                    if (dropzone && draggableElement !== dropzone && draggableElement.parentNode === dropzone.parentNode) {
+                                        // Get bounding box of the drop zone
+                                        const bounding = dropzone.getBoundingClientRect();
+                                        const offset = e.clientY - bounding.top;
+                                        const middle = bounding.height / 2;
+
+                                        if (offset > middle) {
+                                            // Drop in the lower half (after the dropzone)
+                                            dropzone.parentNode.insertBefore(draggableElement, dropzone.nextSibling);
+                                        } else {
+                                            // Drop in the upper half (before the dropzone)
+                                            dropzone.parentNode.insertBefore(draggableElement, dropzone);
+                                        }
+
+                                        // Optionally, you can add logic to remove the highlight
+                                        dropzone.classList.remove('drop-highlight');
+                                    }
+
+                                    console.log("Drop Item");
+
+                                    const arr = [];
+
+                                    for (const [index, child] of Array.from(arrayContainer.children).entries()) {
+                                        arr.push(child.value);
+                                    }
+
+                                    const updateJson = new CustomEvent('updateJSON', {
+                                        detail: {
+                                            path: [...parentpath, key],
+                                            value: arr
+                                        },
+                                    });
+
+                                    // Dispatch the custom event into the select element
+                                    form.dispatchEvent(updateJson);
+                                }
+
+                                function createItem(container, value) {
+                                    //Create a collpasible item
+                                    const collabsibleItem = document.createElement('vscode-collapsible');
+                                    collabsibleItem.title = value;
+                                    //Set width to fit 3 letters
+                                    collabsibleItem.style.width = 'auto';
+                                    collabsibleItem.id = 'input-' + Date.now();  // Unique ID for each input
+                                    collabsibleItem.setAttribute('draggable', 'true');
+
+                                    // Event listeners for drag and drop
+                                    collabsibleItem.addEventListener('dragstart', handleDragStart);
+                                    collabsibleItem.addEventListener('dragover', handleDragOver);
+                                    collabsibleItem.addEventListener('dragenter', handleDragEnter);
+                                    collabsibleItem.addEventListener('dragleave', handleDragLeave);
+                                    collabsibleItem.addEventListener('drop', handleDrop);
+
+                                    collabsibleItem.onchange = (e) => {
+                                        console.log("Change Item");
+                                        //Resize it to current content
+                                        const arr = [];
+
+                                        for (const [index, child] of Array.from(container.children).entries()) {
+                                            arr.push(child.value);
+                                        }
+
+                                        const updateJson = new CustomEvent('updateJSON', {
+                                            detail: {
+                                                path: [...parentpath, key],
+                                                value: arr
+                                            },
+                                        });
+
+                                        // Dispatch the custom event into the select element
+                                        form.dispatchEvent(updateJson);
+                                    };
+                                    // Create a close icon
+                                    const closeIcon = document.createElement('vscode-icon');
+                                    closeIcon.name = 'close';
+                                    closeIcon.onclick = (e) => {
+                                        console.log("Remove Item");
+                                        //Remove the collabsibleItem
+                                        container.removeChild(collabsibleItem);
+                                        //
+                                        const arr = [];
+
+                                        for (const [index, child] of Array.from(container.children).entries()) {
+                                            arr.push(child.value);
+                                        }
+
+                                        const updateJson = new CustomEvent('updateJSON', {
+                                            detail: {
+                                                path: [...parentpath, key],
+                                                value: arr
+                                            },
+                                        });
+
+                                        // Dispatch the custom event into the select element
+                                        form.dispatchEvent(updateJson);
+                                    };
+                                    closeIcon.actionIcon = true;
+                                    closeIcon.slot = 'content-after';
+
+                                    // Append the slot to the input
+                                    collabsibleItem.appendChild(closeIcon);
+
+                                    // Append the input to the array container
+                                    container.appendChild(collabsibleItem);
+
+                                    //Create an empty item and add it
+                                    vscode.postMessage({ command: 'createItem', schema: schema.properties[key].items, filePath: filepath, panelId: message.panelId, jsonPath: [...message.jsonPath, key]});
+
+                                    //Add listener into container arrray
+                                    container.addEventListener('message', event => {
+                                        console.log(message);
+                                        const messageNew = event.data; // The JSON data our extension sent
+                                        console.log(messageNew);
+                                        switch (messageNew.command) {
+                                            case 'createItem':
+                                                if (message.jsonPath === messageNew.jsonPath) {
+                                                    //Decode the sub object
+                                                    decodeProperty(schema.properties[key].items.properties, collabsibleItem, schema.properties[key].items, message.json, [...parentpath, key, messageNew.index]);
+                                                }
+
+                                        }
+                                        event.stopPropagation();
+                                    });
+                                   
+                                }
+                                //for (const value of initialValue) {
+                                //    createItem(arrayContainer, value);
+                                //}
+
+                                const addButton = document.createElement('vscode-icon');
+                                addButton.name = 'add';
+                                addButton.actionIcon = true;
+                                addButton.onclick = (e) => {
+                                    createItem(arrayContainer, "new");
+                                };
+
+                                formGroup.appendChild(addButton);
+
                             }
                         } else if (type === 'object') {
                             //Create a collpasible item
@@ -1152,7 +1429,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const tabs = document.createElement('vscode-tabs');
                     tabs.selectedIndex = message.index;
                     tabs.addEventListener('vsc-tabs-select', (e) => {
-                        vscode.postMessage({ command: 'viewObject', json: message.json, schema: message.schema, filePath: message.filepath, panelId: message.panelId, index: e.detail.selectedIndex});
+                        vscode.postMessage({ command: 'viewObject', json: message.json, schema: message.schema, filePath: message.filepath, panelId: message.panelId, index: e.detail.selectedIndex });
                         e.stopPropagation();
                     });
                     //Create a tabs div for each view
@@ -1166,8 +1443,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         header.textContent = view.title;
 
                         const panel = document.createElement('vscode-tab-panel');
-                        if(index === message.index)
-                        {
+                        if (index === message.index) {
                             panel.innerHTML = message.view;
                         }
                         else {

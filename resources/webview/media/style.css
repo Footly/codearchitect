@@ -650,6 +650,16 @@ vscode-scrollable {
     box-sizing: border-box;
 }
 
+.popup-tree {
+    background-color: var(--vscode-panel-background); /* Background color of the popup */
+    border: var(--vscode-panel-background); /* Border color and style */
+    border-width: 1px; /* Specify the width of the border */
+    opacity: 1; /* Ensures the popup is not transparent */
+    border-radius: 5px; /* Adjust the value for more or less rounding */
+    padding: 10px; /* Optional: add some padding inside the popup */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional: add a shadow for better visibility */
+}
+
 .header {
     --vscode-font-size: x-large;
 }
