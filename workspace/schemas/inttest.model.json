@@ -48,7 +48,7 @@
             [
               {
                 "field": "tags",
-                "regex": "package"
+                "regex": "component"
               }
             ]
           ]

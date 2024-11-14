@@ -115,19 +115,6 @@
         "$ref": "./macro.model.json"
       }
     },
-    "Ports In": {
-      "type": "array",
-      "items": {
-        "$ref": "./port.model.json"
-      },
-      "properties": {
-        "icon": {
-          "hidden": true,
-          "type": "string",
-          "const": "folder"
-        }
-      }
-    },
     "HSM": {
       "type": "array",
       "items": {

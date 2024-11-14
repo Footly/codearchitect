@@ -31,7 +31,23 @@
       "type": "string",
       "const": "plug"
     },
-    "from": {
+    "documentation": {
+      "hidden": true,
+      "editable": true,
+      "multiline": true,
+      "type": "string"
+    },
+    "direction" : {
+      "hidden": true,
+      "editable": true,
+      "type": "string",
+      "enum": [
+        "in",
+        "out"
+      ]
+    },
+    "interface": {
+      "hidden": true,
       "editable": true,
       "type": "string",
       "search": {
@@ -39,11 +55,16 @@
           [
             {
               "field": "tags",
-              "regex": "funcio"
+              "regex": "interface"
             }
           ]
         ]
       }
+    },
+    "use": {
+      "hidden": true,
+      "editable": true,
+      "type": "string"
     }
   }
 }

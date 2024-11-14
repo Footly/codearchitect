@@ -1,8 +1,4 @@
-import json
-import sys
-import argparse
-import os
-import re
+from decode_json import DecodeJson
 
 # Define colors array
 colors = [
@@ -14,54 +10,11 @@ colors = [
 ]
 
 class PlantUMLConverter:
-    def __init__(self, json_path, id):
-        self.json_path = json_path
-        self.id = id
-        self.links = []
-
-    def search_by_id(self, target_id, json_data, path=""):
-        if isinstance(json_data, dict):
-            for key, value in json_data.items():
-                if key == "id" and value == target_id:  # Check if the key is 'id' and the value matches target_id
-                    return json_data  # Return the entire object (dictionary)
-                else:
-                    # Recursively search deeper within nested dictionaries or lists
-                    result = self.search_by_id(target_id, value, path + f".{key}" if path else key)
-                    if result:  # Return as soon as the object is found
-                        return result
-
-        elif isinstance(json_data, list):
-            for index, item in enumerate(json_data):
-                # Recursively search within lists
-                result = self.search_by_id(target_id, item, path + f".{index}")
-                if result:  # Return as soon as the object is found
-                    return result
-
-        return None  # Return None if no matching object is found
-
-    def extract_guid(self, text):
-        # Regular expression to match the GUID pattern inside the text
-        match = re.search(r'\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b', text)
-
-        # Return the matched GUID or None if not found
-        return match.group(0) if match else None
-
-    def search_id(self, links, id):
-        """Retrieve the item from links by its ID."""
-        for item in links:
-            if item.get('id') == id:
-                return item
-        return None
-
-    def get_datatype(self, datatype_id, json_data, default=None):
-        """Retrieve and format the datatype from json_data."""
-        if not datatype_id:
-            return default or 'UnknownType'
-        guid = self.extract_guid(datatype_id)
-        found_id = self.search_by_id(guid, json_data)
-        return found_id.get('label', default) if found_id else default or 'UnknownType'
-
-    def apply_modifiers(self, datatype, item):
+    def __init__(self, json, decoder):
+        self.json = json
+        self.decoder = decoder
+        
+    def _apply_modifiers(self, datatype, item):
         """Apply modifiers (pointer, const, volatile, etc.) to the datatype."""
         if item.get('isConst'):
             datatype = 'const ' + datatype
@@ -73,7 +26,7 @@ class PlantUMLConverter:
             datatype += f"[{item['isArray']}]"
         return datatype
 
-    def get_visibility_symbol(self, visibility):
+    def _get_visibility_symbol(self, visibility):
         """Get the visibility symbol for PlantUML."""
         if visibility == 'protected':
             return '~'
@@ -82,236 +35,216 @@ class PlantUMLConverter:
         else:  # default to public
             return '+'
 
-    def json_to_plantuml_class(self, json_class, json_data):
-        try:
-            class_name = json_class.get('label', 'UnknownClass')
-            variables = json_class.get('variables', [])
-            functions = json_class.get('funcions', [])
-            datastructures = json_class.get('datastructures', [])
-            typedefs = json_class.get('typedefs', [])
-            enumerators = json_class.get('enumerators', [])
-
-            # Initialize PlantUML output
-            plantuml_output = f"@startuml {json_class.get('id', 'unknown')}\n\n"
-
-            # Process non-class items into separate packages
-            non_class_items = {
-                'DataStructures': datastructures,
-                'Typedefs': typedefs,
-                'Enumerators': enumerators,
-            }
-
-            #for package_name, items in non_class_items.items():
-            #    if items:
-            #        plantuml_output += f'package {package_name} {{\n'
-
-            #        if package_name == 'DataStructures':
-            #            for ds in items:
-            #                ds_name = ds.get('label', 'UnknownDS')
-            #                ds_type = ds.get('type', 'struct')
-            #                visibility = ds.get('visibility', 'public')
-            #                visibility_symbol = self.get_visibility_symbol(visibility)
-
-            #                plantuml_output += f'class {ds_name} <<{ds_type}>> {{\n'
-
-            #                for member in ds.get('members', []):
-            #                   member_name = member.get('label', 'UnknownMember')
-            #                   datatype = self.get_datatype(member.get('datatype'), json_data)
-            #                   datatype = self.apply_modifiers(datatype, member)
-            #                   plantuml_output += f"    {visibility_symbol}{member_name} : {datatype}\n"
-
-            #                plantuml_output += '}\n'
-
-            #        elif package_name == 'Typedefs':
-            #            for typedef in items:
-            #                typedef_name = typedef.get('label', 'UnknownTypedef')
-            #                typedef_datatype = self.get_datatype(typedef.get('datatype'), json_data)
-            #                visibility = typedef.get('visibility', 'private')
-            #                visibility_symbol = self.get_visibility_symbol(visibility)
-            #                plantuml_output += f'class {typedef_name} <<typedef>> {{\n'
-            #                plantuml_output += f"    {visibility_symbol}Type : {typedef_datatype}\n"
-            #                plantuml_output += '}\n'
-
-            #        elif package_name == 'Enumerators':
-            #            for enumerator in items:
-            #                enum_name = enumerator.get('label', 'UnknownEnum')
-            #                visibility = enumerator.get('visibility', 'public')
-            #                visibility_symbol = self.get_visibility_symbol(visibility)
-
-            #                plantuml_output += f'class {enum_name} <<enumeration>> {{\n'
-
-            #                for member in enumerator.get('members', []):
-            #                    member_name = member.get('label', 'UnknownMember')
-            #                    value = member.get('value', 'UnknownValue')
-            #                    plantuml_output += f"    {visibility_symbol}{member_name} = {value}\n"
-
-            #                plantuml_output += '}\n'
-
-            #        plantuml_output += '}\n'
-
-            # Process the main class
-            plantuml_output += f'class {class_name} {{\n'
-
-            # Process variables
-            for variable in variables:
-                datatype = self.get_datatype(variable.get('datatype'), json_data)
-                datatype = self.apply_modifiers(datatype, variable)
-
-                visibility = variable.get('visibility', 'public')
-                visibility_symbol = self.get_visibility_symbol(visibility)
-                plantuml_output += f"    {visibility_symbol}{variable['label']} : {datatype}\n"
-
-            plantuml_output += '\n'
-
-            # Process functions
-            for func in functions:
-                visibility = func.get('visibility', 'public')
-                visibility_symbol = self.get_visibility_symbol(visibility)
-
-                # Parameters
-                parameters = func.get('parameters', [])
-                param_strs = [f"{p['label']}: {self.get_datatype(p.get('datatype'), json_data, p)}" for p in parameters]
-
-                # Function signature
-                plantuml_output += f"    {visibility_symbol}{func['label']}({', '.join(param_strs)})"
-
-                # Return type
-                return_type_info = func.get('returntype', {})
-                return_datatype = self.get_datatype(return_type_info.get('datatype'), json_data)
-                return_datatype = self.apply_modifiers(return_datatype, return_type_info)
-                
-                plantuml_output += f" : {return_datatype}\n"
-
-            plantuml_output += '}\n'
-
-            # Add dependencies to packages
-            #if datastructures or typedefs or enumerators:
-            #    plantuml_output += f'{class_name} --* DataStructures\n'
-            #    plantuml_output += f'{class_name} --* Typedefs\n'
-            #    plantuml_output += f'{class_name} --* Enumerators\n'
-
-            plantuml_output += 'hide <<union>> methods\n' 
-            plantuml_output += 'hide <<union>> circle\n' 
-            plantuml_output += 'hide <<struct>> methods\n' 
-            plantuml_output += 'hide <<struct>> circle\n' 
-            plantuml_output += 'hide <<typedef>> methods\n' 
-            plantuml_output += 'hide <<typedef>> circle \n' 
-            plantuml_output += 'hide <<enumeration>> methods\n' 
-            plantuml_output += 'hide <<enumeration>> circle\n'
-            plantuml_output += '@enduml\n'
-            return plantuml_output
-
-        except Exception as e:
-            print(f"Error in json_to_plantuml_class: {e}", file=sys.stderr)
-            return ''
-
-    def json_to_plantuml_hsm(self, hsm, links=[]):
-        def generate_plantuml_state_machine(state, indent=0):
+    def generate(self):
+        raise NotImplementedError("Subclasses must implement this method")
+        
+class PlantUMLReqConverter(PlantUMLConverter):
+    def generate(self):
+        type = 'requirement'
+        if 'tags' in self.json and 'reqs' in self.json['tags']:
             try:
-                plantuml = ''
-                indent_str = '    ' * indent
-
-                is_initial = state.get('isInit', True)
-                if is_initial:
-                    plantuml += f"{indent_str}[*] --> {state['label']}\n"
-
-                plantuml += f'{indent_str}state "{state["label"]}" as {state["label"]} #{colors[indent]} {{\n'
-
-                states = state.get('states', [])
-                for substate in states:
-                    plantuml += generate_plantuml_state_machine(substate, indent + 1)
-
-                guards = state.get('guards', [])
-                for guard in guards:
-                    choice_state = guard['label']
-                    condition = guard.get('condition', 'undefined condition')
-                    plantuml += f"{indent_str}    state {choice_state} <<choice>> : {condition}\n"
-
-                    true_target_state = self.search_id(links, guard['true']['to'])['label']
-                    false_target_state = self.search_id(links, guard['false']['to'])['label']
-
-                    plantuml += f"{indent_str}    {choice_state} --> {true_target_state} : [{guard['condition']}=true]\n"
-                    plantuml += f"{indent_str}    {choice_state} --> {false_target_state} : [{guard['condition']}=false]\n"
-
-                transitions = state.get('transitions', [])
-                for transition in transitions:
-                    event = self.search_id(links, transition['event'])['label']
-                    target_state = self.search_id(links, transition['transition']['to'])['label']
-                    if target_state != state['label']:
-                        plantuml += f"{indent_str}    {state['label']} --> {target_state} : {event}\n"
+                plantuml_output = f"@startuml {self.json['id']}\n"
+                plantuml_output += f'class {self.json["label"]} <<{type}>>\n'
+                plantuml_output += f'hide <<{type}>> methods\n' 
+                plantuml_output += f'hide <<{type}>> circle\n'
+                plantuml_output += f'hide <<{type}>> attributes\n'
+                plantuml_output += '@enduml\n'
+                return plantuml_output
+                
+            except Exception as e:  # Catching the general exception
+                raise RuntimeError(f"Failed to generate PlantUML: {e}")
+                
+        else:
+            raise NotImplementedError("Json provided on PlantUMLReqConverter does not contain the 'reqs' tag")
+        
+class PlantUMLLayerConverter(PlantUMLConverter):
+    def generate(self):
+        type = 'layer'
+        if 'tags' in self.json and 'layer' in self.json['tags']:
+            try:
+                plantuml_output = f"@startuml {self.json['id']}\n"
+                plantuml_output += f'package {self.json["label"]} <<{type}>> {{\n'
+                
+                if 'components' in self.json:
+                    for component in self.json['components']:
+                        # Extract component details
+                        component_label = component['label']
+                        plantuml_output += f'  component {component_label}\n'
+                        
+                        # Optionally handle ports for each component, if needed
+                        if 'ports' in component:
+                            for port in component['ports']:
+                                interface = self.decoder.search_by_id(self.decoder.extract_guid(port['interface']))[0]
+                                print(port)
+                                use = "" if port["use"] == "" else f': <<{port["use"]}>>'
+                                if interface:
+                                    if port["direction"] == 'in':
+                                        plantuml_output += f'  {component["label"]} <--( {interface["label"]} {use}\n'
+                                    else:
+                                        plantuml_output += f'  {component["label"]} -->() {interface["label"]} {use}\n'
+                plantuml_output += '}\n'
+                plantuml_output += '@enduml\n'
+                return plantuml_output
+                
+            except Exception as e:  # Catching the general exception
+                raise RuntimeError(f"Failed to generate PlantUML: {e}")
+                
+        else:
+            raise NotImplementedError("Json provided on PlantUMLLayerConverter does not contain the 'layer' tag")
+        
+class PlantUMLComponentConverter(PlantUMLConverter):
+    def _decode_subcomponent(self, json, parent_ports):
+        """Decode the component"""
+        label = json['label']
+        ports = json['ports']
+        plantuml = f'  component {label}\n'
+        for port in ports:
+            interface = self.decoder.search_by_id(self.decoder.extract_guid(port['interface']))[0]
+            use = "" if port["use"] == "" else f': <<{port["use"]}>>'
+            found_port = False    
+            for parent_port in parent_ports:
+                parent_int = self.decoder.search_by_id(self.decoder.extract_guid(parent_port['interface']))[0]
+                if interface and parent_int and parent_int['label'] == interface['label']:
+                    found_port = True
+                    if port["direction"] == 'in':
+                        plantuml += f'  {label} <-- {parent_port["label"]} {use}\n'
                     else:
-                        plantuml += f"{indent_str}    {target_state} : {event}\n"
-
-                plantuml += f"{indent_str}}}\n"
-                return plantuml
-            except Exception as e:
-                print(f"Error in generate_plantuml_state_machine: {e}", file=sys.stderr)
-                return ''
-
-        try:
-            plantuml = '@startuml\n'
-
-            states = hsm.get('states', [])
-            for state in states:
-                plantuml += generate_plantuml_state_machine(state)
-
-            plantuml += 'legend left\n'
-            plantuml += '  <b><u>HSM levels:</u></b>\n'
-            for idx, color in enumerate(colors):
-                plantuml += f'  <back:{color}>  </back> level {idx} ↓\n'
-            plantuml += 'endlegend\n\n'
-
-            plantuml += '@enduml\n'
-            return plantuml
-        except Exception as e:
-            print(f"Error in json_to_plantuml_hsm: {e}", file=sys.stderr)
-            return ''
-
-    def json_to_plantuml(self):
-        try:
-            with open(self.json_path, 'r', encoding='utf8') as file:
-                data = json.load(file)
-
-            plantuml_content = ''
-
-
-            item = self.search_by_id(self.id, data)
-
-            if item:
-                if 'tags' in item and "lib" in item['tags']:
-                    plantuml_content = self.json_to_plantuml_class(item, data)
-
-            return plantuml_content
-        except Exception as e:
-            print(f"Error in json_to_plantuml: {e}", file=sys.stderr)
-            return ''
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Convert JSON to PlantUML")
-    parser.add_argument("-f", "--file", required=True, help="Path to the JSON file")
-    parser.add_argument("-i", "--id", required=True, help="ID to search for in the JSON")
-    parser.add_argument("-o", "--output", required=False, help="Where to store the PlantUML file")
-
-    args = parser.parse_args()
-
-    try:
-        converter = PlantUMLConverter(args.file, args.id)
-        plantuml_output = converter.json_to_plantuml()
-
-        if args.output:
-            # Ensure the output filename has a .puml extension
-            output_file_path = args.output
-            if not output_file_path.lower().endswith('.puml'):
-                output_file_path += '.puml'
-
-            # Open a file to write the output in UTF-8 encoding
-            with open(output_file_path, 'w', encoding='utf-8') as output_file:
-                output_file.write(plantuml_output)
-
-            print(f"PlantUML content has been written to {output_file_path}")
-        else: 
-            print(plantuml_output)
+                        plantuml += f'  {label} --> {parent_port["label"]} {use}\n'
             
-    except Exception as e:
-        print(f"Error in main execution: {e}", file=sys.stderr)
+            if not found_port:
+                if port["direction"] == 'in':
+                    plantuml += f'  {label} <--( {interface["label"]} {use}\n'
+                else:
+                    plantuml += f'  {label} -->() {interface["label"]} {use}\n'
+                  
+        return plantuml
+    
+    def generate(self):
+        if 'tags' in self.json and 'component' in self.json['tags']:
+            id = self.json['id']
+            components = self.json['components']
+            try:
+                plantuml_output = f"@startuml {id}\n"
+                #Decode parent component
+                label = self.json['label']
+                ports = self.json['ports']
+                plantuml_output += f'component {label}{{\n'
+                for port in ports:
+                    plantuml_output += f'  port{port["direction"]} {port["label"]}\n'
+                #Decode subcomponents
+                for component in components:
+                    plantuml_output += self._decode_subcomponent(component, ports)
+                plantuml_output += '}\n'
+                #Implement the interfaces
+                for port in ports:
+                    use = "" if port["use"] == "" else f': <<{port["use"]}>>'
+                    interface = self.decoder.search_by_id(self.decoder.extract_guid(port['interface']))[0]
+                    if interface:
+                        if port["direction"] == 'in':
+                            plantuml_output += f'{port["label"]} <--( {interface["label"]} {use}\n'
+                        else:
+                            plantuml_output += f'{port["label"]} --> () {interface["label"]} {use}\n'
+                plantuml_output += '@enduml\n'
+                return plantuml_output
+                
+            except Exception as e:  # Catching the general exception
+                raise RuntimeError(f"Failed to generate PlantUML: {e}")
+                
+        else:
+            raise NotImplementedError("Json provided on PlantUMLComponentConverter does not contain the 'component' tag")
+        
+class PlantUMLClassConverter(PlantUMLConverter):
+    def generate(self):
+        type = 'library'
+        if 'tags' in self.json and 'lib' in self.json['tags']:
+            id = self.json['id']
+            label = self.json['label']
+            funcions = self.json['funcions']
+            variables = self.json['variables']
+            try:
+                plantuml_output = f"@startuml {id}\n"
+                plantuml_output += f'class {label} <<{type}>>{{\n'
+                for var in variables:
+                    datatype = self.decoder.search_by_id(self.decoder.extract_guid(var['datatype']))[0]['label']
+                    datatype = self._apply_modifiers(datatype, var)
+
+                    visibility = var['visibility']
+                    visibility_symbol = self._get_visibility_symbol(visibility)
+                    plantuml_output += f"  {visibility_symbol}{var['label']} : {datatype}\n"
+                for fun in funcions:
+                    visibility = fun['visibility']
+                    visibility_symbol = self._get_visibility_symbol(visibility)
+
+                    # Parameters
+                    param_strs = [f"{p['label']}: {self.decoder.search_by_id(self.decoder.extract_guid(p['datatype']))[0]['label']}" for p in fun['parameters']]
+
+                    # Function signature
+                    plantuml_output += f"  {visibility_symbol}{fun['label']}({', '.join(param_strs)})"
+
+                    # Return type
+                    return_type_info = fun.get('returntype', {})
+                    return_datatype = self.decoder.search_by_id(self.decoder.extract_guid(return_type_info['datatype']))[0]['label']
+                    return_datatype = self._apply_modifiers(return_datatype, return_type_info)
+
+                    plantuml_output += f" : {return_datatype}\n"
+                plantuml_output += '}\n'
+                plantuml_output += f'hide <<{type}>> circle\n'
+                plantuml_output += '@enduml\n'
+                return plantuml_output
+                
+            except Exception as e:  # Catching the general exception
+                raise RuntimeError(f"Failed to generate PlantUML: {e}")
+                
+        else:
+            raise NotImplementedError("Json provided on PlantUMLClassConverter does not contain the 'lib' tag")
+
+class PlantUMLHSMConverter(PlantUMLConverter):
+    def _decode_states(self, json, depth=0):
+        """Recursively decode states into PlantUML format."""
+        indent = '  ' * depth
+        plantuml = ''
+        if 'isInit' in json and json['isInit']:
+            plantuml += indent+f'[*] --> {json["label"]}\n'
+        if 'isTerminated' in json and json['isTerminated'] != "":
+            plantuml += indent+f'{json["label"]} --> [*] : {self.decoder.search_by_id(self.decoder.extract_guid(json["isTerminated"]))[0]["label"]}\n'
+        plantuml += indent+f'state {json["label"]} #{colors[depth]}{{\n'
+        if 'states' in json and json['states']:
+            for state in json['states']:
+                plantuml += self._decode_states(state, depth+1)  # Recursively call and accumulate PlantUML string
+        if 'hsms' in json and json['hsms']:
+            for hsm in json['hsms']:
+                plantuml += indent + f'  state {hsm["label"]} #line.dotted;\n'
+        if 'guards' in json and json['guards']:
+            for guard in json['guards']:
+                    choice_state = guard['label']
+                    plantuml += indent+f"  state {choice_state} <<choice>> : {guard['condition']}\n"
+                    plantuml += indent+f"  {choice_state} --> {self.decoder.search_by_id(self.decoder.extract_guid(guard['true']['to']))[0]['label']} : [{guard['condition']}=true]\n"
+                    plantuml += indent+f"  {choice_state} --> {self.decoder.search_by_id(self.decoder.extract_guid(guard['false']['to']))[0]['label']} : [{guard['condition']}=false]\n"
+        if 'transitions' in json and json['transitions']:
+            for tran in json['transitions']:
+                event = self.decoder.search_by_id(self.decoder.extract_guid(tran['event']))[0]['label']
+                target_state = self.decoder.search_by_id(self.decoder.extract_guid(tran['transition']['to']))[0]['label']
+                if target_state != json['label']:
+                    plantuml += indent + f"  {json['label']} --> {target_state} : {event}\n"
+                else:
+                    plantuml += indent + f"  {target_state} : {event}\n"
+        plantuml += indent + '}\n'
+        return plantuml
+        
+    def generate(self):
+        if 'tags' in self.json and 'hsm' in self.json['tags']:
+            id = self.json['id']
+            label = self.json['label']
+            try:
+                plantuml_output = f"@startuml {id}\n"
+                for state in self.json['States']:
+                    plantuml_output += self._decode_states(state)
+                
+                plantuml_output += '@enduml\n'
+                return plantuml_output
+
+            except Exception as e:  # Catching the general exception
+                raise RuntimeError(f"Failed to generate PlantUML: {e}")
+
+        else:
+            raise NotImplementedError("Json provided on PlantUMLClassConverter does not contain the 'hsm' tag")

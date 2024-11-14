@@ -1,7 +1,7 @@
 {
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
-  "title": "Layer",
+  "title": "Interface",
   "properties": {
     "id": {
       "type": "string",
@@ -22,41 +22,28 @@
       "items": {
         "type": "string"
       },
-      "const": [
-        "layer"
-      ]
+      "const": ["interface"]
     },
     "icon": {
       "hidden": true,
       "type": "string",
-      "const": "layers"
+      "const": "symbol-interface"
     },
     "documentation": {
       "hidden": true,
       "editable": true,
       "multiline": true,
-      "type": "string"
-    },
-    "layers": {
-      "type": "array",
-      "hidden": true,
-      "items": {
-        "$ref": "./layer.model.json"
-      }
-    },
-    "interfaces": {
-      "type": "array",
-      "hidden": true,
-      "items": {
-        "$ref": "./interface.model.json"
-      }
-    },
-    "components": {
-      "type": "array",
-      "hidden": true,
-      "items": {
-        "$ref": "./component.model.json"
-      }
+      "type": "string",
+      "search": {
+          "query": [
+            [
+              {
+                "field": "tags",
+                "regex": "interface"
+              }
+            ]
+          ]
+        }
     }
   }
 }

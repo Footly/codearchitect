@@ -1,7 +1,7 @@
 {
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
-  "title": "Package",
+  "title": "Activity Node",
   "properties": {
     "id": {
       "type": "string",
@@ -23,44 +23,18 @@
         "type": "string"
       },
       "const": [
-        "package"
+        "activitynode"
       ]
     },
     "icon": {
       "hidden": true,
       "type": "string",
-      "const": "package"
+      "const": "symbol-field"
     },
-    "documentation": {
+    "text": {
       "hidden": true,
       "editable": true,
-      "multiline": true,
       "type": "string"
-    },
-    "requirements": {
-      "type": "array",
-      "hidden": true,
-      "editable": true,
-      "items": {
-        "type": "string",
-        "search": {
-          "query": [
-            [
-              {
-                "field": "tags",
-                "regex": "reqs"
-              }
-            ]
-          ]
-        }
-      }
-    },
-    "libraries": {
-      "type": "array",
-      "hidden": true,
-      "items": {
-        "$ref": "./library.model.json"
-      }
     }
   }
 }

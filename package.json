@@ -168,10 +168,6 @@
             "type": "string",
             "default": "",
             "description": "Path to the projects"
-          },
-          "codearchitect.pathPyPreviewScript": {
-            "type": "string",
-            "description": "Defines the py path to preview diagrams if implemented"
           }
         }
       }

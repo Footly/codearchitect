@@ -94,6 +94,7 @@
     },
     "false": {
       "hidden": true,
+      "editable": true,
       "type": "object",
       "properties": {
         "to": {

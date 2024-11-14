@@ -31,11 +31,17 @@
       "type": "string",
       "const": "circuit-board"
     },
-    "states": {
-      "hidden": true,
+    "States": {
       "type": "array",
       "items": {
         "$ref": "./state.model.json"
+      },
+      "properties": {
+        "icon": {
+          "hidden": true,
+          "type": "string",
+          "const": "folder"
+        }
       }
     },
     "Events": {

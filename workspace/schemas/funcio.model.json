@@ -75,6 +75,13 @@
       "editable": true,
       "multiline": true,
       "type": "string"
+    },
+    "diagrams": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "$ref": "./activitydiagram.model.json"
+      }
     }
   },
   "view": [

@@ -21,25 +21,23 @@ class DecodeJson:
         try:
             if isinstance(self.json_data, dict):
                 for key, value in self.json_data.items():
-                    if key == "id" and value == target_id:  # Check if the key is 'id' and the value matches target_id
-                        return self.json_data  # Return the entire object (dictionary)
+                    if key == "id" and value == target_id:
+                        return self.json_data, path  # Return the entire object and its path
                     else:
-                        # Recursively search deeper within nested dictionaries or lists
                         result = self._recursive_search(target_id, value, path + [key])
-                        if result:  # Return as soon as the object is found
-                            return [result, path]
+                        if result[0]:  # Return as soon as the object is found
+                            return result  # Already a tuple (object, path)
 
             elif isinstance(self.json_data, list):
                 for index, item in enumerate(self.json_data):
-                    # Recursively search within lists
                     result = self._recursive_search(target_id, item, path + [str(index)])
-                    if result:  # Return as soon as the object is found
-                        return [result, path]
+                    if result[0]:
+                        return result  # Already a tuple (object, path)
         except Exception as e:
             print(f"Error encountered during search: {e}")
-            return [None, path]
+            return None, path
 
-        return [None, path]  # Return None if no matching object is found
+        return None, path  # Return (None, path) if no matching object is found
 
     def _recursive_search(self, target_id, json_data, path):
         """Helper function for recursively searching by 'id'."""
@@ -47,20 +45,20 @@ class DecodeJson:
             if isinstance(json_data, dict):
                 for key, value in json_data.items():
                     if key == "id" and value == target_id:
-                        return json_data  # Return the matched dictionary object
+                        return json_data, path  # Return the matched dictionary object and path
                     result = self._recursive_search(target_id, value, path + [key])
-                    if result:
-                        return [result, path]
+                    if result[0]:
+                        return result  # Already a tuple (object, path)
 
             elif isinstance(json_data, list):
                 for index, item in enumerate(json_data):
                     result = self._recursive_search(target_id, item, path + [str(index)])
-                    if result:
-                        return [result, path]
+                    if result[0]:
+                        return result  # Already a tuple (object, path)
         except Exception as e:
             print(f"Error during recursive search: {e}")
-        return None
-
+        return None, path  # Return (None, path) if nothing is found at this level
+    
     def extract_guid(self, text):
         """Extract a GUID from the provided text."""
         try:
