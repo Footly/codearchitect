@@ -1,6 +1,7 @@
 import argparse
 import re
 from decode_json import DecodeJson
+import markdown
 from json2plantuml import (
     PlantUMLConverter
 )
@@ -9,17 +10,20 @@ class GenerateElement:
     def __init__(self, decoder, element, *args):
         self.element = element
         self.args = args
+        self.ref = False
         if isinstance(self.element, str):
             obj = decoder.search_by_id(decoder.extract_guid(self.element))
             #Check if obj is a list
             if isinstance(obj, tuple) and isinstance(obj[0], dict):
                 self.element = obj[0].get("label")
+                self.ref = True
         elif isinstance(self.element, list):
             for item in self.element:
                 obj = decoder.search_by_id(decoder.extract_guid(item))
                 #Check if obj is a list
                 if isinstance(obj, tuple) and isinstance(obj[0], dict):
                     self.element[self.element.index(item)] = obj[0].get("label")
+                    self.ref = True
         self.result = ""
         try:
             # Call the _generateElement method, which will be defined in subclasses
@@ -85,7 +89,10 @@ class MDList(GenerateElement):
         try:
             # If element is a list, join the elements with a newline character
             if isinstance(self.element, list):
-                return "\n".join([f"- {item}" for item in self.element])
+                if self.ref:
+                    return "\n".join([f"- [{item}](#{item.lower().replace(' ', '-')})" for item in self.element])
+                else:
+                    return "\n".join([f"- {item}" for item in self.element])
             else:
                 raise ValueError("Invalid element type for list")
         except Exception as e:
@@ -161,7 +168,7 @@ class ViewGenerator:
             return None
 
         # Append the generated element to the markdown file
-        self.md_file += element.result + "\n"
+        self.md_file += element.result + "\n\n"
         
     def _processData(self, type_data, arguments, data):
         """
@@ -208,7 +215,7 @@ class ViewGenerator:
                         elif type_data == "@plantuml":
                             plantuml_output =  PlantUMLConverter(self.item).plantuml_output
                             plantuml_md = f"<!--\n{plantuml_output}\n-->\n![]({self.item.get('id')}.svg)\n"
-                            self.md_file += plantuml_md + "\n"
+                            self.md_file += plantuml_md + "\n\n"
                             
                         elif type_data == "@ref":
                             ref_key = arguments[1].strip()
@@ -221,7 +228,8 @@ class ViewGenerator:
                                 label = ref.get("label", "No label")
                                 #description = ref.get("description", "No description")[:60] + "..."
                                 #self.md_file += f"- **{label}**: {description}\n"
-                                self.md_file += f"- **{label}**\n"
+                                anchor_label = label.lower().replace(" ", "-")
+                                self.md_file += f"- **[{label}](#{anchor_label})**\n\n"
                             
                         elif type_data == "@loop":
                             loop_key = arguments[1].strip()
@@ -265,10 +273,9 @@ class ViewGenerator:
                                             elif "@plantuml" in loop_type_data:
                                                 plantuml_output =  PlantUMLConverter(data_item).plantuml_output
                                                 plantuml_md = f"<!--\n{plantuml_output}\n-->\n![]({data_item.get('id')}.svg)\n"
-                                                self.md_file += plantuml_md + "\n"
+                                                self.md_file += plantuml_md + "\n\n"
                                         else:
-                                            self.md_file += loop_line + "\n"
-                                        
+                                            self.md_file += loop_line + "\n\n"
 
                             # Skip past the loop block
                             idx = end_loop_idx
@@ -280,7 +287,7 @@ class ViewGenerator:
                         print(f"Error processing line '{line}': {e}")
                         self.md_file += f"{{Error processing line: {e}}}\n"
                 else:
-                    self.md_file += line + "\n"
+                    self.md_file += line + "\n\n"
 
                 idx += 1
 
@@ -293,11 +300,18 @@ def main():
     parser.add_argument('--json', type=str, required=True, help="Path to the JSON file")
     parser.add_argument('--id', type=str, required=True, help="ID to search for in the JSON")
     parser.add_argument('--blueprint', type=str, required=True, help="Path to the blueprint file")
+    parser.add_argument('--format', type=str, default="md", help="Output format (md, html)")
     args = parser.parse_args()
 
     # Create a ViewGenerator instance with the provided arguments
     generator = ViewGenerator(json_path=args.json, id=args.id, blueprint_path=args.blueprint)
-    print(generator.md_file)
+    output_data = generator.md_file
+    
+    if args.format == "html":
+        output_data = markdown.markdown(output_data)
+    else:
+        output_data = generator.md_file
+    print(output_data)
     
 if __name__ == "__main__":
     main()
