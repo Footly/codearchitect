@@ -15,6 +15,57 @@ class DecodeJson:
         except json.JSONDecodeError:
             print(f"Failed to decode JSON from file {self.json_path}.")
             sys.exit(1)  # Exit if there's an error in JSON format
+            
+            
+    def get_ids_by_tag(self, tag):
+        """Get a list of 'id' values for objects with the specified tag."""
+        try:
+            id_list = []
+            self._recursive_search_by_tag(tag, self.json_data, id_list)
+            return id_list
+        except Exception as e:
+            print(f"Error encountered during search: {e}")
+            return None
+        
+    def _recursive_search_by_tag(self, tag, json_data, id_list):
+        """Helper function for recursively searching by tag."""
+        try:
+            if isinstance(json_data, dict):
+                if 'tags' in json_data and tag in json_data['tags']:
+                    id_list.append(json_data['id'])  # Append the 'id' value to the list
+                for key, value in json_data.items():
+                    self._recursive_search_by_tag(tag, value, id_list)
+
+            elif isinstance(json_data, list):
+                for item in json_data:
+                    self._recursive_search_by_tag(tag, item, id_list)
+        except Exception as e:
+            print(f"Error during recursive search: {e}")
+            
+    def get_ids_by_tag_within_parent_id(self, tag, parent_id):
+        """Get a list of 'id' values for objects with the specified tag within a parent object."""
+        try:
+            id_list = []
+            self._recursive_search_by_tag_within_parent_id(tag, parent_id, self.json_data, id_list)
+            return id_list
+        except Exception as e:
+            print(f"Error encountered during search: {e}")
+            return None
+        
+    def _recursive_search_by_tag_within_parent_id(self, tag, parent_id, json_data, id_list):
+        """Helper function for recursively searching by tag within a parent object."""
+        try:
+            if isinstance(json_data, dict):
+                if 'id' in json_data and json_data['id'] == parent_id:
+                    self._recursive_search_by_tag(tag, json_data, id_list)
+                for key, value in json_data.items():
+                    self._recursive_search_by_tag_within_parent_id(tag, parent_id, value, id_list)
+
+            elif isinstance(json_data, list):
+                for item in json_data:
+                    self._recursive_search_by_tag_within_parent_id(tag, parent_id, item, id_list)
+        except Exception as e:
+            print(f"Error during recursive search: {e}")
 
     def search_by_id(self, target_id, path=[]):
         """Search for an object by its 'id' field within self.json_data."""
@@ -38,6 +89,24 @@ class DecodeJson:
             return None, path
 
         return None, path  # Return (None, path) if no matching object is found
+    
+    def search_by_path(self, path):
+        """Search for an object by its path within self.json_data."""
+        try:
+            if not path:
+                return self.json_data  # Return the root object if the path is empty
+
+            result = self.json_data
+            for key in path:
+                if isinstance(key, str) and key.isdigit():
+                    key = int(key)  # Convert the string key to an integer
+                result = result[key]  # Navigate one level deeper in the dictionary
+            return result
+        except KeyError as e:
+            print(f"KeyError encountered: {e} in path {path}")
+            return None
+        except Exception as e:
+            print(f"Unexpected error during search: {e}")
 
     def _recursive_search(self, target_id, json_data, path):
         """Helper function for recursively searching by 'id'."""

@@ -5,3 +5,6 @@
 
 **Satisfies:** 
 {{ list:requirements }}
+
+**Ports:**
+{{ @foreach:port.port_blueprint }}

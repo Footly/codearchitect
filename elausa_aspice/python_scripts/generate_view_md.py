@@ -1,7 +1,7 @@
 import argparse
-import re
 from decode_json import DecodeJson
 import markdown
+import os
 from json2plantuml import (
     PlantUMLConverter
 )
@@ -136,6 +136,7 @@ class ViewGenerator:
             print(f"Error decoding JSON: {e}")
             self.item = {}
         self.md_file = ""
+        self.blueprint_path = blueprint_path
 
         # Open the blueprint file
         try:
@@ -230,56 +231,25 @@ class ViewGenerator:
                                 #self.md_file += f"- **{label}**: {description}\n"
                                 anchor_label = label.lower().replace(" ", "-")
                                 self.md_file += f"- **[{label}](#{anchor_label})**\n\n"
+                                
+                        elif type_data == "@foreach":
+                            searches = arguments[1].strip().split(",")
+                            # Iterate over the search queries
+                            for search in searches:
+                                #Split the search by the . character
+                                search_split = search.split(".")
+                                # Get the search tag
+                                tags = search_split[0].strip()
+                                # Get the blueprint_file
+                                blueprint_file = search_split[1]
+                                loop_blueprint_path = os.path.abspath(os.path.join(os.path.dirname(self.blueprint_path), f"{blueprint_file}.md"))
+                                ids = self.decode.get_ids_by_tag_within_parent_id(tags, self.item.get("id"))
+                                # Iterate over the ids
+                                for id in ids:
+                                    loop_generator = ViewGenerator(self.jsonPath, id, loop_blueprint_path)
+                                    # Append the loop markdown to the main markdown file
+                                    self.md_file += loop_generator.md_file
                             
-                        elif type_data == "@loop":
-                            loop_key = arguments[1].strip()
-                            end_loop_identifier = f"@endloop:{loop_key}"
-                            parent_data = self.item.get(loop_key, f"{{Data '{loop_key}' not found}}")
-                            end_loop_idx = idx + 1
-
-                            # Look for the end loop line in subsequent lines
-                            while end_loop_idx < len(lines):
-                                if end_loop_identifier in lines[end_loop_idx]:
-                                    break
-                                end_loop_idx += 1
-
-                            if end_loop_idx >= len(lines) or end_loop_identifier not in lines[end_loop_idx]:
-                                print(f"End loop line not found for loop key '{loop_key}'")
-                                idx += 1
-                                continue
-
-                            # Extract the loop content (everything between @loop and @endloop)
-                            loop_content = lines[idx + 1:end_loop_idx]
-                            
-                            if loop_content:
-                                # Process the loop content
-                                for data_item in parent_data:
-                                    for loop_line in loop_content:
-                                        if "{{" in loop_line and "}}" in loop_line:
-                                            loop_start_idx = loop_line.find("{{") + 2
-                                            loop_end_idx = loop_line.find("}}")
-                                            loop_placeholder = loop_line[loop_start_idx:loop_end_idx]
-                                            loop_arguments = loop_placeholder.split(":")
-                                            loop_type_data = loop_arguments[0].strip()
-                                            
-                                            if "@" not in loop_type_data:
-                                                loop_key = loop_arguments[1].strip()
-                                                loop_data = data_item.get(loop_key, None)
-                                                if loop_data is None:
-                                                    print(f"Data '{loop_key}' not found in loop")
-                                                    continue
-                                                # Call the new function to handle non-loop types
-                                                self._processData(loop_type_data, loop_arguments, loop_data)
-                                            elif "@plantuml" in loop_type_data:
-                                                plantuml_output =  PlantUMLConverter(data_item).plantuml_output
-                                                plantuml_md = f"<!--\n{plantuml_output}\n-->\n![]({data_item.get('id')}.svg)\n"
-                                                self.md_file += plantuml_md + "\n\n"
-                                        else:
-                                            self.md_file += loop_line + "\n\n"
-
-                            # Skip past the loop block
-                            idx = end_loop_idx
-
                         else:
                             print(f"Invalid type: {type_data}")
 

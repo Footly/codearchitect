@@ -3,9 +3,8 @@
 
 ## SWE1-Requirements
 
-{{ @loop:SWE1-Requirements }}
+{{ @foreach:SWE1-Requirements }}
 {{ title:label:3:backtick }}
-{{ @plantuml }}
 **Description:** 
 {{ text:description }}
 {{ @endloop:SWE1-Requirements }}

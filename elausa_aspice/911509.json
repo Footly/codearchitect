@@ -54,7 +54,32 @@
             "ports": [
               {
                 "id": "a3e754a9-41f3-4386-81d6-1bf66e219aa8",
-                "label": "in",
+                "label": "speedIN",
+                "tags": [
+                  "port"
+                ],
+                "icon": "plug",
+                "description": "Speed incoming to the system",
+                "direction": "in",
+                "interface": "${id:f61fa331-714f-4f08-a8bf-99771c6bf52d}",
+                "use": ""
+              }
+            ],
+            "Components": []
+          },
+          {
+            "id": "5270ba48-c2ef-4705-b0ee-4f186b753d1a",
+            "label": "patatController",
+            "tags": [
+              "component"
+            ],
+            "icon": "package",
+            "description": "",
+            "requirements": [],
+            "ports": [
+              {
+                "id": "39ea3b0b-f103-4f94-9441-75f7b1e1aea9",
+                "label": "outSpeed",
                 "tags": [
                   "port"
                 ],

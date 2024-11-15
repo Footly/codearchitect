@@ -94,5 +94,47 @@
       },
       "editable": false
     }
-  }
+  },
+  "view": [
+    {
+      "title": "SWE1 View",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\elausa_aspice\\python_scripts\\generate_view_md.py",
+            "--json",
+            "${path}",
+            "--id",
+            "${id}",
+            "--blueprint",
+            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\elausa_aspice\\python_scripts\\swe1_blueprint.md",
+            "--format",
+            "html"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "SWE2 View",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\elausa_aspice\\python_scripts\\generate_view_md.py",
+            "--json",
+            "${path}",
+            "--id",
+            "${id}",
+            "--blueprint",
+            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\elausa_aspice\\python_scripts\\swe2_blueprint.md",
+            "--format",
+            "html"
+          ]
+        }
+      ]
+    }
+  ]
 }
