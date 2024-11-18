@@ -69,7 +69,8 @@
           "type": "string",
           "const": "folder"
         }
-      }
+      },
+      "editable": false
     }
   },
   "view": [

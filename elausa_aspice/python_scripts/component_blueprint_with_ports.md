@@ -1,4 +1,4 @@
-{{ title:label:4:backtick }}
+{{ title:label:i:backtick }}
 
 **Description:** 
 {{ text:description }}
@@ -6,5 +6,5 @@
 **Satisfies:** 
 {{ list:requirements }}
 
-**Ports:**
-{{ @foreach:port.port_blueprint }}
+{{ title:"Ports":i+1:backtick }}
+{{ @foreach:port.port_blueprint:i+1 }}

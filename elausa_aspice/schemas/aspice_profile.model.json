@@ -50,7 +50,8 @@
           "type": "string",
           "const": "folder"
         }
-      }
+      },
+      "editable": false
     },
     "SWE2-Architecture": {
       "type": "object",

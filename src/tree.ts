@@ -479,7 +479,15 @@ export class Item extends vscode.TreeItem {
       this.contextValue += ".command";
     }
 
-    this.command = { command: 'codearchitect.editObject', title: 'Edit Object', arguments: [this.jsonPath, this.filePath] };
+    if(this.schema) {
+      if (this.schema.editable === false) {
+        this.contextValue += ".readonly";
+      }
+    }
+
+    if (!this.contextValue.includes('.readonly')) {
+      this.command = { command: 'codearchitect.editObject', title: 'Edit Object', arguments: [this.jsonPath, this.filePath] };
+    }
 
     this.children = []; // Initialize children[] as an empty array
   }

@@ -1,7 +1,7 @@
-## SWE2 - Architecture
+{{ title:"SWE2 - Architecture":i:backtick }}
 
-### Components
-{{ @foreach:component.component_blueprint_with_ports}}
+{{ title:"Components":i+1:backtick }}
+{{ @foreach:component.component_blueprint_with_ports:i+1}}
 
-### Interfaces
-{{ @foreach:interface.interface_blueprint}}
+{{ title:"Interfaces":i+1:backtick }}
+{{ @foreach:interface.interface_blueprint:i+1}}

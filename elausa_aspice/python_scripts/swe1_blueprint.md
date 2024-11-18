@@ -1,3 +1,3 @@
-## SWE1 - Requirements
+{{ title:"SWE1 - Requirements":i:backtick }}
 
 {{ @foreach:reqs.req_blueprint }}

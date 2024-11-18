@@ -4,13 +4,39 @@ import markdown
 import os
 from json2plantuml import (
     PlantUMLConverter
-)
+)       
+import re
+
+def evaluate_expression(expression):
+    # Remove any whitespace
+    expression = expression.replace(" ", "")
+
+    # Match the expression pattern
+    match = re.match(r"(\d+)([+\-*/])(\d+)", expression)
+    if not match:
+        raise ValueError("Invalid expression format")
+
+    num1, operator, num2 = match.groups()
+    num1, num2 = int(num1), int(num2)
+
+    if operator == '+':
+        result = num1 + num2
+    elif operator == '-':
+        result = num1 - num2
+    elif operator == '*':
+        result = num1 * num2
+    elif operator == '/':
+        result = num1 / num2
+    else:
+        raise ValueError("Unsupported operator")    
+    return int(result)
 
 class GenerateElement:
-    def __init__(self, decoder, element, *args):
+    def __init__(self, decoder, depth, element, *args):
         self.element = element
         self.args = args
         self.ref = False
+        self.depth = depth
         if isinstance(self.element, str):
             obj = decoder.search_by_id(decoder.extract_guid(self.element))
             #Check if obj is a list
@@ -37,36 +63,44 @@ class GenerateElement:
         raise NotImplementedError("Subclasses must override the _generateElement method")
 
 class MDTitle(GenerateElement):
-  def _generateElement(self):
-    try:
-      # Remove all empty spaces from the arguments
-      self.args = [arg.strip() for arg in self.args if arg.strip()]
-      
-      # Convert the first argument to an integer if possible, otherwise default to 1
-      heading_level = int(self.args[0].strip()) if self.args else 1
-      
-      # Check if "backtick" is in the arguments
-      backticks = "backtick" in self.args
+    def _generateElement(self):
+        try:
+            # Remove all empty spaces from the arguments
+            self.args = [arg.strip() for arg in self.args if arg.strip()]       
+            # Convert the first argument to an integer if possible, otherwise default to 1
+            heading_level = self.args[0].strip()
+            #Check if it contains a "i" character
+            if "i" in heading_level:
+                #Replace the i character for the self.depth
+                heading_level = heading_level.replace("i", str(self.depth))
 
-      # If element is a string, replace newline characters with spaces
-      if isinstance(self.element, str):
-          heading_text = self.element.replace("\n", " ")
-      # If element is a list, join the elements with a space
-      elif isinstance(self.element, list):
-          heading_text = " ".join(self.element)
-      else:
-          raise ValueError("Invalid element type for heading text")
-
-      # Create the markdown title with the specified heading
-      # If backticks is True, use backticks for the title
-      if backticks:
-          markdown_title = f"{'#' * heading_level} {'`'}{heading_text}{'`'}"
-      else:
-          markdown_title = f"{'#' * heading_level} {heading_text}"
-      return markdown_title
-    except Exception as e:
-      print(f"Error in MDTitle: {e}")
-      return f"{{Error in MDTitle: {e}}}"
+            #Check if the heading_level contains an expression
+            if "+" in heading_level or "-" in heading_level or "*" in heading_level or "/" in heading_level:
+                heading_level = evaluate_expression(heading_level)
+            else:
+                heading_level = int(heading_level)
+    
+            # Check if "backtick" is in the arguments
+            backticks = "backtick" in self.args     
+            # If element is a string, replace newline characters with spaces
+            if isinstance(self.element, str):
+                heading_text = self.element.replace("\n", " ")
+            # If element is a list, join the elements with a space
+            elif isinstance(self.element, list):
+                heading_text = " ".join(self.element)
+            else:
+                raise ValueError("Invalid element type for heading text")       
+            # Create the markdown title with the specified heading
+            # If backticks is True, use backticks for the title
+            if backticks:
+                markdown_title = f"{'#' * heading_level} {'`'}{heading_text}{'`'}"
+            else:
+                markdown_title = f"{'#' * heading_level} {heading_text}"
+            return markdown_title
+        
+        except Exception as e:
+            print(f"Error in MDTitle: {e}")
+            return f"{{Error in MDTitle: {e}}}"
     
 class MDText(GenerateElement):
     def _generateElement(self):
@@ -126,10 +160,11 @@ class MDLink(GenerateElement):
       return f"{{Error in MDLink: {e}}}"
 
 class ViewGenerator:
-    def __init__(self, json_path, id, blueprint_path):
+    def __init__(self, json_path, id, blueprint_path, depth=1):
         self.id = id
         self.jsonPath = json_path
         self.decode = DecodeJson(json_path)
+        self.depth = depth
         try:
             self.item = self.decode.search_by_id(id)[0] if self.decode.search_by_id(id) else {}
         except Exception as e:
@@ -155,15 +190,15 @@ class ViewGenerator:
     def _createMarkdownItem(self, type_data, data, arguments):
         # Call the appropriate class based on the type
         if type_data == "title":
-            element = MDTitle(self.decode, data, *arguments[2:])
+            element = MDTitle(self.decode, self.depth, data, *arguments[2:])
         elif type_data == "text":
-            element = MDText(self.decode, data)
+            element = MDText(self.decode, self.depth, data)
         elif type_data == "list":
-            element = MDList(self.decode, data)
+            element = MDList(self.decode, self.depth, data)
         elif type_data == "image":
-            element = MDImage(self.decode, data, *arguments[2:])
+            element = MDImage(self.decode, self.depth, data, *arguments[2:])
         elif type_data == "link":
-            element = MDLink(self.decode, data, *arguments[2:])
+            element = MDLink(self.decode, self.depth, data, *arguments[2:])
         else:
             print(f"Invalid type: {type_data}")
             return None
@@ -205,12 +240,16 @@ class ViewGenerator:
 
                         if "@" not in type_data:
                             key = arguments[1].strip()
-                            data = self.item.get(key, None)
-                            if data is None:
-                                print(f"Data '{key}' not found")
-                                idx += 1
-                                continue
-                            # Call the new function to handle non-loop types
+                            #Check if data is a string surroudned by " "
+                            if key[0] == '"' and key[-1] == '"':
+                                data = key[1:-1]
+                            else:
+                                data = self.item.get(key, None)
+                                if data is None:
+                                    print(f"Data '{key}' not found")
+                                    idx += 1
+                                    continue
+                                # Call the new function to handle non-loop types
                             self._processData(type_data, arguments, data)
                             
                         elif type_data == "@plantuml":
@@ -233,6 +272,14 @@ class ViewGenerator:
                                 self.md_file += f"- **[{label}](#{anchor_label})**\n\n"
                                 
                         elif type_data == "@foreach":
+                            #Check if argument[2] exists
+                            if len(arguments) == 3:
+                                depth = arguments[2].strip()
+                                if "i" in depth:
+                                    #Replace the i character for the self.depth
+                                    depth = depth.replace("i", str(self.depth))
+                                self.depth = evaluate_expression(depth)
+                                
                             searches = arguments[1].strip().split(",")
                             # Iterate over the search queries
                             for search in searches:
@@ -246,7 +293,7 @@ class ViewGenerator:
                                 ids = self.decode.get_ids_by_tag_within_parent_id(tags, self.item.get("id"))
                                 # Iterate over the ids
                                 for id in ids:
-                                    loop_generator = ViewGenerator(self.jsonPath, id, loop_blueprint_path)
+                                    loop_generator = ViewGenerator(self.jsonPath, id, loop_blueprint_path, self.depth + 1)
                                     # Append the loop markdown to the main markdown file
                                     self.md_file += loop_generator.md_file
                             
