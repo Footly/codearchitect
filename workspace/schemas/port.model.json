@@ -1,0 +1,70 @@
+{
+  "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
+  "type": "object",
+  "title": "Port",
+  "properties": {
+    "id": {
+      "type": "string",
+      "hidden": true
+    },
+    "label": {
+      "type": "string",
+      "hidden": true
+    },
+    "visibility": {
+      "$ref": "./visibility.model.json",
+      "const": "public",
+      "hidden": true
+    },
+    "tags": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "port"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "plug"
+    },
+    "documentation": {
+      "hidden": true,
+      "editable": true,
+      "multiline": true,
+      "type": "string"
+    },
+    "direction" : {
+      "hidden": true,
+      "editable": true,
+      "type": "string",
+      "enum": [
+        "in",
+        "out"
+      ]
+    },
+    "interface": {
+      "hidden": true,
+      "editable": true,
+      "type": "string",
+      "search": {
+        "query": [
+          [
+            {
+              "field": "tags",
+              "regex": "interface"
+            }
+          ]
+        ]
+      }
+    },
+    "use": {
+      "hidden": true,
+      "editable": true,
+      "type": "string"
+    }
+  }
+}

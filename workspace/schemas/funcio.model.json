@@ -2,48 +2,69 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Funcio",
-  "vscodeIcon": "symbol-property",
-  "modelType": "parent-object",
   "properties": {
-    "$id": {
+    "id": {
       "type": "string",
       "hidden": true
     },
-    "$label": {
+    "label": {
       "type": "string",
       "hidden": true
     },
     "visibility": {
-      "hidden": true,
-      "modelType": "dropdown-select",
-      "$ref": "./visibility.model.json"
+      "$ref": "./visibility.model.json",
+      "const": "public",
+      "hidden": true
     },
-
+    "tags": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "funcio"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "symbol-property"
+    },
     "returntype": {
       "hidden": true,
-      "modelType": "sub-object",
+      "editable": true,
       "type": "object",
       "properties": {
         "datatype": {
-          "modelType": "dropdown-select-tag",
+          "hidden": true,
+          "editable": true,
           "type": "string",
-          "const": [
-            "types"
-          ]
+          "search": {
+            "query": [
+              [
+                {
+                  "field": "tags",
+                  "regex": "types"
+                }
+              ]
+            ]
+          }
         },
         "isPointer": {
-          "modelType": "checkbox",
+          "hidden": true,
+          "editable": true,
           "type": "boolean"
         },
         "isConst": {
-          "modelType": "checkbox",
+          "hidden": true,
+          "editable": true,
           "type": "boolean"
         }
       }
     },
     "parameters": {
       "hidden": true,
-      "modelType": "folder",
       "type": "array",
       "items": {
         "$ref": "./parameter.model.json"
@@ -51,14 +72,40 @@
     },
     "documentation": {
       "hidden": true,
-      "modelType": "input-string",
+      "editable": true,
+      "multiline": true,
       "type": "string"
+    },
+    "diagrams": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "$ref": "./activitydiagram.model.json"
+      }
     }
   },
-  "$link": {
-    "tags": [
-      "*",
-      "funcions"
-    ]
-  }
+  "view": [
+    {
+      "title": "Block Diagram",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\plantuml_test.py",
+            "|",
+            "java",
+            "-D'file.encoding'=UTF8",
+            "-jar",
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\plantuml.jar",
+            "-pipe",
+            "-charset",
+            "UTF-8",
+            "-pipe",
+            "-tsvg"
+          ]
+        }
+      ]
+    }
+  ]
 }

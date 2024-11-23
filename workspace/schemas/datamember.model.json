@@ -2,56 +2,89 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "DataMember",
-  "modelType": "parent-object",
-  "vscodeIcon": "symbol-field",
   "properties": {
-    "$id": {
+    "id": {
       "type": "string",
       "hidden": true
     },
-    "$label": {
+    "label": {
       "type": "string",
       "hidden": true
     },
     "visibility": {
-      "hidden": true,
       "$ref": "./visibility.model.json",
-      "const": "public"
+      "const": "public",
+      "hidden": true
     },
-    "datatype": {
-      "modelType": "dropdown-select-tag",
+    "tags": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "datamember"
+      ]
+    },
+    "icon": {
       "hidden": true,
       "type": "string",
-      "const": ["types"]
+      "const": "symbol-field"
     },
-    "isArray": {
-      "modelType": "input-string",
+    "datatype": {
       "hidden": true,
-      "type": "string"
+      "editable": true,
+      "type": "string",
+      "search": {
+        "query": [
+          [
+            {
+              "field": "tags",
+              "regex": "types"
+            }
+          ]
+        ]
+      }
+    },
+    "Array": {
+      "hidden": true,
+      "type": "array",
+      "editable": true,
+      "items": {
+        "type": "string",
+        "search": {
+          "query": [
+            [
+              {
+                "field": "tags",
+                "regex": "enummember"
+              }
+            ]
+          ],
+          "text": true
+        }
+      }
     },
     "isPointer": {
       "hidden": true,
-      "modelType": "checkbox",
+      "editable": true,
       "type": "boolean"
     },
     "isVolatile": {
       "hidden": true,
-      "modelType": "checkbox",
+      "editable": true,
       "type": "boolean"
     },
     "isConst": {
       "hidden": true,
-      "modelType": "checkbox",
+      "editable": true,
       "type": "boolean"
     },
     "documentation": {
       "hidden": true,
-      "modelType": "input-string",
-      "type": "string",
-      "const": ["variable"]
+      "editable": true,
+      "multiline": true,
+      "type": "string"
     }
-  },
-  "$link": {
-    "tags": ["*", "datamember"]
   }
 }

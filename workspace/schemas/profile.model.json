@@ -1,23 +1,37 @@
 {
-  "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
+  "$schema": "file:///C:/Users/narci/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "$id": "profile.model.json",
   "title": "Project",
-  "vscodeIcon": "symbol-method",
   "type": "object",
-  "modelType": "root",
+  "root": true,
   "properties": {
-    "$id": {
+    "id": {
       "type": "string",
       "hidden": true
     },
-    "$label": {
+    "label": {
       "type": "string",
       "hidden": true
     },
     "visibility": {
-      "hidden": true,
       "$ref": "./visibility.model.json",
-      "const": "public"
+      "const": "public",
+      "hidden": true
+    },
+    "tags": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "project"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "symbol-method"
     },
     "$model": {
       "type": "string",
@@ -25,52 +39,220 @@
     },
     "version": {
       "hidden": true,
-      "modelType": "input-string",
+      "editable": true,
       "type": "string"
     },
     "documentation": {
       "hidden": true,
-      "modelType": "input-string",
+      "editable": true,
+      "multiline": true,
       "type": "string"
     },
-    "srcPath": {
-      "type": "string",
-      "hidden": true,
-      "modelType": "vscode-fs"
-    },
-    "Structure": {
-      "modelType": "folder",
-      "vscodeIcon": "folder",
-      "type": "array",
-      "items": {
-        "$ref": "./structure.model.json"
-      }
-    },
     "Requirements": {
-      "modelType": "folder",
-      "vscodeIcon": "folder",
       "type": "array",
       "items": {
         "$ref": "./reqs.model.json"
+      },
+      "properties": {
+        "icon": {
+          "hidden": true,
+          "type": "string",
+          "const": "folder"
+        }
       }
     },
-    "Primitive Types": {
-      "modelType": "folder",
-      "vscodeIcon": "folder",
+    "Architecture": {
       "type": "array",
       "items": {
-        "$ref": "./primitivetypes.model.json"
+        "$ref": "./layer.model.json"
+      },
+      "properties": {
+        "icon": {
+          "hidden": true,
+          "type": "string",
+          "const": "folder"
+        }
       }
     },
-    "$links": {
+    "Integration Tests": {
       "type": "array",
-      "hidden": true,
       "items": {
-        "$ref": "./tags.model.json"
+        "$ref": "./inttest.model.json"
+      },
+      "properties": {
+        "icon": {
+          "hidden": true,
+          "type": "string",
+          "const": "folder"
+        }
+      }
+    },
+    "Qualification Tests": {
+      "type": "array",
+      "items": {
+        "$ref": "./qualitest.model.json"
+      },
+      "properties": {
+        "icon": {
+          "hidden": true,
+          "type": "string",
+          "const": "folder"
+        }
       }
     }
   },
-  "$link": {
-    "tags": ["*"]
-  }
+  "view": [
+    {
+      "title": "SW1 View",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\generate_view.py",
+            "-f",
+            "${path}",
+            "-v",
+            "swe1",
+            "--format",
+            "html"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "SW2 View",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\generate_view.py",
+            "-f",
+            "${path}",
+            "-v",
+            "swe2",
+            "--format",
+            "html"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "SW3 View",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\generate_view.py",
+            "-f",
+            "${path}",
+            "-v",
+            "swe3",
+            "--format",
+            "html"
+          ]
+        }
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "title": "Traceability SWE1 View",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\generate_view.py",
+            "-f",
+            "${path}",
+            "-o",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\",
+            "-n",
+            "${label}"
+          ]
+        },
+        {
+          "tool": "vscode",
+          "args": [
+            "openFile",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\${label}_swe1.md"
+          ]
+        },
+        {
+          "tool": "vscode",
+          "args": [
+            "executeCommand",
+            "markdown.showPreview"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Traceability SWE2 View",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\generate_view.py",
+            "-f",
+            "${path}",
+            "-o",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\",
+            "-n",
+            "${label}"
+          ]
+        },
+        {
+          "tool": "vscode",
+          "args": [
+            "openFile",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\${label}_swe2.md"
+          ]
+        },
+        {
+          "tool": "vscode",
+          "args": [
+            "executeCommand",
+            "markdown.showPreview"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Traceability SWE3 View",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\generate_view.py",
+            "-f",
+            "${path}",
+            "-o",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\",
+            "-n",
+            "${label}"
+          ]
+        },
+        {
+          "tool": "vscode",
+          "args": [
+            "openFile",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\${label}_swe3.md"
+          ]
+        },
+        {
+          "tool": "vscode",
+          "args": [
+            "executeCommand",
+            "markdown.showPreview"
+          ]
+        }
+      ]
+    }
+  ]
 }

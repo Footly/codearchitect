@@ -1,0 +1,80 @@
+{
+  "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
+  "type": "object",
+  "title": "Component",
+  "properties": {
+    "id": {
+      "type": "string",
+      "hidden": true
+    },
+    "label": {
+      "type": "string",
+      "hidden": true
+    },
+    "visibility": {
+      "$ref": "./visibility.model.json",
+      "const": "public",
+      "hidden": true
+    },
+    "tags": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "component"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "package"
+    },
+    "documentation": {
+      "hidden": true,
+      "editable": true,
+      "multiline": true,
+      "type": "string"
+    },
+    "requirements": {
+      "type": "array",
+      "hidden": true,
+      "editable": true,
+      "items": {
+        "type": "string",
+        "search": {
+          "query": [
+            [
+              {
+                "field": "tags",
+                "regex": "reqs"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    "ports": {
+      "type": "array",
+      "hidden": true,
+      "items": {
+        "$ref": "./port.model.json"
+      }
+    },
+    "components": {
+      "type": "array",
+      "hidden": true,
+      "items": {
+        "$ref": "./component.model.json"
+      }
+    },
+    "libraries": {
+      "type": "array",
+      "hidden": true,
+      "items": {
+        "$ref": "./library.model.json"
+      }
+    }
+  }
+}

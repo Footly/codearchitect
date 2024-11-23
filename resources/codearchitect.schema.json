@@ -67,6 +67,15 @@
         "description": {
             "type": "string"
         },
+        "multiline": {
+            "type": "boolean"
+        },
+        "markdown": {
+            "type": "boolean"
+        },
+        "file": {
+            "type": "string"
+        },
         "items": {
             "anyOf": [
                 {
@@ -106,41 +115,17 @@
                 }
             ]
         },
-        "modelType": {
-            "type": "string",
-            "enum": [
-              "root",
-              "parent-object",
-              "folder",
-              "input-string",
-              "checkbox",
-              "dropdown-select",
-              "dropdown-select-tag",
-              "sub-object",
-              "text-area",
-              "pool-dropdown-select-tag",
-              "vscode-fs"
-          ]
+        "root" : {
+            "type": "boolean"
+        },
+        "editable": {
+            "type": "boolean"
         },
         "hidden": {
             "type":"boolean"
         },
-        "vscodeIcon": {
+        "icon": {
             "type": "string"
-        },
-        "$link": {
-            "type": "object",
-            "properties": {
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "preview": {
-            "type":"boolean"
         },
         "commands": {
             "type": "array",

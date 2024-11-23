@@ -1,0 +1,141 @@
+{
+  "$schema": "file:///C:/Users/narci/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
+  "$id": "aspice_profile.model.json",
+  "title": "Project",
+  "type": "object",
+  "root": true,
+  "properties": {
+    "id": {
+      "type": "string",
+      "hidden": true
+    },
+    "label": {
+      "type": "string",
+      "hidden": true
+    },
+    "tags": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "project"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "symbol-method"
+    },
+    "$model": {
+      "type": "string",
+      "hidden": true
+    },
+    "description": {
+      "hidden": true,
+      "editable": true,
+      "multiline": true,
+      "type": "string"
+    },
+    "SWE1-Requirements": {
+      "type": "array",
+      "items": {
+        "$ref": "./reqs.model.json"
+      },
+      "properties": {
+        "icon": {
+          "hidden": true,
+          "editable": false,
+          "type": "string",
+          "const": "folder"
+        }
+      },
+      "editable": false
+    },
+    "SWE2-Architecture": {
+      "type": "object",
+      "properties": {
+        "Layers": {
+          "type": "array",
+          "items": {
+            "$ref": "./layer.model.json"
+          },
+          "properties": {
+            "icon": {
+              "hidden": true,
+              "editable": false,
+              "type": "string",
+              "const": "folder"
+            }
+          },
+          "editable": false
+        },
+        "Interfaces": {
+          "type": "array",
+          "items": {
+            "$ref": "./interface.model.json"
+          },
+          "properties": {
+            "icon": {
+              "hidden": true,
+              "editable": false,
+              "type": "string",
+              "const": "folder"
+            }
+          },
+          "editable": false
+        },
+        "icon": {
+          "hidden": true,
+          "editable": false,
+          "type": "string",
+          "const": "folder"
+        }
+      },
+      "editable": false
+    }
+  },
+  "view": [
+    {
+      "title": "SWE1 View",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\elausa_aspice\\python_scripts\\generate_view_md.py",
+            "--json",
+            "${path}",
+            "--id",
+            "${id}",
+            "--blueprint",
+            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\elausa_aspice\\python_scripts\\swe1_blueprint.md",
+            "--format",
+            "html"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "SWE2 View",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\elausa_aspice\\python_scripts\\generate_view_md.py",
+            "--json",
+            "${path}",
+            "--id",
+            "${id}",
+            "--blueprint",
+            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\elausa_aspice\\python_scripts\\swe2_blueprint.md",
+            "--format",
+            "html"
+          ]
+        }
+      ]
+    }
+  ]
+}

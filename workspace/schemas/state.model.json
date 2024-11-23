@@ -2,25 +2,37 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "State",
-  "vscodeIcon": "window",
-  "modelType": "parent-object",
   "properties": {
-    "$id": {
+    "id": {
       "type": "string",
       "hidden": true
     },
-    "$label": {
+    "label": {
       "type": "string",
       "hidden": true
     },
     "visibility": {
-      "hidden": true,
       "$ref": "./visibility.model.json",
-      "const": "public"
+      "const": "public",
+      "hidden": true
+    },
+    "tags": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "state"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "window"
     },
     "states": {
       "type": "array",
-      "modelType": "folder",
       "hidden": true,
       "items": {
         "$ref": "./state.model.json"
@@ -28,27 +40,68 @@
     },
     "transitions": {
       "type": "array",
-      "modelType": "folder",
-      "hidden": true,
       "items": {
         "$ref": "./transition.model.json"
+      },
+      "properties": {
+        "icon": {
+          "hidden": true,
+          "type": "string",
+          "const": "folder"
+        }
       }
     },
     "guards": {
       "type": "array",
-      "modelType": "folder",
-      "hidden": true,
       "items": {
         "$ref": "./guard.model.json"
+      },
+      "properties": {
+        "icon": {
+          "hidden": true,
+          "type": "string",
+          "const": "folder"
+        }
       }
     },
-    "isInit": {
+    "hsms": {
+      "type": "array",
+      "items": {
+        "$ref": "./hsm.model.json"
+      },
+      "properties": {
+        "icon": {
+          "hidden": true,
+          "type": "string",
+          "const": "folder"
+        }
+      }
+    },
+    "documentation": {
       "hidden": true,
-      "type":"boolean",
-      "modelType": "checkbox"
+      "editable": true,
+      "multiline": true,
+      "type": "string"
+    },
+    "isInit": {
+      "editable": true,
+      "hidden": true,
+      "type":"boolean"
+    },
+    "isTerminated" : {
+      "hidden": true,
+      "editable": true,
+      "type": "string",
+      "search": {
+        "query": [
+          [
+            {
+              "field": "tags",
+              "regex": "event"
+            }
+          ]
+        ]
+      }
     }
-  },
-  "$link": {
-    "tags": ["*", "state"]
   }
 }

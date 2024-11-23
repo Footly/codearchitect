@@ -2,54 +2,90 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Transition",
-  "vscodeIcon": "arrow-right",
-  "modelType": "parent-object",
   "properties": {
-    "$id": {
+    "id": {
       "type": "string",
       "hidden": true
     },
-    "$label": {
+    "label": {
       "type": "string",
       "hidden": true
     },
     "visibility": {
-      "hidden": true,
       "$ref": "./visibility.model.json",
-      "const": "public"
+      "const": "public",
+      "hidden": true
+    },
+    "tags": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "transition"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "arrow-right"
     },
     "event": {
       "hidden": true,
-      "modelType": "dropdown-select-tag",
+      "editable": true,
       "type": "string",
-      "const": [
-        "event"
-      ]
+      "search": {
+        "query": [
+          [
+            {
+              "field": "tags",
+              "regex": "event"
+            }
+          ]
+        ]
+      }
     },
     "transition": {
       "hidden": true,
+      "editable": true,
       "type": "object",
-      "modelType": "sub-object",
       "properties": {
         "to": {
-          "modelType": "dropdown-select-tag",
+          "hidden": true,
+          "editable": true,
           "type": "string",
-          "const": [
-            "state",
-            "guard"
-          ]
+          "search": {
+            "query": [
+              [
+                {
+                  "field": "tags",
+                  "regex": "state"
+                },
+                {
+                  "field": "tags",
+                  "regex": "guard"
+                }
+              ]
+            ]
+          }
         },
         "activity": {
-          "modelType": "dropdown-select-tag",
+          "hidden": true,
+          "editable": true,
           "type": "string",
-          "const": [
-            "activity"
-          ]
+          "search": {
+            "query": [
+              [
+                {
+                  "field": "tags",
+                  "regex": "activity"
+                }
+              ]
+            ]
+          }
         }
       }
     }
-  },
-  "$link": {
-    "tags": ["*", "transition"]
   }
 }

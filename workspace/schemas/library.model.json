@@ -2,54 +2,80 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "Library",
-  "modelType": "parent-object",
-  "vscodeIcon": "repo",
   "properties": {
-    "$id": {
+    "id": {
       "type": "string",
       "hidden": true
     },
-    "$label": {
+    "label": {
       "type": "string",
       "hidden": true
     },
     "visibility": {
-      "hidden": true,
       "$ref": "./visibility.model.json",
-      "const": "public"
+      "const": "public",
+      "hidden": true
     },
-    "requirements": {
-      "type": "array",
+    "tags": {
       "hidden": true,
-      "modelType": "pool-dropdown-select-tag",
+      "type": "array",
       "items": {
         "type": "string"
       },
-      "const": ["reqs"]
+      "const": [
+        "lib"
+      ]
+    },
+    "documentation": {
+      "hidden": true,
+      "editable": true,
+      "multiline": true,
+      "type": "string"
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "repo"
     },
     "public dependencies": {
       "type": "array",
       "hidden": true,
-      "modelType": "pool-dropdown-select-tag",
+      "editable": true,
       "items": {
-        "type": "string"
-      },
-      "const": ["lib"]
+        "type": "string",
+        "search": {
+          "query": [
+            [
+              {
+                "field": "tags",
+                "regex": "lib"
+              }
+            ]
+          ]
+        }
+      }
     },
     "private dependencies": {
       "type": "array",
       "hidden": true,
-      "modelType": "pool-dropdown-select-tag",
+      "editable": true,
       "items": {
-        "type": "string"
-
-      },
-      "const": ["lib"]
+        "type": "string",
+        "search": {
+          "query": [
+            [
+              {
+                "field": "tags",
+                "regex": "lib"
+              }
+            ]
+          ]
+        }
+      }
     },
     "variables": {
       "type": "array",
       "hidden": true,
-      "modelType": "folder",
       "items": {
         "$ref": "./variable.model.json"
       }
@@ -57,7 +83,6 @@
     "funcions": {
       "type": "array",
       "hidden": true,
-      "modelType": "folder",
       "items": {
         "$ref": "./funcio.model.json"
       }
@@ -65,7 +90,6 @@
     "datastructures": {
       "type": "array",
       "hidden": true,
-      "modelType": "folder",
       "items": {
         "$ref": "./datastructure.model.json"
       }
@@ -73,7 +97,6 @@
     "typedefs": {
       "type": "array",
       "hidden": true,
-      "modelType": "folder",
       "items": {
         "$ref": "./typedefs.model.json"
       }
@@ -81,7 +104,6 @@
     "enumerators": {
       "type": "array",
       "hidden": true,
-      "modelType": "folder",
       "items": {
         "$ref": "./enumerator.model.json"
       }
@@ -89,23 +111,91 @@
     "macros": {
       "type": "array",
       "hidden": true,
-      "modelType": "folder",
       "items": {
         "$ref": "./macro.model.json"
       }
     },
-    "hsm": {
-      "hidden": true,
+    "HSM": {
       "type": "array",
-      "modelType": "folder",
       "items": {
         "$ref": "./hsm.model.json"
+      },
+      "properties": {
+        "icon": {
+          "hidden": true,
+          "type": "string",
+          "const": "folder"
+        }
+      }
+    },
+    "Unit Tests": {
+      "type": "array",
+      "items": {
+        "$ref": "./unittest.model.json"
+      },
+      "properties": {
+        "icon": {
+          "hidden": true,
+          "type": "string",
+          "const": "folder"
+        }
       }
     }
   },
-  "$link": {
-    "tags": ["*", "lib"]
-  },
+  "view": [
+    {
+      "title": "Block Diagram",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\json2plantuml.py",
+            "-f",
+            "${path}",
+            "-i",
+            "${id}",
+            "|",
+            "java",
+            "-D'file.encoding'=UTF8",
+            "-jar",
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\plantuml.jar",
+            "-pipe",
+            "-charset",
+            "UTF-8",
+            "-pipe",
+            "-tsvg"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Block Diagram 2",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\json2plantuml.py",
+            "-f",
+            "${path}",
+            "-i",
+            "${id}",
+            "|",
+            "java",
+            "-D'file.encoding'=UTF8",
+            "-jar",
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\plantuml.jar",
+            "-pipe",
+            "-charset",
+            "UTF-8",
+            "-pipe",
+            "-tsvg"
+          ]
+        }
+      ]
+    }
+  ],
   "commands": [
     {
       "title": "PlantUml Preview SVG",
@@ -114,11 +204,11 @@
           "tool": "shell",
           "args": [
             "python",
-            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\json2plantuml.py",
+            "C:\\Users\\narci\\Documents\\codearchitect\\codearchitect_3\\workspace\\python_scripts\\json2plantuml.py",
             "-f",
-            "${$path}",
+            "${path}",
             "-i",
-            "${$id}",
+            "${id}",
             "|",
             "java",
             "-D'file.encoding'=UTF8",
@@ -130,14 +220,14 @@
             "-pipe",
             "-tsvg",
             ">",
-            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\${$label}-${$id}.svg"
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\${label}-${id}.svg"
           ]
         },
         {
           "tool": "vscode",
           "args": [
             "openFile",
-            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\${$label}-${$id}.svg"
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\${label}-${id}.svg"
           ]
         },
         {
@@ -158,18 +248,18 @@
             "python",
             "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\json2plantuml.py",
             "-f",
-            "${$path}",
+            "${path}",
             "-i",
-            "${$id}",
+            "${id}",
             "-o",
-            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\${$label}-${$id}.puml"
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\${label}-${id}.puml"
           ]
         },
         {
           "tool": "vscode",
           "args": [
             "openFile",
-            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\${$label}-${$id}.puml"
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\${label}-${id}.puml"
           ]
         },
         {
@@ -190,9 +280,9 @@
             "python",
             "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\code_generator.py",
             "-f",
-            "${$path}",
+            "${path}",
             "-i",
-            "${$id}",
+            "${id}",
             "-t",
             "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts",
             "-o",
@@ -203,14 +293,14 @@
           "tool": "vscode",
           "args": [
             "openFile",
-            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\${$label}-${$id}.c"
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\${label}-${id}.c"
           ]
         },
         {
           "tool": "vscode",
           "args": [
             "openFile",
-            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\${$label}-${$id}.h"
+            "C:\\Users\\narci\\Documents\\codearchitect_3\\workspace\\python_scripts\\${label}-${id}.h"
           ]
         }
       ]

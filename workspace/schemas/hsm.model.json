@@ -2,49 +2,73 @@
   "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
   "type": "object",
   "title": "HSM",
-  "modelType": "parent-object",
-  "vscodeIcon": "circuit-board",
   "properties": {
-    "$id": {
+    "id": {
       "type": "string",
       "hidden": true
     },
-    "$label": {
+    "label": {
       "type": "string",
       "hidden": true
     },
     "visibility": {
-      "hidden": true,
       "$ref": "./visibility.model.json",
-      "const": "public"
+      "const": "public",
+      "hidden": true
     },
-    "states": {
+    "tags": {
       "hidden": true,
       "type": "array",
-      "modelType": "folder",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "hsm"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "circuit-board"
+    },
+    "States": {
+      "type": "array",
       "items": {
         "$ref": "./state.model.json"
+      },
+      "properties": {
+        "icon": {
+          "hidden": true,
+          "type": "string",
+          "const": "folder"
+        }
       }
     },
     "Events": {
       "type": "array",
-      "modelType": "folder",
-      "vscodeIcon": "folder",
       "items": {
         "$ref": "./event.model.json"
+      },
+      "properties": {
+        "icon": {
+          "hidden": true,
+          "type": "string",
+          "const": "folder"
+        }
       }
     },
     "Activities": {
       "type": "array",
-      "modelType": "folder",
-      "vscodeIcon": "folder",
       "items": {
         "$ref": "./activity.model.json"
+      },
+      "properties": {
+        "icon": {
+          "hidden": true,
+          "type": "string",
+          "const": "folder"
+        }
       }
     }
-  },
-  "$link": {
-    "tags": ["*", "hsm"]
-  },
-  "preview": true
+  }
 }

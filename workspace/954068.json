@@ -1,0 +1,383 @@
+{
+  "id": "d5a4d9b5-ae36-4915-a5f3-d47c3252797b",
+  "label": "954068",
+  "visibility": "public",
+  "tags": [
+    "project"
+  ],
+  "icon": "symbol-method",
+  "$model": "profile.model.json",
+  "version": "",
+  "documentation": "dasd",
+  "Requirements": [],
+  "Architecture": [
+    {
+      "id": "10d2712c-f021-4e9d-9300-cb3e95d2db37",
+      "label": "app",
+      "visibility": "public",
+      "tags": [
+        "layer"
+      ],
+      "icon": "layers",
+      "documentation": "",
+      "layers": [],
+      "interfaces": [
+        {
+          "id": "c5c0d2b5-fc88-4278-a5fd-5b8a6e6a0912",
+          "label": "speed",
+          "visibility": "public",
+          "tags": [
+            "interface"
+          ],
+          "icon": "symbol-interface",
+          "documentation": ""
+        },
+        {
+          "id": "f3582fd9-f560-48bc-8119-1fd5d9a89ff5",
+          "label": "temperature",
+          "visibility": "public",
+          "tags": [
+            "interface"
+          ],
+          "icon": "symbol-interface",
+          "documentation": "\n\n"
+        },
+        {
+          "id": "c84f5223-6d31-4fd7-b759-8b61729d775f",
+          "label": "light",
+          "visibility": "public",
+          "tags": [
+            "interface"
+          ],
+          "icon": "symbol-interface",
+          "documentation": ""
+        }
+      ],
+      "components": [
+        {
+          "id": "db35bdc1-a2c5-49d6-ae17-7372bef0342b",
+          "label": "motorController",
+          "visibility": "public",
+          "tags": [
+            "component"
+          ],
+          "icon": "package",
+          "documentation": "",
+          "requirements": [],
+          "ports": [
+            {
+              "id": "353f571f-7d58-49db-bab0-197a7a4fb46b",
+              "label": "speedIn",
+              "visibility": "public",
+              "tags": [
+                "port"
+              ],
+              "icon": "plug",
+              "documentation": "",
+              "direction": "in",
+              "interface": "${id:c5c0d2b5-fc88-4278-a5fd-5b8a6e6a0912}",
+              "use": ""
+            },
+            {
+              "id": "c39719e1-f207-4280-988f-0db472298fcb",
+              "label": "motorTemp",
+              "visibility": "public",
+              "tags": [
+                "port"
+              ],
+              "icon": "plug",
+              "documentation": "",
+              "direction": "out",
+              "interface": "${id:f3582fd9-f560-48bc-8119-1fd5d9a89ff5}",
+              "use": ""
+            }
+          ],
+          "components": [
+            {
+              "id": "8480e07e-ad03-43fd-82c3-e97c3a5b4468",
+              "label": "speedRegulator",
+              "visibility": "public",
+              "tags": [
+                "component"
+              ],
+              "icon": "package",
+              "documentation": "",
+              "requirements": [],
+              "ports": [
+                {
+                  "id": "37ffd611-685f-4670-810c-b9b82887763e",
+                  "label": "speedRegIn",
+                  "visibility": "public",
+                  "tags": [
+                    "port"
+                  ],
+                  "icon": "plug",
+                  "documentation": "",
+                  "direction": "in",
+                  "interface": "${id:c5c0d2b5-fc88-4278-a5fd-5b8a6e6a0912}",
+                  "use": ""
+                },
+                {
+                  "id": "6b0d0ed7-39b5-485b-80ad-6cb13719fbe5",
+                  "label": "lighin",
+                  "visibility": "public",
+                  "tags": [
+                    "port"
+                  ],
+                  "icon": "plug",
+                  "documentation": "",
+                  "direction": "in",
+                  "interface": "${id:c84f5223-6d31-4fd7-b759-8b61729d775f}",
+                  "use": ""
+                }
+              ],
+              "components": [],
+              "libraries": []
+            },
+            {
+              "id": "6e834001-6743-4897-84a2-2f723cf68a88",
+              "label": "temperatureMotor",
+              "visibility": "public",
+              "tags": [
+                "component"
+              ],
+              "icon": "package",
+              "documentation": "",
+              "requirements": [],
+              "ports": [
+                {
+                  "id": "a1ad95c0-1d6f-449a-bd22-162aa5a9ad0b",
+                  "label": "tempOut",
+                  "visibility": "public",
+                  "tags": [
+                    "port"
+                  ],
+                  "icon": "plug",
+                  "documentation": "",
+                  "direction": "out",
+                  "interface": "${id:f3582fd9-f560-48bc-8119-1fd5d9a89ff5}",
+                  "use": ""
+                },
+                {
+                  "id": "79a805e2-3c1f-4440-8c5e-7c0d7da27718",
+                  "label": "out",
+                  "visibility": "public",
+                  "tags": [
+                    "port"
+                  ],
+                  "icon": "plug",
+                  "documentation": "",
+                  "direction": "out",
+                  "interface": "${id:c84f5223-6d31-4fd7-b759-8b61729d775f}",
+                  "use": "implementing"
+                }
+              ],
+              "components": [],
+              "libraries": [
+                {
+                  "id": "545ba787-cf6c-416e-9bb2-39cc2c1987b5",
+                  "label": "oka",
+                  "visibility": "public",
+                  "tags": [
+                    "lib"
+                  ],
+                  "documentation": "",
+                  "icon": "repo",
+                  "public dependencies": [],
+                  "private dependencies": [],
+                  "variables": [],
+                  "funcions": [
+                    {
+                      "id": "714f7829-1b7f-422e-b0a9-f2725df2d097",
+                      "label": "func1",
+                      "visibility": "public",
+                      "tags": [
+                        "funcio"
+                      ],
+                      "icon": "symbol-property",
+                      "returntype": {
+                        "datatype": "",
+                        "isPointer": false,
+                        "isConst": false
+                      },
+                      "parameters": [],
+                      "documentation": "",
+                      "diagrams": [
+                        {
+                          "id": "f66f1de8-ef86-43bd-a126-52600ba1ef7d",
+                          "label": "activity1",
+                          "visibility": "public",
+                          "tags": [
+                            "activitydiagram"
+                          ],
+                          "icon": "symbol-misc",
+                          "nodes": [
+                            {
+                              "id": "2ae2599a-3f80-491a-b097-e38db4d38aca",
+                              "label": "new",
+                              "tags": [
+                                "activitynode"
+                              ],
+                              "icon": "symbol-field",
+                              "text": ""
+                            },
+                            {
+                              "id": "3629daea-f121-4138-8c5e-a46a814fcebf",
+                              "label": "new",
+                              "tags": [
+                                "activitynode"
+                              ],
+                              "icon": "symbol-field",
+                              "text": ""
+                            },
+                            {
+                              "id": "27464088-0baa-4608-b597-61a4bd3c6755",
+                              "label": "new",
+                              "tags": [
+                                "activitynode"
+                              ],
+                              "icon": "symbol-field",
+                              "text": ""
+                            },
+                            {
+                              "id": "8bd6fa4b-d062-4061-bd02-6e548055a8ed",
+                              "label": "new",
+                              "tags": [
+                                "activitynode"
+                              ],
+                              "icon": "symbol-field",
+                              "text": ""
+                            },
+                            {
+                              "id": "fc3e4e69-2a43-4589-848f-d0f8c4fa7385",
+                              "label": "new",
+                              "tags": [
+                                "activitynode"
+                              ],
+                              "icon": "symbol-field",
+                              "text": ""
+                            },
+                            {
+                              "id": "73b860da-bdd3-4afe-87ef-a7ea307b95c4",
+                              "label": "new",
+                              "tags": [
+                                "activitynode"
+                              ],
+                              "icon": "symbol-field",
+                              "text": ""
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "datastructures": [],
+                  "typedefs": [],
+                  "enumerators": [],
+                  "macros": [],
+                  "HSM": [],
+                  "Unit Tests": []
+                }
+              ]
+            }
+          ],
+          "libraries": [
+            {
+              "id": "0ebcd920-144d-4133-b638-4f54787079d6",
+              "label": "liba",
+              "visibility": "public",
+              "tags": [
+                "lib"
+              ],
+              "documentation": "ewrfqwafwaf\n",
+              "icon": "repo",
+              "public dependencies": [],
+              "private dependencies": [],
+              "variables": [
+                {
+                  "id": "34784e00-d9f2-456e-91a6-f0cfb2205fe5",
+                  "label": "var1",
+                  "visibility": "public",
+                  "tags": [
+                    "variable"
+                  ],
+                  "icon": "symbol-variable",
+                  "datatype": "",
+                  "Array": [],
+                  "isPointer": false,
+                  "isVolatile": false,
+                  "isConst": false,
+                  "defaultValue": [],
+                  "documentation": ""
+                }
+              ],
+              "funcions": [],
+              "datastructures": [],
+              "typedefs": [],
+              "enumerators": [],
+              "macros": [],
+              "HSM": [],
+              "Unit Tests": []
+            }
+          ]
+        },
+        {
+          "id": "1a114ac2-2119-4863-b69e-b39555f30930",
+          "label": "temperatureController",
+          "visibility": "public",
+          "tags": [
+            "component"
+          ],
+          "icon": "package",
+          "documentation": "",
+          "requirements": [],
+          "ports": [
+            {
+              "id": "280feb07-21f8-4ea3-885d-d7029e04418b",
+              "label": "speedOut",
+              "visibility": "public",
+              "tags": [
+                "port"
+              ],
+              "icon": "plug",
+              "documentation": "",
+              "direction": "out",
+              "interface": "${id:c5c0d2b5-fc88-4278-a5fd-5b8a6e6a0912}",
+              "use": ""
+            },
+            {
+              "id": "e51a7b4e-7fa7-411c-8a24-8ba2e040639a",
+              "label": "tempIn",
+              "visibility": "public",
+              "tags": [
+                "port"
+              ],
+              "icon": "plug",
+              "documentation": "",
+              "direction": "in",
+              "interface": "${id:f3582fd9-f560-48bc-8119-1fd5d9a89ff5}",
+              "use": ""
+            }
+          ],
+          "components": [],
+          "libraries": []
+        }
+      ]
+    },
+    {
+      "id": "3018ea87-36f4-4ea8-a738-d668603400aa",
+      "label": "mid",
+      "visibility": "public",
+      "tags": [
+        "layer"
+      ],
+      "icon": "layers",
+      "documentation": "",
+      "layers": [],
+      "interfaces": [],
+      "components": []
+    }
+  ],
+  "Integration Tests": [],
+  "Qualification Tests": []
+}
