@@ -1,0 +1,87 @@
+{
+  "$schema": "file:///C:/Users/narcis.oriol/Documents/codearchitect/codearchitect_3/resources/codearchitect.schema.json",
+  "type": "object",
+  "title": "Port",
+  "properties": {
+    "id": {
+      "type": "string",
+      "hidden": true
+    },
+    "label": {
+      "type": "string",
+      "hidden": true
+    },
+    "tags": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "port"
+      ]
+    },
+    "icon": {
+      "hidden": true,
+      "type": "string",
+      "const": "plug"
+    },
+    "description": {
+      "hidden": true,
+      "editable": true,
+      "multiline": true,
+      "type": "string"
+    },
+    "direction" : {
+      "hidden": true,
+      "editable": true,
+      "type": "string",
+      "enum": [
+        "in",
+        "out"
+      ]
+    },
+    "interface": {
+      "hidden": true,
+      "editable": true,
+      "type": "string",
+      "search": {
+        "query": [
+          [
+            {
+              "field": "tags",
+              "regex": "interface"
+            }
+          ]
+        ]
+      }
+    },
+    "use": {
+      "hidden": true,
+      "editable": true,
+      "type": "string"
+    }
+  },
+  "view": [
+    {
+      "title": "Data View",
+      "steps": [
+        {
+          "tool": "shell",
+          "args": [
+            "python",
+            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\elausa_aspice\\python_scripts\\generate_view_md.py",
+            "--json",
+            "${path}",
+            "--id",
+            "${id}",
+            "--blueprint",
+            "C:\\Users\\narcis.oriol\\Documents\\codearchitect\\codearchitect\\elausa_aspice\\python_scripts\\port_blueprint.md",
+            "--format",
+            "html"
+          ]
+        }
+      ]
+    }
+  ]
+}
