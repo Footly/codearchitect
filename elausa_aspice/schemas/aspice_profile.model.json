@@ -51,6 +51,9 @@
           "const": "folder"
         }
       },
+      "autoincrement": {
+        "prefix": "REQ-"
+      },
       "editable": false
     },
     "SWE2-Architecture": {

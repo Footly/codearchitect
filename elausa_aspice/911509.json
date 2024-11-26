@@ -9,17 +9,83 @@
   "description": "",
   "SWE1-Requirements": [
     {
-      "id": "98baf2e0-47c5-40da-8032-981bb8c441d8",
-      "label": "REQ1",
+      "id": "60dc5675-bff9-468c-a5fa-5d0ec9539504",
+      "label": "REQ-0",
       "tags": [
         "reqs"
       ],
-      "description": "Aquest es el primer requeriment que fem",
+      "description": "",
+      "icon": "book"
+    },
+    {},
+    {
+      "id": "5377e255-8c0a-40f1-a8e9-e82e6adb0c19",
+      "label": "REQ-2",
+      "tags": [
+        "reqs"
+      ],
+      "description": "",
       "icon": "book"
     },
     {
-      "id": "469467af-9e0a-4a92-bd08-6e6a8206c067",
-      "label": "REQ2",
+      "id": "50aeeeb1-5f21-4893-ad43-b940fd4788f0",
+      "label": "REQ-3",
+      "tags": [
+        "reqs"
+      ],
+      "description": "",
+      "icon": "book"
+    },
+    {},
+    {
+      "id": "0a8f49d6-2e88-4ebc-b3b0-2ad7546dfcc2",
+      "label": "REQ-5",
+      "tags": [
+        "reqs"
+      ],
+      "description": "",
+      "icon": "book"
+    },
+    {
+      "id": "124aa9f1-84be-4f9a-8a6a-a5745ef905db",
+      "label": "REQ-6",
+      "tags": [
+        "reqs"
+      ],
+      "description": "",
+      "icon": "book"
+    },
+    {},
+    {
+      "id": "547490ca-7dd1-4ea4-a730-e4ab58cba6c0",
+      "label": "REQ-8",
+      "tags": [
+        "reqs"
+      ],
+      "description": "",
+      "icon": "book"
+    },
+    {
+      "id": "7a941dee-4b74-445f-9097-33c92c4863ba",
+      "label": "REQ-9",
+      "tags": [
+        "reqs"
+      ],
+      "description": "",
+      "icon": "book"
+    },
+    {
+      "id": "e713560c-aa1a-41c4-96f3-9cd29d3874cb",
+      "label": "REQ-10",
+      "tags": [
+        "reqs"
+      ],
+      "description": "",
+      "icon": "book"
+    },
+    {
+      "id": "253624ca-22bb-45be-9129-33140fddc71a",
+      "label": "REQ-11",
       "tags": [
         "reqs"
       ],
@@ -47,10 +113,7 @@
             ],
             "icon": "package",
             "description": "Mòdul és encarregat del control PID del motor, si s'escau informa la resta del sistema que la temperature del motor és crítica. Conté algoritmes de refrigerat",
-            "requirements": [
-              "${id:469467af-9e0a-4a92-bd08-6e6a8206c067}",
-              "${id:98baf2e0-47c5-40da-8032-981bb8c441d8}"
-            ],
+            "requirements": [],
             "ports": [
               {
                 "id": "a3e754a9-41f3-4386-81d6-1bf66e219aa8",
