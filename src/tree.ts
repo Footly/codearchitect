@@ -228,6 +228,28 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
           items: value.items
         }));
 
+    const getChildName = async (parent: Item): Promise<string | undefined> => {
+      if (parent.schema?.autoincrement) {
+        //Get the number of items in the array from the json
+        const rootJSON = JSON.parse(fs.readFileSync(parent.filePath, 'utf-8'));
+        //With the jsonPath get the according json
+        let current = rootJSON;
+        for (const key of parent.jsonPath) {
+          current = current[key];
+        }
+        const numItems = current.length;
+        const prefix = parent.schema.autoincrement.prefix;
+        return prefix + numItems;
+      } else {
+        const input = await vscode.window.showInputBox({ prompt: 'Enter child object name' });
+        if (!input) {
+          vscode.window.showWarningMessage('Child object creation cancelled');
+          return undefined;
+        }
+        return input;
+      }
+    };
+
     const handleSchemaForObject = async (parent: any) => {
       const properties = parent.schema?.properties ?? {};
       const options = getOptions(properties, parent.root_schema);
@@ -283,9 +305,9 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
 
     const rootJSONfile = parent.filePath;
 
-    const childName = await vscode.window.showInputBox({ prompt: 'Enter child object name' });
+
+    const childName = await getChildName(parent);
     if (!childName) {
-      vscode.window.showWarningMessage('Child object creation cancelled');
       return;
     }
 
@@ -322,12 +344,14 @@ export class ItemTreeProvider implements vscode.TreeDataProvider<Item> {
       if (rootJSON[key].id === (id)) {
         //If rootJSON is an array, remove the id from the array
         if (Array.isArray(rootJSON)) {
-          rootJSON.splice(Number(key), 1);
+          //rootJSON.splice(Number(key), 1);
+          //Substutute by empty object
+          rootJSON[Number(key)] = {};
         } else {
           delete rootJSON[key];
         }
       }
-      else if (rootJSON[key] === "${id:"+id+"}") {
+      else if (rootJSON[key] === "${id:" + id + "}") {
         // If rootJSON is a array, remove the id from the array
         if (Array.isArray(rootJSON)) {
           rootJSON.splice(Number(key), 1);
@@ -479,7 +503,7 @@ export class Item extends vscode.TreeItem {
       this.contextValue += ".command";
     }
 
-    if(this.schema) {
+    if (this.schema) {
       if (this.schema.editable === false) {
         this.contextValue += ".readonly";
       }

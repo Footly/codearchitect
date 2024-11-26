@@ -155,6 +155,14 @@
                 }
             }
         },
+        "autoincrement": {
+            "type": "object",
+            "properties": {
+                "prefix": {
+                    "type": "string"
+                }
+            }
+        },
         "default": true
     }
 }
